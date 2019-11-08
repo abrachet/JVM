@@ -31,4 +31,4 @@ jobs:
           command: 'mkdir build && cd build && cmake .. && make'
       - run:
           name: Run Tests
-          command: 'cd test && ctest'
+          command: 'cd test/unittest && ctest'
