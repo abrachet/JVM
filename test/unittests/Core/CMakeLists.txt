@@ -1,6 +1,7 @@
 
 add_executable(core_test
     FileBufferTest.cpp
+    FileReaderTest.cpp
 )
 
 include_directories(INCLUDE_DIR)

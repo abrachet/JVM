@@ -7,10 +7,10 @@
 
 class FileBuffer {
     int fd = -1;
-    size_t size;
+    size_t len;
     char *buf = nullptr;
 
-    FileBuffer(int fd, size_t size, char* buf) : fd(fd), size(size), buf(buf) {}
+    FileBuffer(int fd, size_t len, char* buf) : fd(fd), len(len), buf(buf) {}
 
 public:
     ~FileBuffer();
@@ -19,6 +19,7 @@ public:
 
     operator const char*() const { return buf; }
     operator char*() { return buf; }
+    size_t size() const { return len; }
 };
 
 #endif // JVM_CORE_FILEBUFFER_H

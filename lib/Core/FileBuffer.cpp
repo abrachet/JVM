@@ -6,7 +6,7 @@
 
 FileBuffer::~FileBuffer() {
     if (fd != -1 && buf != MAP_FAILED)
-        munmap(buf, size + 1);
+        munmap(buf, len + 1);
 }
 
 std::unique_ptr<FileBuffer> FileBuffer::create(std::string_view filename) {
