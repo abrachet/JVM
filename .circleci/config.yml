@@ -32,4 +32,4 @@ jobs:
             mkdir build && cd build
             cmake -DCMAKE_BUILD_TYPE=Debug ..
             make
-            cd test/unittest && ctest
+            cd test/unittests && ctest
