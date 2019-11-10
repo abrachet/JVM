@@ -38,6 +38,7 @@ struct ConstPool {
   struct ConstPoolBase {
     Type tag;
     ConstPoolBase(Type tag) : tag(tag) {}
+    virtual ~ConstPoolBase() {}
   };
 
   struct ClassInfo : public ConstPoolBase {
