@@ -26,7 +26,7 @@ TEST_F(FileReaderTest, ReadInt) {
   f.write(reinterpret_cast<const char*>(&a), sizeof(int));
   f.close();
 
-  auto reader = FileReader::create(filename);
+  auto reader = FileReader<false>::create(filename);
   int read;
   reader->read(read);
   EXPECT_EQ(read, a);
@@ -38,7 +38,7 @@ TEST_F(FileReaderTest, ReadPointer) {
   f.write(reinterpret_cast<const char*>(&a), sizeof(int));
   f.close();
 
-  auto reader = FileReader::create(filename);
+  auto reader = FileReader<false>::create(filename);
   int *read = nullptr;
   reader->read(read);
   ASSERT_NE(read, nullptr);
@@ -52,7 +52,7 @@ TEST_F(FileReaderTest, ReadMultiple) {
   f.write(reinterpret_cast<const char*>(arr), sizeof(arr));
   f.close();
   
-  auto reader = FileReader::create(filename);
+  auto reader = FileReader<false>::create(filename);
   for (int a, i = 0; i < 5; i++) {
     EXPECT_TRUE(reader->read(a));
     EXPECT_EQ(a, arr[i]);
@@ -72,7 +72,7 @@ TEST_F(FileReaderTest, DifferentTypes) {
   f.write(reinterpret_cast<const char*>(&c), sizeof(c));
   f.close();
 
-  auto reader = FileReader::create(filename);
+  auto reader = FileReader<false>::create(filename);
   EXPECT_TRUE(reader->read(ea));
   EXPECT_EQ(ea, a);
   EXPECT_TRUE(reader->read(eb));
@@ -85,7 +85,7 @@ TEST_F(FileReaderTest, TakeFile) {
   f.write("abc", 3);
   f.close();
 
-  auto reader = FileReader::create(filename);
+  auto reader = FileReader<false>::create(filename);
   char c;
   reader->read(c);
   EXPECT_EQ(c, 'a');
@@ -102,7 +102,7 @@ TEST_F(FileReaderTest, Pos) {
   f.write("abc", 3);
   f.close();
 
-  auto reader = FileReader::create(filename);
+  auto reader = FileReader<false>::create(filename);
   char c;
   ASSERT_TRUE(reader->read(c));
   EXPECT_EQ(c, 'a');
@@ -112,4 +112,18 @@ TEST_F(FileReaderTest, Pos) {
   ASSERT_TRUE(reader->read(c));
   EXPECT_EQ(c, 'a');
   EXPECT_EQ(reader->getPos(), 1);
+}
+
+TEST_F(FileReaderTest, Endianness) {
+  uint8_t arr[] = {0xCA, 0xFE, 0xBA, 0xBE};
+  f.write(reinterpret_cast<const char*>(arr), 1);
+  f.write(reinterpret_cast<const char*>(arr + 1), 1);
+  f.write(reinterpret_cast<const char*>(arr + 2), 1);
+  f.write(reinterpret_cast<const char*>(arr + 3), 1);
+  f.close();
+
+  auto reader = FileReader<true>::create(filename);
+  uint32_t magic = 0;
+  ASSERT_TRUE(reader->read(magic));
+  EXPECT_EQ(magic, 0xCAFEBABE);
 }
