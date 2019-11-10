@@ -32,4 +32,7 @@ jobs:
             mkdir build && cd build
             cmake -DCMAKE_BUILD_TYPE=Debug -DVERBOSE=On ..
             make
-            cd test/unittests && ctest
+            cd test/unittests
+            # Must cd into Class because it needs to be the cwd.
+            cd Class && ./class_test && cd ..
+            cd Core && ./core_test && cd ..

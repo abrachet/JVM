@@ -32,7 +32,7 @@ if(VERBOSE)
   execute_process(
     COMMAND sh -c "javac '${CMAKE_CURRENT_SOURCE_DIR}/Test.java' &&
       javap -c -v '${CMAKE_CURRENT_SOURCE_DIR}/Test.class' &&
-      '${CMAKE_CURRENT_SOURCE_DIR}/Test.class'"
+      rm '${CMAKE_CURRENT_SOURCE_DIR}/Test.class'"
   )
 endif()
 
