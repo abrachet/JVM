@@ -9,18 +9,18 @@
 class FileBuffer {
   int fd = -1;
   size_t len;
-  char* buf = nullptr;
+  char *buf = nullptr;
 
-  FileBuffer(int fd, size_t len, char* buf) : fd(fd), len(len), buf(buf) {}
+  FileBuffer(int fd, size_t len, char *buf) : fd(fd), len(len), buf(buf) {}
 
- public:
+public:
   ~FileBuffer();
 
   static std::unique_ptr<FileBuffer> create(std::string_view filename);
 
-  operator const char*() const { return buf; }
-  operator char*() { return buf; }
+  operator const char *() const { return buf; }
+  operator char *() { return buf; }
   size_t size() const { return len; }
 };
 
-#endif  // JVM_CORE_FILEBUFFER_H
+#endif // JVM_CORE_FILEBUFFER_H
