@@ -2,9 +2,12 @@
 #ifndef JVM_CLASS_CLASSFILE_H
 #define JVM_CLASS_CLASSFILE_H
 
+#include "JVM/Core/FileBuffer.h"
 #include <cstdint>
 #include <memory>
-#include "JVM/Core/FileBuffer.h"
+#include <vector>
+
+class ClassFileReader;
 
 namespace Class {
 
@@ -32,14 +35,21 @@ struct ConstPool {
     InvokeDynamic = 18,
   };
 
-  struct ClassInfo {
-    Type tag = Class;
+  struct ConstPoolBase {
+    Type tag;
+    ConstPoolBase(Type tag) : tag(tag) {}
+  };
+
+  struct ClassInfo : public ConstPoolBase {
+    ClassInfo(uint16_t nameIndex = 0)
+        : ConstPoolBase(Class), nameIndex(nameIndex) {}
     uint16_t nameIndex;
   };
 
-  template <Type t>
-  struct RefInfo {
-    Type tag = t;
+  template <Type t> struct RefInfo : public ConstPoolBase {
+    RefInfo(uint16_t classIndex = 0, uint16_t nameAndTypeIndex = 0)
+        : ConstPoolBase(t), classIndex(classIndex),
+          nameAndTypeIndex(nameAndTypeIndex) {}
     uint16_t classIndex;
     uint16_t nameAndTypeIndex;
   };
@@ -48,27 +58,34 @@ struct ConstPool {
   using MethodrefInfo = RefInfo<Methodref>;
   using InterfaceMethodrefInfo = RefInfo<InterfaceMethodref>;
 
-  struct StringInfo {
-    Type tag = String;
+  struct StringInfo : public ConstPoolBase {
+    StringInfo(uint16_t stringIndex = 0)
+        : ConstPoolBase(String), stringIndex(stringIndex) {}
     uint16_t stringIndex;
   };
 
-  struct NameAndTypeInfo {
-    Type tag = NameAndType;
+  struct NameAndTypeInfo : public ConstPoolBase {
+    NameAndTypeInfo(uint16_t nameIndex = 0, uint16_t descriptorIndex = 0)
+        : ConstPoolBase(NameAndType), nameIndex(nameIndex),
+          descriptorIndex(descriptorIndex) {}
     uint16_t nameIndex;
     uint16_t descriptorIndex;
   };
 
-  struct Utf8Info {
-    Type tag = Utf8;
+  struct Utf8Info : public ConstPoolBase {
+    Utf8Info(uint16_t length = 0, const uint8_t *bytes = nullptr)
+        : ConstPoolBase(Utf8), length(length), bytes(bytes) {}
     uint16_t length;
-    uint8_t* bytes;
+    const uint8_t *bytes;
   };
 
-  struct Info {
-    Type tag;
-    uint8_t* info;
-  };
+  const std::vector<std::unique_ptr<ConstPoolBase>> &getEntries() const {
+    return entries;
+  }
+
+private:
+  std::vector<std::unique_ptr<ConstPoolBase>> entries;
+  friend class ::ClassFileReader;
 };
 
 struct Interfaces {};
@@ -76,9 +93,7 @@ struct Fields {};
 struct Methods {};
 struct Attributes {};
 
-}  // namespace Class
-
-class ClassFileReader;
+} // namespace Class
 
 class ClassFile {
   friend class ClassFileReader;
@@ -98,9 +113,10 @@ class ClassFile {
 
   std::unique_ptr<FileBuffer> underlyingFile;
 
- public:
+public:
   uint16_t getMinorVersion() const { return minorVersion; }
   uint16_t getMajorVersion() const { return majorVersion; }
+  const Class::ConstPool &getConstPool() const { return constPool; }
 };
 
-#endif  // JVM_CLASS_CLASSFILE_H
+#endif // JVM_CLASS_CLASSFILE_H
