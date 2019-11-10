@@ -10,7 +10,7 @@ jobs:
           command: 'apt-get update && apt-get install -y sudo && rm -rf /var/lib/apt/lists/*'
       - run:
           name: Install gcc9
-          command: 'sudo apt-get update && sudo apt-get install gcc-9-hppa64-linux-gnu'
+          command: 'sudo apt-get update && sudo apt-get install gcc-9-x86-64-linux-gnu'
       - run:
           name: Install build-essentials
           command: 'sudo apt-get update && sudo apt-get install -y build-essential'
