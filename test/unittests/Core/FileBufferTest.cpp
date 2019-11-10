@@ -1,6 +1,6 @@
 
-#include "JVM/Core/FileBuffer.h"
 #include <fstream>
+#include "JVM/Core/FileBuffer.h"
 #include "gtest/gtest.h"
 
 TEST(FileBuffer, OpenFile) {

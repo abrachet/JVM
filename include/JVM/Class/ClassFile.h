@@ -2,9 +2,9 @@
 #ifndef JVM_CLASS_CLASSFILE_H
 #define JVM_CLASS_CLASSFILE_H
 
-#include "JVM/Core/FileBuffer.h"
-#include <memory>
 #include <cstdint>
+#include <memory>
+#include "JVM/Core/FileBuffer.h"
 
 namespace Class {
 
@@ -76,7 +76,7 @@ struct Fields {};
 struct Methods {};
 struct Attributes {};
 
-} // namespace Class
+}  // namespace Class
 
 class ClassFileReader;
 
@@ -98,10 +98,9 @@ class ClassFile {
 
   std::unique_ptr<FileBuffer> underlyingFile;
 
-public:
+ public:
   uint16_t getMinorVersion() const { return minorVersion; }
   uint16_t getMajorVersion() const { return majorVersion; }
 };
 
-
-#endif // JVM_CLASS_CLASSFILE_H
+#endif  // JVM_CLASS_CLASSFILE_H

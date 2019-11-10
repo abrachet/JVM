@@ -1,21 +1,15 @@
 
+#include <fstream>
 #include "JVM/Core/FileReader.h"
-#include <fstream>  
 #include "gtest/gtest.h"
 
 class FileReaderTest : public ::testing::Test {
-  void SetUp() override {
-    f.open(filename, std::ios_base::trunc);
-  }
+  void SetUp() override { f.open(filename, std::ios_base::trunc); }
 
-  void TearDown() override {
-    f.close();
-  }
+  void TearDown() override { f.close(); }
 
-public:
-  ~FileReaderTest() override {
-    std::remove(filename);
-  }
+ public:
+  ~FileReaderTest() override { std::remove(filename); }
 
   std::ofstream f;
   static constexpr char filename[] = "test.tmp";
@@ -39,7 +33,7 @@ TEST_F(FileReaderTest, ReadPointer) {
   f.close();
 
   auto reader = FileReader<false>::create(filename);
-  int *read = nullptr;
+  int* read = nullptr;
   reader->read(read);
   ASSERT_NE(read, nullptr);
   EXPECT_EQ(*read, a);
@@ -51,7 +45,7 @@ TEST_F(FileReaderTest, ReadMultiple) {
   int arr[5] = {10, 4, 5, 10548845, 3178941};
   f.write(reinterpret_cast<const char*>(arr), sizeof(arr));
   f.close();
-  
+
   auto reader = FileReader<false>::create(filename);
   for (int a, i = 0; i < 5; i++) {
     EXPECT_TRUE(reader->read(a));

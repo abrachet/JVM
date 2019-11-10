@@ -5,8 +5,8 @@
 #include <sys/stat.h>
 
 FileBuffer::~FileBuffer() {
-    if (fd != -1 && buf != MAP_FAILED)
-        munmap(buf, len + 1);
+  if (fd != -1 && buf != MAP_FAILED)
+    munmap(buf, len + 1);
 }
 
 std::unique_ptr<FileBuffer> FileBuffer::create(std::string_view filename) {
@@ -22,6 +22,6 @@ std::unique_ptr<FileBuffer> FileBuffer::create(std::string_view filename) {
     return nullptr;
   madvise(mapping, sb.st_size + 1, MADV_SEQUENTIAL);
   // Can't use make_unique with private ctor.
-  return std::unique_ptr<FileBuffer>(new FileBuffer(fd, sb.st_size,
-                                      static_cast<char*>(mapping)));
+  return std::unique_ptr<FileBuffer>(
+      new FileBuffer(fd, sb.st_size, static_cast<char*>(mapping)));
 }

@@ -2,12 +2,13 @@
 #ifndef JVM_CORE_FILEREADER_H
 #define JVM_CORE_FILEREADER_H
 
-#include "FileBuffer.h"
-#include <cstddef>
+#include <cassert>
 #include <climits>
+#include <cstddef>
+#include <memory>
 #include <string_view>
 #include <type_traits>
-#include <memory>
+#include "FileBuffer.h"
 
 template <bool swapEndianOfReadsDefault = false>
 class FileReader {
@@ -15,9 +16,8 @@ class FileReader {
   size_t pos = 0;
 
   template <typename T>
-  T swap(T u)
-  {
-    static_assert (CHAR_BIT == 8);
+  T swap(T u) {
+    static_assert(CHAR_BIT == 8);
 
     union {
       T u;
@@ -26,21 +26,24 @@ class FileReader {
 
     source.u = u;
     for (size_t i = 0; i < sizeof(T); i++)
-        dest.u8[i] = source.u8[sizeof(T) - i - 1];
+      dest.u8[i] = source.u8[sizeof(T) - i - 1];
 
     return dest.u;
   }
 
   template <typename T, bool swapEndian>
-  typename std::enable_if<std::is_pointer<T>::value, void>::type unsafeRead(T& t) {
-    static_assert(!swapEndian, "Can't swap endianess when using read with a pointer");
+  typename std::enable_if<std::is_pointer<T>::value, void>::type unsafeRead(
+      T& t) {
+    static_assert(!swapEndian,
+                  "Can't swap endianess when using read with a pointer");
     const T ptr = reinterpret_cast<const T>(*buf + pos);
     pos += sizeof(*ptr);
     t = ptr;
   }
 
   template <typename T, bool swapEndian>
-  typename std::enable_if<!std::is_pointer<T>::value, void>::type unsafeRead(T& t) {
+  typename std::enable_if<!std::is_pointer<T>::value, void>::type unsafeRead(
+      T& t) {
     const T* ptr = reinterpret_cast<const T*>(*buf + pos);
     pos += sizeof(T);
     t = swapEndian ? swap(*ptr) : *ptr;
@@ -54,7 +57,7 @@ class FileReader {
       return sizeof(T);
   }
 
-public:
+ public:
   static std::unique_ptr<FileReader> create(std::string_view filename) {
     auto reader = std::make_unique<FileReader>();
     reader->buf = FileBuffer::create(filename);
@@ -62,26 +65,23 @@ public:
   }
 
   // Using a T that is a pointer type will set t to a proper pointer in the
-  // file but it's lifetime is that of the file. 
-  template <typename T, bool swapEndian = swapEndianOfReadsDefault> bool read(T& t) {
+  // file but it's lifetime is that of the file.
+  template <typename T, bool swapEndian = swapEndianOfReadsDefault>
+  bool read(T& t) {
     if (!buf || getTemplateSize<T>() + pos > buf->size())
       return false;
     unsafeRead<T, swapEndian>(t);
     return true;
   }
 
-  const char *data() const {
-    return *buf;
-  }
+  const char* data() const { return *buf; }
 
-  size_t getPos() const {
-    return pos;
-  }
+  size_t getPos() const { return pos; }
 
   void seek(size_t newPos) {
     assert(!buf || newPos <= buf->size());
     pos = newPos;
-  } 
+  }
 
   std::unique_ptr<FileBuffer> takeFileBuffer() {
     auto ret = std::move(buf);
@@ -90,4 +90,4 @@ public:
   }
 };
 
-#endif // JVM_CORE_FILEREADER_H
+#endif  // JVM_CORE_FILEREADER_H

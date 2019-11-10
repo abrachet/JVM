@@ -12,6 +12,6 @@ ClassFileReader::ClassFileOrError ClassFileReader::read() {
     return {nullptr, "reader error"};
   if (!reader->read(classFile->majorVersion))
     return {nullptr, "reader error"};
-  
+
   return {std::move(classFile), std::string{}};
 }

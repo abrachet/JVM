@@ -1,16 +1,16 @@
 
-#include "JVM/Class/ClassFileReader.h"
-#include <fstream>
 #include <unistd.h>
+#include <fstream>
+#include "JVM/Class/ClassFileReader.h"
 #include "gtest/gtest.h"
 
 constexpr int majorVersion =
 #include "Test_MajorVersion.inc"
-;
+    ;
 
 constexpr int minorVersion =
 #include "Test_MinorVersion.inc"
-;
+    ;
 
 TEST(ClassReader, FindFiles) {
   ASSERT_NE(access("Test.class", 0), -1);
