@@ -36,4 +36,9 @@ endif()
 
 include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 
+execute_process(COMMAND sh -c "mkdir '${CMAKE_BINARY_DIR}/include' 2> /dev/null")
+set(INC_FILE_DIR "${CMAKE_BINARY_DIR}/include")
+include_directories("${INC_FILE_DIR}")
+
+add_subdirectory(Class)
 add_subdirectory(Core)
