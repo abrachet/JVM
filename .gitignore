@@ -5,3 +5,5 @@
 .vscode
 .vs
 .clangd
+*.class
+compile_commands.json
