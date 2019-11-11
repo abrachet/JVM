@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: "gcc:8.2"
+      - image: "debian:stretch"
     steps:
       - checkout:
       - run:
@@ -11,6 +11,14 @@ jobs:
       - run:
           name: Install build-essentials
           command: 'sudo apt-get update && sudo apt-get install -y build-essential'
+      - run:
+          name: Install clang
+          command: |
+            wget http://releases.llvm.org/9.0.0/clang+llvm-9.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+            tar -xvf clang+llvm-9.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+            echo "export PATH=$PWD/clang+llvm-9.0.0-x86_64-linux-gnu-ubuntu-18.04/bin:$PATH" >> $BASH_ENV
+            echo "export CC="clang+llvm-9.0.0-x86_64-linux-gnu-ubuntu-18.04/bin/clang" >> $BASH_ENV
+            echo "export CXX="clang+llvm-9.0.0-x86_64-linux-gnu-ubuntu-18.04/bin/clang++" >> $BASH_ENV
       - run:
           name: Install git
           command: 'sudo apt install -y git-all'
