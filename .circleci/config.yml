@@ -12,6 +12,9 @@ jobs:
           name: Install build-essentials
           command: 'sudo apt-get update && sudo apt-get install -y build-essential'
       - run:
+          name: Install wget
+          command: 'sudo apt-get install -y wget'
+      - run:
           name: Install clang
           command: |
             wget http://releases.llvm.org/9.0.0/clang+llvm-9.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
@@ -22,9 +25,6 @@ jobs:
       - run:
           name: Install git
           command: 'sudo apt install -y git-all'
-      - run:
-          name: Install wget
-          command: 'sudo apt-get install -y wget'
       - run:
           name: Install CMake
           command: |
@@ -42,5 +42,7 @@ jobs:
             make
             cd test/unittests
             # Must cd into Class because it needs to be the cwd.
+            # This is better than using ctest because it will show the output
+            # of the unit tests.
             cd Class && ./class_test && cd ..
             cd Core && ./core_test && cd ..
