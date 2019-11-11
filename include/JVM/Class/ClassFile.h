@@ -3,6 +3,7 @@
 #define JVM_CLASS_CLASSFILE_H
 
 #include "JVM/Core/FileBuffer.h"
+#include "JVM/Core/decimal.h"
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -33,6 +34,8 @@ struct ConstPool {
     MethodHandle = 15,
     MethodType = 16,
     InvokeDynamic = 18,
+
+    Last
   };
 
   struct ConstPoolBase {
@@ -41,23 +44,25 @@ struct ConstPool {
     virtual ~ConstPoolBase() {}
   };
 
-  struct ClassInfo : public ConstPoolBase {
-    ClassInfo(uint16_t nameIndex = 0)
-        : ConstPoolBase(Class), nameIndex(nameIndex) {}
-    uint16_t nameIndex;
+  template <typename IntT, Type CpType>
+  struct IntegralInfo : public ConstPoolBase {
+    IntegralInfo(uint32_t bytes = 0) : ConstPoolBase(CpType), bytes(bytes) {}
+    IntT bytes;
   };
 
   template <Type t> struct RefInfo : public ConstPoolBase {
-    RefInfo(uint16_t classIndex = 0, uint16_t nameAndTypeIndex = 0)
+    RefInfo<t>(uint16_t classIndex = 0, uint16_t nameAndTypeIndex = 0)
         : ConstPoolBase(t), classIndex(classIndex),
           nameAndTypeIndex(nameAndTypeIndex) {}
     uint16_t classIndex;
     uint16_t nameAndTypeIndex;
   };
 
-  using FieldrefInfo = RefInfo<Fieldref>;
-  using MethodrefInfo = RefInfo<Methodref>;
-  using InterfaceMethodrefInfo = RefInfo<InterfaceMethodref>;
+  struct ClassInfo : public ConstPoolBase {
+    ClassInfo(uint16_t nameIndex = 0)
+        : ConstPoolBase(Class), nameIndex(nameIndex) {}
+    uint16_t nameIndex;
+  };
 
   struct StringInfo : public ConstPoolBase {
     StringInfo(uint16_t stringIndex = 0)
@@ -79,6 +84,16 @@ struct ConstPool {
     uint16_t length;
     const uint8_t *bytes;
   };
+
+  using FieldrefInfo = RefInfo<Fieldref>;
+  using MethodrefInfo = RefInfo<Methodref>;
+  using InterfaceMethodrefInfo = RefInfo<InterfaceMethodref>;
+
+  using IntegerInfo = IntegralInfo<int32_t, Integer>;
+  using LongInfo = IntegralInfo<int64_t, Long>;
+
+  using FloatInfo = IntegralInfo<decimal32, Float>;
+  using DoubleInfo = IntegralInfo<decimal64, Double>;
 
   const std::vector<std::unique_ptr<ConstPoolBase>> &getEntries() const {
     return entries;

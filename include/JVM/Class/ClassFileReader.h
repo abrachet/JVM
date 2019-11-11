@@ -4,6 +4,7 @@
 
 #include "JVM/Class/ClassFile.h"
 #include "JVM/Core/FileReader.h"
+#include "JVM/Core/decimal.h"
 #include <memory>
 #include <string>
 #include <utility>
@@ -13,9 +14,11 @@ class ClassFileReader {
 
   std::string readConstPool(ClassFile &);
   std::string readCPUtf8(ClassFile &);
+  template <typename IntT, Class::ConstPool::Type CpType>
+  std::string readCPIntegeral(ClassFile &);
   std::string readCPClass(ClassFile &);
   std::string readCPString(ClassFile &);
-  std::string readCPRef(ClassFile &, Class::ConstPool::Type);
+  template <Class::ConstPool::Type CpType> std::string readCPRef(ClassFile &);
   std::string readCPNameType(ClassFile &);
 
 public:

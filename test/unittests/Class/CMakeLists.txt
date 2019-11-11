@@ -25,6 +25,17 @@ execute_process(
     grep -i 'major version' | awk '{print $3}' > '${INC_FILE_DIR}/Test_MajorVersion.inc' &&
   javap -c -v '${CMAKE_CURRENT_SOURCE_DIR}/Test.class' | tr -s ' ' |
     grep -i 'Utf8 string literal' | awk '{print $1}' | cut -b 2- > '${INC_FILE_DIR}/Test_StringLiteralIndex.inc' &&
+  javap -c -v '${CMAKE_CURRENT_SOURCE_DIR}/Test.class' | tr -s ' ' |
+    grep -i '// testString:Ljava/lang/String;' |  awk '{print $1}' | 
+    cut -b 2- > '${INC_FILE_DIR}/Test_StringNameTypeIndex.inc' &&
+  javap -c -v '${CMAKE_CURRENT_SOURCE_DIR}/Test.class' | tr -s ' ' |
+    grep -i 'Integer 32768' | awk '{print $1}' | cut -b 2- > '${INC_FILE_DIR}/Test_IntegerLiteralIndex.inc' &&
+  javap -c -v '${CMAKE_CURRENT_SOURCE_DIR}/Test.class' | tr -s ' ' | grep -i '// testInt:I' |
+    awk '{print $1}' | cut -b 2- > '${INC_FILE_DIR}/Test_IntegerNameTypeIndex.inc' &&
+  javap -v -c '${CMAKE_CURRENT_SOURCE_DIR}/Test.class' | tr -s ' ' | grep -i '= Long 2l' |
+    awk '{print $1}' | cut -b 2- > '${INC_FILE_DIR}/Test_LongLiteralIndex.inc' &&
+  javap -v -c '${CMAKE_CURRENT_SOURCE_DIR}/Test.class' | tr -s ' ' | grep -i '// testLong' |
+    awk '{print $1}' | cut -b 2- > '${INC_FILE_DIR}/Test_LongNameTypeIndex.inc' &&
   rm '${CMAKE_CURRENT_SOURCE_DIR}/Test.class'"
 )
 

@@ -1,5 +1,6 @@
 
 #include "JVM/Class/ClassFileReader.h"
+#include <functional>
 
 ClassFileReader::ClassFileOrError ClassFileReader::read() {
   auto classFile = std::make_unique<ClassFile>();
@@ -22,46 +23,50 @@ ClassFileReader::ClassFileOrError ClassFileReader::read() {
 using namespace Class;
 
 std::string ClassFileReader::readConstPool(ClassFile &classFile) {
+  using readCPFunc = std::string (ClassFileReader::*)(ClassFile &);
+  static readCPFunc readCPFunctions[ConstPool::Last] = {
+      [ConstPool::Utf8] = &ClassFileReader::readCPUtf8,
+      [ConstPool::Integer] =
+          &ClassFileReader::readCPIntegeral<int32_t, ConstPool::Integer>,
+      [ConstPool::Float] =
+          &ClassFileReader::readCPIntegeral<decimal32, ConstPool::Float>,
+      [ConstPool::Long] =
+          &ClassFileReader::readCPIntegeral<int64_t, ConstPool::Long>,
+      [ConstPool::Double] =
+          &ClassFileReader::readCPIntegeral<decimal64, ConstPool::Double>,
+      [ConstPool::Class] = &ClassFileReader::readCPClass,
+      [ConstPool::String] = &ClassFileReader::readCPString,
+      [ConstPool::Fieldref] = &ClassFileReader::readCPRef<ConstPool::Fieldref>,
+      [ConstPool::Methodref] =
+          &ClassFileReader::readCPRef<ConstPool::Methodref>,
+      [ConstPool::InterfaceMethodref] =
+          &ClassFileReader::readCPRef<ConstPool::InterfaceMethodref>,
+      [ConstPool::NameAndType] = &ClassFileReader::readCPNameType,
+  };
+
   uint16_t count;
   if (!reader->read(count))
     return "reader error";
   classFile.constPool.entries.reserve(count);
-  // Pool is 1 indexed.
+  // Pool is 1 indexed so add an emtpy entry at the front.
   classFile.constPool.entries.emplace_back(nullptr);
   for (int i = 0; i < count - 1; i++) {
     uint8_t tag;
     if (!reader->read(tag))
       return "reader error";
-    switch (tag) {
-    default:
-      return "unkown const pool tag";
-    case ConstPool::Utf8:
-      if (std::string s = readCPUtf8(classFile); s != "")
-        return s;
-      break;
-    case ConstPool::Class:
-      if (std::string s = readCPClass(classFile); s != "")
-        return s;
-      break;
-    case ConstPool::String:
-      if (std::string s = readCPString(classFile); s != "")
-        return s;
-      break;
-    case ConstPool::Fieldref:
-    case ConstPool::Methodref:
-    case ConstPool::InterfaceMethodref:
-      if (std::string s =
-              readCPRef(classFile, static_cast<ConstPool::Type>(tag));
-          s != "")
-        return s;
-      break;
-    case ConstPool::NameAndType:
-      if (std::string s = readCPNameType(classFile); s != "")
-        return s;
-      break;
+    if (tag >= ConstPool::Last)
+      return "unkown tag is larger than any known tags";
+
+    readCPFunc method = readCPFunctions[tag];
+    if (!method)
+      return "unkown tag";
+    (this->*method)(classFile);
+
+    if (tag == ConstPool::Long || tag == ConstPool::Double) {
+      classFile.constPool.entries.emplace_back(nullptr);
+      i++;
     }
   }
-
   return "";
 }
 
@@ -74,6 +79,16 @@ std::string ClassFileReader::readCPUtf8(ClassFile &classFile) {
   reader->seek(reader->getPos() + utf8.length);
   classFile.constPool.entries.emplace_back(
       std::make_unique<ConstPool::Utf8Info>(utf8));
+  return "";
+}
+
+template <typename IntT, ConstPool::Type CpType>
+std::string ClassFileReader::readCPIntegeral(ClassFile &classFile) {
+  ConstPool::IntegralInfo<IntT, CpType> entry;
+  if (!reader->read(entry.bytes))
+    return "reader error";
+  classFile.constPool.entries.emplace_back(
+      std::make_unique<decltype(entry)>(entry));
   return "";
 }
 
@@ -95,10 +110,9 @@ std::string ClassFileReader::readCPString(ClassFile &classFile) {
   return "";
 }
 
-std::string ClassFileReader::readCPRef(ClassFile &classFile,
-                                       ConstPool::Type tag) {
-  ConstPool::RefInfo<ConstPool::Fieldref> refInfo;
-  refInfo.tag = tag;
+template <Class::ConstPool::Type CpType>
+std::string ClassFileReader::readCPRef(ClassFile &classFile) {
+  ConstPool::RefInfo<CpType> refInfo;
   if (!reader->read(refInfo.classIndex))
     return "reader error";
   if (!reader->read(refInfo.nameAndTypeIndex))
