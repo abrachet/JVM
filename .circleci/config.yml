@@ -19,9 +19,9 @@ jobs:
           command: |
             wget http://releases.llvm.org/6.0.0/clang+llvm-6.0.0-x86_64-linux-gnu-debian8.tar.xz
             tar -xvf clang+llvm-6.0.0-x86_64-linux-gnu-debian8.tar.xz
-            echo "export PATH=$PWD/clang+llvm-6.0.0-x86_64-linux-gnu-debian8.tar.xz/bin:$PATH" >> $BASH_ENV
-            echo "export CC="$PWD/clang+llvm-6.0.0-x86_64-linux-gnu-debian8.tar.xz/bin/clang" >> $BASH_ENV
-            echo "export CXX="$PWD/clang+llvm-6.0.0-x86_64-linux-gnu-debian8.tar.xz/bin/clang++" >> $BASH_ENV
+            echo "export PATH=$PWD/clang+llvm-6.0.0-x86_64-linux-gnu-debian8/bin:$PATH" >> $BASH_ENV
+            echo "export CC="$PWD/clang+llvm-6.0.0-x86_64-linux-gnu-debian8/bin/clang" >> $BASH_ENV
+            echo "export CXX="$PWD/clang+llvm-6.0.0-x86_64-linux-gnu-debian8/bin/clang++" >> $BASH_ENV
       - run:
           name: Install git
           command: 'sudo apt install -y git-all'
