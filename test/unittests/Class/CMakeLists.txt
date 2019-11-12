@@ -36,6 +36,12 @@ execute_process(
     awk '{print $1}' | cut -b 2- > '${INC_FILE_DIR}/Test_LongLiteralIndex.inc' &&
   javap -v -c '${CMAKE_CURRENT_SOURCE_DIR}/Test.class' | tr -s ' ' | grep -i '// testLong' |
     awk '{print $1}' | cut -b 2- > '${INC_FILE_DIR}/Test_LongNameTypeIndex.inc' &&
+  javap -v -c '${CMAKE_CURRENT_SOURCE_DIR}/Test.class' | tr -s ' ' | grep '= Double 2.0d' |
+    awk '{print $1}' | cut -b 2- > '${INC_FILE_DIR}/Test_DoubleLiteralIndex.inc' &&
+  javap -v -c '${CMAKE_CURRENT_SOURCE_DIR}/Test.class' | tr -s ' ' | grep '= Float' |
+    awk '{print $1}' | cut -b 2- > '${INC_FILE_DIR}/Test_FloatLiteralIndex.inc' &&
+  javap -v -c '${CMAKE_CURRENT_SOURCE_DIR}/Test.class' | tr -s ' ' | grep -i '// Test.testInt' |
+    awk '{print $1}' | cut -b 2- > '${INC_FILE_DIR}/Test_IntFieldRefIndex.inc' &&
   rm '${CMAKE_CURRENT_SOURCE_DIR}/Test.class'"
 )
 

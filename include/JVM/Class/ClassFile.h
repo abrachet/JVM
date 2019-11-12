@@ -31,9 +31,9 @@ struct ConstPool {
     Methodref = 10,
     InterfaceMethodref = 11,
     NameAndType = 12,
-    MethodHandle = 15,
-    MethodType = 16,
-    InvokeDynamic = 18,
+    MethodHandle = 15,  // Not tested
+    MethodType = 16,    // Not tested
+    InvokeDynamic = 18, // Not tested
 
     Last
   };
@@ -51,7 +51,7 @@ struct ConstPool {
   };
 
   template <Type t> struct RefInfo : public ConstPoolBase {
-    RefInfo<t>(uint16_t classIndex = 0, uint16_t nameAndTypeIndex = 0)
+    RefInfo(uint16_t classIndex = 0, uint16_t nameAndTypeIndex = 0)
         : ConstPoolBase(t), classIndex(classIndex),
           nameAndTypeIndex(nameAndTypeIndex) {}
     uint16_t classIndex;

@@ -36,6 +36,18 @@ constexpr int longNameTypeIndex =
 #include "Test_LongNameTypeIndex.inc"
     ;
 
+constexpr int doubleLiteralIndex =
+#include "Test_DoubleLiteralIndex.inc"
+    ;
+
+constexpr int floatLiteralIndex =
+#include "Test_FloatLiteralIndex.inc"
+    ;
+
+constexpr int intFieldRef =
+#include "Test_IntFieldRefIndex.inc"
+    ;
+
 using namespace Class;
 
 TEST(ClassReader, FindFiles) { ASSERT_NE(access("Test.class", 0), -1); }
@@ -122,6 +134,7 @@ TEST(ClassReader, ConstTableInteger) {
   ASSERT_EQ(entries[intLiteralIndex]->tag, ConstPool::Integer);
   auto &integer = *reinterpret_cast<const ConstPool::IntegerInfo *>(
       entries[intLiteralIndex].get());
+  static_assert(std::is_same<decltype(integer.bytes), int32_t>::value);
   EXPECT_EQ(integer.bytes, 32768);
 
   ASSERT_GT(entries.size(), intNameTypeIndex);
@@ -159,6 +172,7 @@ TEST(ClassReader, ConstTableLong) {
   EXPECT_EQ(entries[longLiteralIndex + 1], nullptr);
   auto &longLit = *reinterpret_cast<const ConstPool::LongInfo *>(
       entries[longLiteralIndex].get());
+  static_assert(std::is_same<decltype(longLit.bytes), int64_t>::value);
   EXPECT_EQ(longLit.bytes, 2);
 
   ASSERT_GT(entries.size(), longNameTypeIndex);
@@ -180,4 +194,65 @@ TEST(ClassReader, ConstTableLong) {
       *reinterpret_cast<const ConstPool::Utf8Info *>(entries[typeIndex].get());
   EXPECT_EQ(utf82.length, 1);
   EXPECT_EQ(utf82.bytes[0], 'J');
+}
+
+TEST(ClassReader, ConstTableDouble) {
+  ClassFileReader reader("Test.class");
+  auto fileOrError = reader.read();
+  ASSERT_EQ(fileOrError.second, std::string());
+  std::unique_ptr<ClassFile> classFile = std::move(fileOrError.first);
+  auto &entries = classFile->getConstPool().getEntries();
+
+  ASSERT_GT(entries.size(), doubleLiteralIndex);
+  ASSERT_EQ(entries[doubleLiteralIndex]->tag, ConstPool::Double);
+  auto &doub = *reinterpret_cast<const ConstPool::DoubleInfo *>(
+      entries[doubleLiteralIndex].get());
+
+  static_assert(std::is_same<decltype(doub.bytes), decimal64>::value);
+  EXPECT_EQ(doub.bytes, 2.0);
+}
+
+TEST(ClassReader, ConstTableFloat) {
+  ClassFileReader reader("Test.class");
+  auto fileOrError = reader.read();
+  ASSERT_EQ(fileOrError.second, std::string());
+  std::unique_ptr<ClassFile> classFile = std::move(fileOrError.first);
+  auto &entries = classFile->getConstPool().getEntries();
+
+  ASSERT_GT(entries.size(), floatLiteralIndex);
+  ASSERT_EQ(entries[floatLiteralIndex]->tag, ConstPool::Float);
+  auto &flo = *reinterpret_cast<const ConstPool::FloatInfo *>(
+      entries[floatLiteralIndex].get());
+
+  static_assert(std::is_same<decltype(flo.bytes), decimal32>::value);
+  EXPECT_EQ(flo.bytes, 4.0);
+}
+
+TEST(ClassReader, ConstTableFieldRef) {
+  ClassFileReader reader("Test.class");
+  auto fileOrError = reader.read();
+  ASSERT_EQ(fileOrError.second, std::string());
+  std::unique_ptr<ClassFile> classFile = std::move(fileOrError.first);
+  auto &entries = classFile->getConstPool().getEntries();
+
+  ASSERT_GT(entries.size(), intFieldRef);
+  ASSERT_EQ(entries[intFieldRef]->tag, ConstPool::Fieldref);
+  auto &fieldRef = *reinterpret_cast<const ConstPool::FieldrefInfo *>(
+      entries[intFieldRef].get());
+
+  int classIndex = fieldRef.classIndex;
+  ASSERT_GT(entries.size(), intFieldRef);
+  ASSERT_EQ(entries[classIndex]->tag, ConstPool::Class);
+  auto &classInfo = *reinterpret_cast<const ConstPool::ClassInfo *>(
+      entries[classIndex].get());
+  int nameIndex = classInfo.nameIndex;
+  auto &utf8 =
+      *reinterpret_cast<const ConstPool::Utf8Info *>(entries[nameIndex].get());
+  EXPECT_EQ(strlen("Test"), utf8.length);
+  EXPECT_FALSE(
+      strncmp(reinterpret_cast<const char *>(utf8.bytes), "Test", utf8.length));
+
+  int nameType = fieldRef.nameAndTypeIndex;
+  ASSERT_GT(entries.size(), nameType);
+  ASSERT_EQ(entries[nameType]->tag, ConstPool::NameAndType);
 }
