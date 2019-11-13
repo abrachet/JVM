@@ -48,6 +48,10 @@ constexpr int intFieldRef =
 #include "Test_IntFieldRefIndex.inc"
     ;
 
+constexpr int accessFlags =
+#include "Test_AccessFlag.inc"
+    ;
+
 using namespace Class;
 
 TEST(ClassReader, FindFiles) { ASSERT_NE(access("Test.class", 0), -1); }
@@ -255,4 +259,59 @@ TEST(ClassReader, ConstTableFieldRef) {
   int nameType = fieldRef.nameAndTypeIndex;
   ASSERT_GT(entries.size(), nameType);
   ASSERT_EQ(entries[nameType]->tag, ConstPool::NameAndType);
+}
+
+TEST(ClassReader, AccessFlags) {
+  ClassFileReader reader("Test.class");
+  auto fileOrError = reader.read();
+  ASSERT_EQ(fileOrError.second, std::string());
+  std::unique_ptr<ClassFile> classFile = std::move(fileOrError.first);
+
+  EXPECT_EQ(classFile->getAccessFlags(), accessFlags);
+}
+
+TEST(ClassReader, ThisClass) {
+  ClassFileReader reader("Test.class");
+  auto fileOrError = reader.read();
+  ASSERT_EQ(fileOrError.second, std::string());
+  std::unique_ptr<ClassFile> classFile = std::move(fileOrError.first);
+  auto &entries = classFile->getConstPool().getEntries();
+
+  int thisIndex = classFile->getThisClass();
+  ASSERT_GT(entries.size(), thisIndex);
+  ASSERT_EQ(entries[thisIndex]->tag, ConstPool::Class);
+  auto &classInfo =
+      *reinterpret_cast<const ConstPool::ClassInfo *>(entries[thisIndex].get());
+
+  int nameIndex = classInfo.nameIndex;
+  ASSERT_GT(entries.size(), nameIndex);
+  ASSERT_EQ(entries[nameIndex]->tag, ConstPool::Utf8);
+  auto &utf8 =
+      *reinterpret_cast<const ConstPool::Utf8Info *>(entries[nameIndex].get());
+  ASSERT_EQ(strlen("Test"), utf8.length);
+  EXPECT_FALSE(
+      strncmp(reinterpret_cast<const char *>(utf8.bytes), "Test", utf8.length));
+}
+
+TEST(ClassReader, SuperClass) {
+  ClassFileReader reader("Test.class");
+  auto fileOrError = reader.read();
+  ASSERT_EQ(fileOrError.second, std::string());
+  std::unique_ptr<ClassFile> classFile = std::move(fileOrError.first);
+  auto &entries = classFile->getConstPool().getEntries();
+
+  int superIndex = classFile->getSuperClass();
+  ASSERT_GT(entries.size(), superIndex);
+  ASSERT_EQ(entries[superIndex]->tag, ConstPool::Class);
+  auto &classInfo = *reinterpret_cast<const ConstPool::ClassInfo *>(
+      entries[superIndex].get());
+
+  int nameIndex = classInfo.nameIndex;
+  ASSERT_GT(entries.size(), nameIndex);
+  ASSERT_EQ(entries[nameIndex]->tag, ConstPool::Utf8);
+  auto &utf8 =
+      *reinterpret_cast<const ConstPool::Utf8Info *>(entries[nameIndex].get());
+  ASSERT_EQ(strlen("java/lang/Object"), utf8.length);
+  EXPECT_FALSE(strncmp(reinterpret_cast<const char *>(utf8.bytes),
+                       "java/lang/Object", utf8.length));
 }

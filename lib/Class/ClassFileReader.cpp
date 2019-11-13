@@ -17,6 +17,13 @@ ClassFileReader::ClassFileOrError ClassFileReader::read() {
   if (std::string s = readConstPool(*classFile); s != "")
     return {nullptr, s};
 
+  if (!reader->read(classFile->accessFlags))
+    return {nullptr, "reader error"};
+  if (!reader->read(classFile->thisClass))
+    return {nullptr, "reader error"};
+  if (!reader->read(classFile->superClass))
+    return {nullptr, "reader error"};
+
   return {std::move(classFile), std::string{}};
 }
 

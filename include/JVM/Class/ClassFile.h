@@ -132,6 +132,9 @@ class ClassFile {
 public:
   uint16_t getMinorVersion() const { return minorVersion; }
   uint16_t getMajorVersion() const { return majorVersion; }
+  uint16_t getAccessFlags() const { return accessFlags; }
+  uint16_t getThisClass() const { return thisClass; }
+  uint16_t getSuperClass() const { return superClass; }
   const Class::ConstPool &getConstPool() const { return constPool; }
 };
 
