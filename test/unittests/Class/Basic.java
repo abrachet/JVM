@@ -1,5 +1,5 @@
 
-class Test {
+class Basic {
   static String testString = "string literal";
   static int testInt = 32768;
   static long testLong = 2;

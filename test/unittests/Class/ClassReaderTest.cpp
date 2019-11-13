@@ -4,59 +4,14 @@
 #include <fstream>
 #include <unistd.h>
 
-constexpr int majorVersion =
-#include "Test_MajorVersion.inc"
-    ;
-
-constexpr int minorVersion =
-#include "Test_MinorVersion.inc"
-    ;
-
-constexpr int stringLiteralIndex =
-#include "Test_StringLiteralIndex.inc"
-    ;
-
-constexpr int stringNameTypeIndex =
-#include "Test_StringNameTypeIndex.inc"
-    ;
-
-constexpr int intLiteralIndex =
-#include "Test_IntegerLiteralIndex.inc"
-    ;
-
-constexpr int intNameTypeIndex =
-#include "Test_IntegerNameTypeIndex.inc"
-    ;
-
-constexpr int longLiteralIndex =
-#include "Test_LongLiteralIndex.inc"
-    ;
-
-constexpr int longNameTypeIndex =
-#include "Test_LongNameTypeIndex.inc"
-    ;
-
-constexpr int doubleLiteralIndex =
-#include "Test_DoubleLiteralIndex.inc"
-    ;
-
-constexpr int floatLiteralIndex =
-#include "Test_FloatLiteralIndex.inc"
-    ;
-
-constexpr int intFieldRef =
-#include "Test_IntFieldRefIndex.inc"
-    ;
-
-constexpr int accessFlags =
-#include "Test_AccessFlag.inc"
-    ;
+constexpr const char *filename = "Basic.class";
+#include "ClassReaderTest.h"
 
 using namespace Class;
 
-TEST(ClassReader, FindFiles) { ASSERT_NE(access("Test.class", 0), -1); }
-
-TEST(ClassReader, IncorrectMagic) {
+// Tests that the reader fails with a sensible warning when the class file
+// magic int is not as expected.
+TEST_F(ClassReader, IncorrectMagic) {
   std::ofstream s("incorrect");
   uint64_t notMagic = 0xCAFEBABF;
   s.write(reinterpret_cast<const char *>(&notMagic), 8);
@@ -83,20 +38,28 @@ TEST(ClassReader, IncorrectMagic) {
   }
 }
 
-TEST(ClassReader, ParseVersion) {
-  ClassFileReader reader("Test.class");
-  auto fileOrError = reader.read();
-  ASSERT_EQ(fileOrError.second, std::string());
-  std::unique_ptr<ClassFile> classFile = std::move(fileOrError.first);
+constexpr int majorVersion =
+#include "Test_MajorVersion.inc"
+    ;
+
+constexpr int minorVersion =
+#include "Test_MinorVersion.inc"
+    ;
+
+TEST_F(ClassReader, ParseVersion) {
   EXPECT_EQ(classFile->getMajorVersion(), majorVersion);
   EXPECT_EQ(classFile->getMinorVersion(), minorVersion);
 }
 
-TEST(ClassReader, ConstTableString) {
-  ClassFileReader reader("Test.class");
-  auto fileOrError = reader.read();
-  ASSERT_EQ(fileOrError.second, std::string());
-  std::unique_ptr<ClassFile> classFile = std::move(fileOrError.first);
+constexpr int stringLiteralIndex =
+#include "Test_StringLiteralIndex.inc"
+    ;
+
+constexpr int stringNameTypeIndex =
+#include "Test_StringNameTypeIndex.inc"
+    ;
+
+TEST_F(ClassReader, ConstTableString) {
   auto &entries = classFile->getConstPool().getEntries();
 
   ASSERT_GT(entries.size(), stringLiteralIndex + 1);
@@ -127,11 +90,17 @@ TEST(ClassReader, ConstTableString) {
   EXPECT_FALSE(diff);
 }
 
-TEST(ClassReader, ConstTableInteger) {
-  ClassFileReader reader("Test.class");
-  auto fileOrError = reader.read();
-  ASSERT_EQ(fileOrError.second, std::string());
-  std::unique_ptr<ClassFile> classFile = std::move(fileOrError.first);
+constexpr int intLiteralIndex =
+#include "Test_IntegerLiteralIndex.inc"
+    ;
+
+constexpr int intNameTypeIndex =
+#include "Test_IntegerNameTypeIndex.inc"
+    ;
+
+// Tests that the int in the const table is of the same value as expected in
+// Basic.java
+TEST_F(ClassReader, ConstTableInteger) {
   auto &entries = classFile->getConstPool().getEntries();
 
   ASSERT_GT(entries.size(), intLiteralIndex);
@@ -164,11 +133,15 @@ TEST(ClassReader, ConstTableInteger) {
   EXPECT_EQ(utf82.bytes[0], 'I');
 }
 
-TEST(ClassReader, ConstTableLong) {
-  ClassFileReader reader("Test.class");
-  auto fileOrError = reader.read();
-  ASSERT_EQ(fileOrError.second, std::string());
-  std::unique_ptr<ClassFile> classFile = std::move(fileOrError.first);
+constexpr int longLiteralIndex =
+#include "Test_LongLiteralIndex.inc"
+    ;
+
+constexpr int longNameTypeIndex =
+#include "Test_LongNameTypeIndex.inc"
+    ;
+
+TEST_F(ClassReader, ConstTableLong) {
   auto &entries = classFile->getConstPool().getEntries();
 
   ASSERT_GT(entries.size(), longLiteralIndex);
@@ -200,11 +173,11 @@ TEST(ClassReader, ConstTableLong) {
   EXPECT_EQ(utf82.bytes[0], 'J');
 }
 
-TEST(ClassReader, ConstTableDouble) {
-  ClassFileReader reader("Test.class");
-  auto fileOrError = reader.read();
-  ASSERT_EQ(fileOrError.second, std::string());
-  std::unique_ptr<ClassFile> classFile = std::move(fileOrError.first);
+constexpr int doubleLiteralIndex =
+#include "Test_DoubleLiteralIndex.inc"
+    ;
+
+TEST_F(ClassReader, ConstTableDouble) {
   auto &entries = classFile->getConstPool().getEntries();
 
   ASSERT_GT(entries.size(), doubleLiteralIndex);
@@ -216,11 +189,11 @@ TEST(ClassReader, ConstTableDouble) {
   EXPECT_EQ(doub.bytes, 2.0);
 }
 
-TEST(ClassReader, ConstTableFloat) {
-  ClassFileReader reader("Test.class");
-  auto fileOrError = reader.read();
-  ASSERT_EQ(fileOrError.second, std::string());
-  std::unique_ptr<ClassFile> classFile = std::move(fileOrError.first);
+constexpr int floatLiteralIndex =
+#include "Test_FloatLiteralIndex.inc"
+    ;
+
+TEST_F(ClassReader, ConstTableFloat) {
   auto &entries = classFile->getConstPool().getEntries();
 
   ASSERT_GT(entries.size(), floatLiteralIndex);
@@ -232,11 +205,11 @@ TEST(ClassReader, ConstTableFloat) {
   EXPECT_EQ(flo.bytes, 4.0);
 }
 
-TEST(ClassReader, ConstTableFieldRef) {
-  ClassFileReader reader("Test.class");
-  auto fileOrError = reader.read();
-  ASSERT_EQ(fileOrError.second, std::string());
-  std::unique_ptr<ClassFile> classFile = std::move(fileOrError.first);
+constexpr int intFieldRef =
+#include "Test_IntFieldRefIndex.inc"
+    ;
+
+TEST_F(ClassReader, ConstTableFieldRef) {
   auto &entries = classFile->getConstPool().getEntries();
 
   ASSERT_GT(entries.size(), intFieldRef);
@@ -252,29 +225,24 @@ TEST(ClassReader, ConstTableFieldRef) {
   int nameIndex = classInfo.nameIndex;
   auto &utf8 =
       *reinterpret_cast<const ConstPool::Utf8Info *>(entries[nameIndex].get());
-  EXPECT_EQ(strlen("Test"), utf8.length);
-  EXPECT_FALSE(
-      strncmp(reinterpret_cast<const char *>(utf8.bytes), "Test", utf8.length));
+  EXPECT_EQ(strlen("Basic"), utf8.length);
+  EXPECT_FALSE(strncmp(reinterpret_cast<const char *>(utf8.bytes), "Basic",
+                       utf8.length));
 
   int nameType = fieldRef.nameAndTypeIndex;
   ASSERT_GT(entries.size(), nameType);
   ASSERT_EQ(entries[nameType]->tag, ConstPool::NameAndType);
 }
 
-TEST(ClassReader, AccessFlags) {
-  ClassFileReader reader("Test.class");
-  auto fileOrError = reader.read();
-  ASSERT_EQ(fileOrError.second, std::string());
-  std::unique_ptr<ClassFile> classFile = std::move(fileOrError.first);
+constexpr int accessFlags =
+#include "Test_AccessFlags.inc"
+    ;
 
+TEST_F(ClassReader, AccessFlags) {
   EXPECT_EQ(classFile->getAccessFlags(), accessFlags);
 }
 
-TEST(ClassReader, ThisClass) {
-  ClassFileReader reader("Test.class");
-  auto fileOrError = reader.read();
-  ASSERT_EQ(fileOrError.second, std::string());
-  std::unique_ptr<ClassFile> classFile = std::move(fileOrError.first);
+TEST_F(ClassReader, ThisClass) {
   auto &entries = classFile->getConstPool().getEntries();
 
   int thisIndex = classFile->getThisClass();
@@ -288,16 +256,12 @@ TEST(ClassReader, ThisClass) {
   ASSERT_EQ(entries[nameIndex]->tag, ConstPool::Utf8);
   auto &utf8 =
       *reinterpret_cast<const ConstPool::Utf8Info *>(entries[nameIndex].get());
-  ASSERT_EQ(strlen("Test"), utf8.length);
-  EXPECT_FALSE(
-      strncmp(reinterpret_cast<const char *>(utf8.bytes), "Test", utf8.length));
+  ASSERT_EQ(strlen("Basic"), utf8.length);
+  EXPECT_FALSE(strncmp(reinterpret_cast<const char *>(utf8.bytes), "Basic",
+                       utf8.length));
 }
 
-TEST(ClassReader, SuperClass) {
-  ClassFileReader reader("Test.class");
-  auto fileOrError = reader.read();
-  ASSERT_EQ(fileOrError.second, std::string());
-  std::unique_ptr<ClassFile> classFile = std::move(fileOrError.first);
+TEST_F(ClassReader, SuperClass) {
   auto &entries = classFile->getConstPool().getEntries();
 
   int superIndex = classFile->getSuperClass();

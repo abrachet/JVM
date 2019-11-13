@@ -27,6 +27,12 @@ public:
 
   using ClassFileOrError = std::pair<std::unique_ptr<ClassFile>, std::string>;
 
+  std::unique_ptr<FileBuffer> takeFileBuffer() {
+    auto buffer = reader->takeFileBuffer();
+    reader = nullptr;
+    return buffer;
+  }
+
   ClassFileOrError read();
 };
 
