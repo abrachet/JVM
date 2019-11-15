@@ -24,6 +24,8 @@ ClassFileReader::ClassFileOrError ClassFileReader::read() {
   if (!reader->read(classFile->superClass))
     return {nullptr, "reader error"};
 
+  readInterfaces(*classFile);
+
   return {std::move(classFile), std::string{}};
 }
 
@@ -170,5 +172,19 @@ std::string ClassFileReader::readCPInvokeDyn(ClassFile &classFile) {
     return "reader error";
   classFile.constPool.entries.emplace_back(
       std::make_unique<decltype(invD)>(invD));
+  return "";
+}
+
+std::string ClassFileReader::readInterfaces(ClassFile &classFile) {
+  uint16_t numInterfaces;
+  if (!reader->read(numInterfaces))
+    return "reader error";
+  for (int i = 0; i < numInterfaces; i++) {
+    uint16_t interface;
+    if (!reader->read(interface))
+      return "reader erorr";
+    classFile.interfaces.push_back(interface);
+  }
+
   return "";
 }

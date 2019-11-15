@@ -40,5 +40,17 @@ execute_process(COMMAND sh -c "mkdir '${CMAKE_BINARY_DIR}/include' 2> /dev/null"
 set(INC_FILE_DIR "${CMAKE_BINARY_DIR}/include")
 include_directories("${INC_FILE_DIR}")
 
+execute_process(
+  COMMAND sh -c "javap -version | cut -f 1 -d ."
+  OUTPUT_VARIABLE JAVAP_VERSION
+)
+
+if(JAVAC LESS 13)
+  set(NO_EXTRA_JAVAP TRUE)
+  message("Not a new enough jdk version for javap needed for testing")
+else()
+  set(NO_EXTRA_JAVAP FALSE)
+endif()
+
 add_subdirectory(Class)
 add_subdirectory(Core)

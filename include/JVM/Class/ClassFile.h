@@ -14,7 +14,7 @@ class ClassFileReader;
 namespace Class {
 
 struct ConstPool;
-struct Interfaces;
+using Interfaces = std::vector<uint16_t>;
 struct Fields;
 struct Methods;
 struct Attributes;
@@ -130,7 +130,6 @@ private:
   friend class ::ClassFileReader;
 };
 
-struct Interfaces {};
 struct Fields {};
 struct Methods {};
 struct Attributes {};
@@ -162,6 +161,7 @@ public:
   uint16_t getThisClass() const { return thisClass; }
   uint16_t getSuperClass() const { return superClass; }
   const Class::ConstPool &getConstPool() const { return constPool; }
+  const Class::Interfaces &getInterfaces() const { return interfaces; }
 };
 
 #endif // JVM_CLASS_CLASSFILE_H
