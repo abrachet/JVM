@@ -4,6 +4,7 @@
 
 #include "JVM/Core/FileBuffer.h"
 #include "JVM/Core/decimal.h"
+#include <cassert>
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -31,9 +32,9 @@ struct ConstPool {
     Methodref = 10,
     InterfaceMethodref = 11,
     NameAndType = 12,
-    MethodHandle = 15,  // Not tested
-    MethodType = 16,    // Not tested
-    InvokeDynamic = 18, // Not tested
+    MethodHandle = 15,
+    MethodType = 16,
+    InvokeDynamic = 18,
 
     Last
   };
@@ -83,6 +84,31 @@ struct ConstPool {
         : ConstPoolBase(Utf8), length(length), bytes(bytes) {}
     uint16_t length;
     const uint8_t *bytes;
+  };
+
+  struct MethodHandleInfo : public ConstPoolBase {
+    MethodHandleInfo(uint8_t refKind = 1, uint16_t refInd = 0)
+        : ConstPoolBase(MethodHandle), referenceKind(refKind),
+          referenceIndex(refInd) {
+      assert(refKind < 10 && refKind > 0 && "Invalid range for reference kind");
+    }
+    uint8_t referenceKind;
+    uint16_t referenceIndex;
+  };
+
+  struct MethodTypeInfo : public ConstPoolBase {
+    MethodTypeInfo(uint16_t descInd = 0)
+        : ConstPoolBase(MethodType), descriptorIndex(descInd) {}
+    uint16_t descriptorIndex;
+  };
+
+  struct InvokeDynamicInfo : public ConstPoolBase {
+    InvokeDynamicInfo(uint16_t bsMethodIndex = 0, uint16_t nameTypeInd = 0)
+        : ConstPoolBase(InvokeDynamic), bootstrapMethodAttrIndex(bsMethodIndex),
+          nameAndTypeIndex(nameTypeInd) {}
+
+    uint16_t bootstrapMethodAttrIndex;
+    uint16_t nameAndTypeIndex;
   };
 
   using FieldrefInfo = RefInfo<Fieldref>;

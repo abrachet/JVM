@@ -1,6 +1,7 @@
 
 add_executable(class_test
-  ClassReaderTest.cpp
+  ClassReaderCPBasicTest.cpp
+  ClassReaderCPMethodsTest.cpp
 )
 
 target_link_libraries(class_test 
@@ -15,6 +16,8 @@ add_custom_command(
   POST_BUILD
     COMMAND javac "${CMAKE_CURRENT_SOURCE_DIR}/Basic.java" &&
     mv "${CMAKE_CURRENT_SOURCE_DIR}/Basic.class" "$<TARGET_FILE_DIR:class_test>/Basic.class"
+    COMMAND javac "${CMAKE_CURRENT_SOURCE_DIR}/InvD.java" &&
+    mv "${CMAKE_CURRENT_SOURCE_DIR}/InvD.class" "$<TARGET_FILE_DIR:class_test>/InvD.class"
 )
 
 execute_process(
@@ -54,6 +57,30 @@ execute_process(
   rm -f '${CMAKE_CURRENT_SOURCE_DIR}/Basic.class' 'Basic.diss'"
 )
 
+execute_process(
+  COMMAND sh -c "javac '${CMAKE_CURRENT_SOURCE_DIR}/InvD.java' &&
+  javap -c -v '${CMAKE_CURRENT_SOURCE_DIR}/InvD.class' > InvD.diss &&
+
+  cat InvD.diss | tr -s ' ' | grep '= InvokeDynamic' | awk '{print $1}' |
+    cut -b 2- > '${INC_FILE_DIR}/InvD_InvokeDynamicIndex.inc' &&
+  cat InvD.diss | tr -s ' ' | grep '= InvokeDynamic' | awk '{print $4}' |
+    cut -f 1 -d : | cut -b 2- > '${INC_FILE_DIR}/InvD_InvDBSMethod.inc' &&
+  cat InvD.diss | tr -s ' ' | grep '= InvokeDynamic' | awk '{print $4}' |
+    cut -f 2 -d : | cut -b 2- > '${INC_FILE_DIR}/InvD_InvDNameTypeIndex.inc' &&
+
+  cat InvD.diss | grep '= Methodref' | awk 'NR==1{print $1}' |
+    cut -b 2- > '${INC_FILE_DIR}/InvD_FirstMethodRefIndex.inc' &&
+  cat InvD.diss | grep '= InterfaceMethodref' | awk 'NR==1{print $1}' |
+    cut -b 2- > '${INC_FILE_DIR}/InvD_FirstInterfaceMethodrefIndex.inc' &&
+  cat InvD.diss | grep '= MethodHandle' | awk 'NR==1{print $1}' |
+    cut -b 2- > '${INC_FILE_DIR}/InvD_FirstMethodHandleIndex.inc' &&
+  cat InvD.diss | grep '= MethodType' | awk 'NR==1{print $1}' |
+    cut -b 2- > '${INC_FILE_DIR}/InvD_FirstMethodTypeIndex.inc' &&
+
+  rm -f '${CMAKE_CURRENT_SOURCE_DIR}/InvD.class' InvD.diss"
+)
+
+
 if(VERBOSE)
   execute_process(
     COMMAND sh -c "javac '${CMAKE_CURRENT_SOURCE_DIR}/Basic.java' &&
@@ -61,6 +88,5 @@ if(VERBOSE)
       rm '${CMAKE_CURRENT_SOURCE_DIR}/Basic.class'"
   )
 endif()
-
 
 add_test(NAME class_test COMMAND class_test)

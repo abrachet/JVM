@@ -4,8 +4,10 @@
 #include <fstream>
 #include <unistd.h>
 
-constexpr const char *filename = "Basic.class";
 #include "ClassReaderTest.h"
+class ClassReader : public ClassReaderBase {
+  const char *getFilename() const override { return "Basic.class"; }
+};
 
 using namespace Class;
 

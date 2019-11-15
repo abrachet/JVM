@@ -20,6 +20,11 @@ class ClassFileReader {
   std::string readCPString(ClassFile &);
   template <Class::ConstPool::Type CpType> std::string readCPRef(ClassFile &);
   std::string readCPNameType(ClassFile &);
+  std::string readCPMethodHandle(ClassFile &);
+  std::string readCPMethodType(ClassFile &);
+  std::string readCPInvokeDyn(ClassFile &);
+
+  std::string readInterfaces(ClassFile &);
 
 public:
   ClassFileReader(std::string_view filename)

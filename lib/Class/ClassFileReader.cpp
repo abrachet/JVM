@@ -49,7 +49,9 @@ std::string ClassFileReader::readConstPool(ClassFile &classFile) {
       [ConstPool::InterfaceMethodref] =
           &ClassFileReader::readCPRef<ConstPool::InterfaceMethodref>,
       [ConstPool::NameAndType] = &ClassFileReader::readCPNameType,
-  };
+      [ConstPool::MethodHandle] = &ClassFileReader::readCPMethodHandle,
+      [ConstPool::MethodType] = &ClassFileReader::readCPMethodType,
+      [ConstPool::InvokeDynamic] = &ClassFileReader::readCPInvokeDyn};
 
   uint16_t count;
   if (!reader->read(count))
@@ -137,5 +139,36 @@ std::string ClassFileReader::readCPNameType(ClassFile &classFile) {
     return "reader error";
   classFile.constPool.entries.emplace_back(
       std::make_unique<decltype(nameType)>(nameType));
+  return "";
+}
+
+std::string ClassFileReader::readCPMethodHandle(ClassFile &classFile) {
+  ConstPool::MethodHandleInfo method;
+  if (!reader->read(method.referenceKind))
+    return "reader error";
+  if (!reader->read(method.referenceIndex))
+    return "reader error";
+  classFile.constPool.entries.emplace_back(
+      std::make_unique<decltype(method)>(method));
+  return "";
+}
+
+std::string ClassFileReader::readCPMethodType(ClassFile &classFile) {
+  ConstPool::MethodTypeInfo method;
+  if (!reader->read(method.descriptorIndex))
+    return "reader error";
+  classFile.constPool.entries.emplace_back(
+      std::make_unique<decltype(method)>(method));
+  return "";
+}
+
+std::string ClassFileReader::readCPInvokeDyn(ClassFile &classFile) {
+  ConstPool::InvokeDynamicInfo invD;
+  if (!reader->read(invD.bootstrapMethodAttrIndex))
+    return "reader error";
+  if (!reader->read(invD.nameAndTypeIndex))
+    return "reader error";
+  classFile.constPool.entries.emplace_back(
+      std::make_unique<decltype(invD)>(invD));
   return "";
 }
