@@ -15,9 +15,12 @@ namespace Class {
 
 struct ConstPool;
 using Interfaces = std::vector<uint16_t>;
-struct Fields;
-struct Methods;
-struct Attributes;
+struct Field;
+using Fields = std::vector<Field>;
+struct Attribute;
+using Attributes = std::vector<Attribute>;
+struct Method;
+using Methods = std::vector<Method>;
 
 struct ConstPool {
   enum Type : uint8_t {
@@ -130,9 +133,35 @@ private:
   friend class ::ClassFileReader;
 };
 
-struct Fields {};
-struct Methods {};
-struct Attributes {};
+struct Field {
+  enum AccessFlags : uint16_t {
+    Public = 0x1,
+    Private = 0x2,
+    Protected = 0x4,
+    Static = 0x8,
+    Final = 0x10,
+    Volatile = 0x40,
+    Transient = 0x80,
+    Synthetic = 0x1000,
+    Enum = 0x4000
+  };
+
+  uint16_t accessFlags;
+  uint16_t nameIndex;
+  uint16_t descriptorIndex;
+  Attributes attributes;
+};
+
+struct Attribute {
+  uint16_t attributeNameIndex;
+  uint32_t attributeLength;
+  const void *mem;
+
+  Attribute(uint16_t nameIndex = 0, uint32_t len = 0, const void *mem = nullptr)
+      : attributeNameIndex(nameIndex), attributeLength(len), mem(mem) {}
+};
+
+struct Method {};
 
 } // namespace Class
 
@@ -149,7 +178,7 @@ class ClassFile {
   Class::ConstPool constPool;
   Class::Interfaces interfaces;
   Class::Fields fields;
-  Class::Methods methods;
+  Class::Method methods;
   Class::Attributes attributes;
 
   std::unique_ptr<FileBuffer> underlyingFile;
@@ -162,6 +191,7 @@ public:
   uint16_t getSuperClass() const { return superClass; }
   const Class::ConstPool &getConstPool() const { return constPool; }
   const Class::Interfaces &getInterfaces() const { return interfaces; }
+  const Class::Fields &getFields() const { return fields; }
 };
 
 #endif // JVM_CLASS_CLASSFILE_H

@@ -26,6 +26,10 @@ class ClassFileReader {
 
   std::string readInterfaces(ClassFile &);
 
+  std::string readFields(ClassFile &);
+
+  std::string readAttributes(Class::Attributes &);
+
 public:
   ClassFileReader(std::string_view filename)
       : reader(FileReader<true>::create(filename)) {}

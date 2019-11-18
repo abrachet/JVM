@@ -2,6 +2,7 @@
 add_executable(class_test
   ClassReaderCPBasicTest.cpp
   ClassReaderCPMethodsTest.cpp
+  ClassReaderFieldsTest.cpp
 )
 
 target_link_libraries(class_test 

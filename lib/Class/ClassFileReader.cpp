@@ -24,7 +24,11 @@ ClassFileReader::ClassFileOrError ClassFileReader::read() {
   if (!reader->read(classFile->superClass))
     return {nullptr, "reader error"};
 
-  readInterfaces(*classFile);
+  if (std::string s = readInterfaces(*classFile); s != "")
+    return {nullptr, s};
+
+  if (std::string s = readFields(*classFile); s != "")
+    return {nullptr, s};
 
   return {std::move(classFile), std::string{}};
 }
@@ -179,12 +183,53 @@ std::string ClassFileReader::readInterfaces(ClassFile &classFile) {
   uint16_t numInterfaces;
   if (!reader->read(numInterfaces))
     return "reader error";
+  classFile.interfaces.resize(numInterfaces);
+  for (auto &interface : classFile.interfaces) {
+    if (!reader->read(interface))
+      return "reader error";
+  }
+#if 0
   for (int i = 0; i < numInterfaces; i++) {
     uint16_t interface;
     if (!reader->read(interface))
       return "reader erorr";
     classFile.interfaces.push_back(interface);
   }
+#endif
+  return "";
+}
 
+std::string ClassFileReader::readFields(ClassFile &classFile) {
+  uint16_t numFields;
+  if (!reader->read(numFields))
+    return "reader error";
+  classFile.fields.resize(numFields);
+  for (auto &field : classFile.fields) {
+    if (!reader->read(field.accessFlags))
+      return "reader error";
+    if (!reader->read(field.nameIndex))
+      return "reader error";
+    if (!reader->read(field.descriptorIndex))
+      return "reader error";
+    if (std::string s = readAttributes(field.attributes); s != "")
+      return s;
+  }
+  return "";
+}
+
+std::string ClassFileReader::readAttributes(Class::Attributes &attributes) {
+  assert(!attributes.size() && "Expected attributes have a length of 0");
+  uint16_t numAttributes;
+  if (!reader->read(numAttributes))
+    return "reader error";
+  attributes.resize(numAttributes);
+  for (auto &attr : attributes) {
+    if (!reader->read(attr.attributeNameIndex))
+      return "reader error";
+    if (!reader->read(attr.attributeLength))
+      return "reader error";
+    attr.mem = reader->data() + reader->getPos();
+    reader->seek(reader->getPos() + attr.attributeLength);
+  }
   return "";
 }
