@@ -12,6 +12,16 @@ target_link_libraries(class_test
   Core
 )
 
+execute_process(
+  COMMAND javap -version
+  OUTPUT_VARIABLE JAVAP_VERSION
+)
+
+
+if (JAVAP_VERSION MATCHES "1.8")
+  set(OLD_JDK TRUE)
+endif()
+
 add_custom_command(
   TARGET class_test
   POST_BUILD
@@ -51,15 +61,34 @@ execute_process(
   cat 'Basic.diss' | tr -s ' ' | grep -i '// Basic.testInt' |
     awk '{print $1}' | cut -b 2- > '${INC_FILE_DIR}/Test_IntFieldRefIndex.inc' &&
 
-  cat 'Basic.diss' | grep 'flags:' |
-  awk 'NR==1{acc=$3; if (acc == \"ACC_PUBLIC\") print \"0x0001\"; else if (acc == \"ACC_FINAL\") print \"0x0010\";
-      else if (acc == \"ACC_SUPER\") print \"0x0020\"; else if (acc == \"ACC_INTERFACE\") print \"0x0200\";
-      else if (acc == \"ACC_ABSTRACT\") print \"0x0400\"; else if (acc == \"ACC_SYNTHETIC\") print \"0x1000\";
-      else if (acc == \"ACC_ANNOTATION\") print \"0x2000\"; else if (acc == \"ACC_ENUM\") print \"0x4000\";
-      else exit 1}' > '${INC_FILE_DIR}/Test_AccessFlags.inc' ;
 
   rm -f '${CMAKE_CURRENT_SOURCE_DIR}/Basic.class' 'Basic.diss'"
 )
+
+## TODO: 
+if(OLD_JDK)
+  execute_process(
+    COMMAND sh -c "javac '${CMAKE_CURRENT_SOURCE_DIR}/Basic.java' &&
+    javap -c -v '${CMAKE_CURRENT_SOURCE_DIR}/Basic.class' | grep 'flags:' |
+      awk 'NR==1{acc=$2; if (acc == \"ACC_PUBLIC\") print \"0x0001\"; else if (acc == \"ACC_FINAL\") print \"0x0010\";
+      else if (acc == \"ACC_SUPER\") print \"0x0020\"; else if (acc == \"ACC_INTERFACE\") print \"0x0200\";
+      else if (acc == \"ACC_ABSTRACT\") print \"0x0400\"; else if (acc == \"ACC_SYNTHETIC\") print \"0x1000\";
+      else if (acc == \"ACC_ANNOTATION\") print \"0x2000\"; else if (acc == \"ACC_ENUM\") print \"0x4000\";
+      else exit 1}' > '${INC_FILE_DIR}/Test_AccessFlags.inc' &&
+    rm -rf '${CMAKE_CURRENT_SOURCE_DIR}/Basic.class'"
+  )
+else()
+  execute_process(
+    COMMAND sh -c "javac '${CMAKE_CURRENT_SOURCE_DIR}/Basic.java' &&
+    javap -c -v '${CMAKE_CURRENT_SOURCE_DIR}/Basic.class' | grep 'flags:' |
+      awk 'NR==1{acc=$3; if (acc == \"ACC_PUBLIC\") print \"0x0001\"; else if (acc == \"ACC_FINAL\") print \"0x0010\";
+      else if (acc == \"ACC_SUPER\") print \"0x0020\"; else if (acc == \"ACC_INTERFACE\") print \"0x0200\";
+      else if (acc == \"ACC_ABSTRACT\") print \"0x0400\"; else if (acc == \"ACC_SYNTHETIC\") print \"0x1000\";
+      else if (acc == \"ACC_ANNOTATION\") print \"0x2000\"; else if (acc == \"ACC_ENUM\") print \"0x4000\";
+      else exit 1}' > '${INC_FILE_DIR}/Test_AccessFlags.inc' &&
+    rm -rf '${CMAKE_CURRENT_SOURCE_DIR}/Basic.class'"
+  )
+endif()
 
 execute_process(
   COMMAND sh -c "javac '${CMAKE_CURRENT_SOURCE_DIR}/InvD.java' &&
@@ -84,7 +113,11 @@ execute_process(
   rm -f '${CMAKE_CURRENT_SOURCE_DIR}/InvD.class' InvD.diss"
 )
 
-if (NOT NO_EXTRA_JAVAP)
+if (OLD_JDK)
+  execute_process(
+    COMMAND sh -c "echo '-1' > '${INC_FILE_DIR}/Interface_NumInterface.inc'"
+  )
+elseif (NOT NO_EXTRA_JAVAP)
   target_sources(class_test PUBLIC ClassReaderInterfaceTest.cpp)
   execute_process(
     COMMAND sh -c "javac '${CMAKE_CURRENT_SOURCE_DIR}/Interface.java' &&
@@ -96,9 +129,7 @@ if (NOT NO_EXTRA_JAVAP)
     rm -f '${CMAKE_CURRENT_SOURCE_DIR}/Interface.class' '${CMAKE_CURRENT_SOURCE_DIR}/C.class'
     rm -f C.diss Interface.diss"
   )
-
 endif()
-
 
 if(VERBOSE)
   execute_process(

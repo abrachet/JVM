@@ -9,7 +9,7 @@ FileBuffer::~FileBuffer() {
     munmap(buf, len + 1);
 }
 
-std::unique_ptr<FileBuffer> FileBuffer::create(std::string_view filename) {
+std::unique_ptr<FileBuffer> FileBuffer::create(const std::string& filename) {
   int fd = open(filename.data(), O_RDWR);
   if (fd == -1)
     return nullptr;

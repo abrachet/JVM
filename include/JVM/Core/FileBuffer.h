@@ -4,7 +4,7 @@
 
 #include <cstddef>
 #include <memory>
-#include <string_view>
+#include <string>
 
 class FileBuffer {
   int fd = -1;
@@ -16,7 +16,7 @@ class FileBuffer {
 public:
   ~FileBuffer();
 
-  static std::unique_ptr<FileBuffer> create(std::string_view filename);
+  static std::unique_ptr<FileBuffer> create(const std::string& filename);
 
   operator const char *() const { return buf; }
   operator char *() { return buf; }

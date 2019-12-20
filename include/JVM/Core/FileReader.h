@@ -6,7 +6,7 @@
 #include <climits>
 #include <cstddef>
 #include <memory>
-#include <string_view>
+#include <string>
 #include <type_traits>
 #include "FileBuffer.h"
 
@@ -58,7 +58,7 @@ class FileReader {
   }
 
  public:
-  static std::unique_ptr<FileReader> create(std::string_view filename) {
+  static std::unique_ptr<FileReader> create(const std::string& filename) {
     auto reader = std::make_unique<FileReader>();
     reader->buf = FileBuffer::create(filename);
     return reader;

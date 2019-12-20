@@ -29,5 +29,6 @@ constexpr int numInterfaces =
     ;
 
 TEST_F(ClassReaderImplements, Basic) {
-  EXPECT_EQ(classFile->getInterfaces().size(), numInterfaces);
+  if (numInterfaces != -1)
+    EXPECT_EQ(classFile->getInterfaces().size(), numInterfaces);
 }
