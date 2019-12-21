@@ -30,8 +30,11 @@ class ClassFileReader {
 
   std::string readAttributes(Class::Attributes &);
 
+  std::string readMethod(Class::Method &);
+  std::string readMethods(ClassFile &);
+
 public:
-  ClassFileReader(const std::string& filename)
+  ClassFileReader(const std::string &filename)
       : reader(FileReader<true>::create(filename)) {}
 
   using ClassFileOrError = std::pair<std::unique_ptr<ClassFile>, std::string>;

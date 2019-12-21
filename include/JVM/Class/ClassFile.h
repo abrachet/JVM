@@ -161,7 +161,28 @@ struct Attribute {
       : attributeNameIndex(nameIndex), attributeLength(len), mem(mem) {}
 };
 
-struct Method {};
+struct Method {
+  enum AccessFlags : uint16_t {
+    Public = 0x0001,
+    Private = 0x0002,
+    Protected = 0x0004,
+    Static = 0x0008,
+    Final = 0x0010,
+    Synchronized = 0x0020,
+    Bridge = 0x0040,
+    Varargs = 0x0080,
+    Native = 0x0100,
+    Abstract = 0x0400,
+    Strict = 0x0800,
+    Synthetic = 0x1000
+  };
+
+  uint16_t accessFlags;
+  uint16_t nameIndex;
+  uint16_t descriptorIndex;
+  uint16_t attributeCount;
+  std::vector<Attribute> attributes;
+};
 
 } // namespace Class
 
@@ -178,7 +199,7 @@ class ClassFile {
   Class::ConstPool constPool;
   Class::Interfaces interfaces;
   Class::Fields fields;
-  Class::Method methods;
+  Class::Methods methods;
   Class::Attributes attributes;
 
   std::unique_ptr<FileBuffer> underlyingFile;
@@ -192,6 +213,7 @@ public:
   const Class::ConstPool &getConstPool() const { return constPool; }
   const Class::Interfaces &getInterfaces() const { return interfaces; }
   const Class::Fields &getFields() const { return fields; }
+  const Class::Methods &getMethods() const { return methods; }
 };
 
 #endif // JVM_CLASS_CLASSFILE_H

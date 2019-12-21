@@ -3,6 +3,8 @@ add_executable(class_test
   ClassReaderCPBasicTest.cpp
   ClassReaderCPMethodsTest.cpp
   ClassReaderFieldsTest.cpp
+  ClassReaderInterfaceTest.cpp
+  ClassReaderMethodsTest.cpp
 )
 
 target_link_libraries(class_test 
@@ -32,6 +34,8 @@ add_custom_command(
     COMMAND javac "${CMAKE_CURRENT_SOURCE_DIR}/Interface.java" &&
     mv "${CMAKE_CURRENT_SOURCE_DIR}/Interface.class" "$<TARGET_FILE_DIR:class_test>/Interface.class" &&
     mv "${CMAKE_CURRENT_SOURCE_DIR}/C.class" "$<TARGET_FILE_DIR:class_test>/C.class"
+    COMMAND javac "${CMAKE_CURRENT_SOURCE_DIR}/Methods.java" &&
+    mv "${CMAKE_CURRENT_SOURCE_DIR}/Methods.class" "$<TARGET_FILE_DIR:class_test>/Methods.class"
 )
 
 execute_process(
@@ -138,5 +142,9 @@ if(VERBOSE)
       rm '${CMAKE_CURRENT_SOURCE_DIR}/Basic.class'"
   )
 endif()
+
+execute_process(
+  COMMAND javac "${CMAKE_CURRENT_SOURCE_DIR}/Methods.java"
+)
 
 add_test(NAME class_test COMMAND class_test)

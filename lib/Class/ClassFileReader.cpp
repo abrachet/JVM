@@ -30,6 +30,9 @@ ClassFileReader::ClassFileOrError ClassFileReader::read() {
   if (std::string s = readFields(*classFile); s != "")
     return {nullptr, s};
 
+  if (std::string s = readMethods(*classFile); s != "")
+    return {nullptr, s};
+
   return {std::move(classFile), std::string{}};
 }
 
@@ -188,14 +191,6 @@ std::string ClassFileReader::readInterfaces(ClassFile &classFile) {
     if (!reader->read(interface))
       return "reader error";
   }
-#if 0
-  for (int i = 0; i < numInterfaces; i++) {
-    uint16_t interface;
-    if (!reader->read(interface))
-      return "reader erorr";
-    classFile.interfaces.push_back(interface);
-  }
-#endif
   return "";
 }
 
@@ -218,7 +213,7 @@ std::string ClassFileReader::readFields(ClassFile &classFile) {
 }
 
 std::string ClassFileReader::readAttributes(Class::Attributes &attributes) {
-  assert(!attributes.size() && "Expected attributes have a length of 0");
+  assert(!attributes.size() && "Expected attributes to have a length of 0");
   uint16_t numAttributes;
   if (!reader->read(numAttributes))
     return "reader error";
@@ -231,5 +226,31 @@ std::string ClassFileReader::readAttributes(Class::Attributes &attributes) {
     attr.mem = reader->data() + reader->getPos();
     reader->seek(reader->getPos() + attr.attributeLength);
   }
+  return "";
+}
+
+std::string ClassFileReader::readMethod(Class::Method &method) {
+  if (!reader->read(method.accessFlags))
+    return "reader error";
+  if (!reader->read(method.nameIndex))
+    return "reader error";
+  if (!reader->read(method.descriptorIndex))
+    return "reader error";
+  if (std::string s = readAttributes(method.attributes); s != "")
+    return s;
+  method.attributeCount = method.attributes.size();
+  return "";
+}
+
+std::string ClassFileReader::readMethods(ClassFile &classFile) {
+  auto &methods = classFile.methods;
+  assert(!methods.size() && "Expected methods to have a length of 0");
+  uint16_t numMethods;
+  if (!reader->read(numMethods))
+    return "reader error";
+  methods.resize(numMethods);
+  for (Class::Method &m : methods)
+    if (std::string s = readMethod(m); s != "")
+      return s;
   return "";
 }
