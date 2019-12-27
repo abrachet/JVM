@@ -1,0 +1,12 @@
+
+#if __has_include(<string_view>)
+  #include <string_view>
+#else
+  #if !__has_include(<experimental/string_view>)
+    #error "no string_view header"
+  #endif
+  #include <experimental/string_view>
+  namespace std {
+    using string_view = experimental::string_view;
+  }
+#endif
