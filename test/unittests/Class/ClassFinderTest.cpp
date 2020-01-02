@@ -15,7 +15,9 @@ TEST(ClassFinder, RegisterFromJar) {
     goto removeEntries;
   if (::open("entry3", O_CREAT, 0666) == -1)
     goto removeEntries;
-  exitCode = std::system("jar cvf Test.jar entry1 entry2 entry3 #> /dev/null");
+  // Use zip(1) instead of jar(1) because jar creates some extra files in the
+  // archive.
+  exitCode = std::system("zip Test.jar entry1 entry2 entry3 > /dev/null");
   if (exitCode == -1)
     goto cleanup;
 
@@ -24,7 +26,6 @@ TEST(ClassFinder, RegisterFromJar) {
   err = registerFromJar("Test.jar", [&entries](std::string entry) {
     entries.push_back(std::move(entry));
   });
-  std::cout << err;
   ASSERT_TRUE(err.empty()) << err;
 
   ASSERT_EQ(entries.size(), 3);
@@ -40,7 +41,6 @@ removeEntries:
   (void)::remove("entry3");
 }
 
-#if 1
 TEST(ClassFinder, FindRTJar) {
   if (::mkdir("jre", 0644))
     return;
@@ -60,4 +60,16 @@ TEST(ClassFinder, FindRTJar) {
   ASSERT_TRUE(err.empty());
   ASSERT_EQ(path, std::string(std::getenv("PWD")) + "/jre/lib/rt.jar");
 }
-#endif
+
+TEST(ClassFinder, FindClassLocation) {
+  EXPECT_NE(::open("Test.class", O_CREAT, 0644), -1);
+  ClassLocation loc = findClassLocation("Test.class", {"."});
+  EXPECT_EQ(loc.type, ClassLocation::File);
+  EXPECT_EQ(loc.className, std::string("Test.class"));
+  EXPECT_EQ(loc.path, std::string("./Test.class"));
+
+  loc = findClassLocation("No exist", {"."});
+  EXPECT_EQ(loc.type, ClassLocation::NoExist);
+  EXPECT_EQ(loc.className, std::string());
+  EXPECT_EQ(loc.path, std::string());
+}
