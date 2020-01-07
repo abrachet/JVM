@@ -9,13 +9,15 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
 class ClassLoader {
   using LockType = std::pair<std::condition_variable, std::mutex>;
 
-  class Class {
+public:
+  struct Class {
     enum State {
       Erroneous = 0,
       VerifiedExistence,
@@ -24,19 +26,22 @@ class ClassLoader {
       Initialized, // <clinit> ran
     };
 
-    std::string fullClassName;
-
-    State state;
-    ClassLocation location; // Only meanignful when state is VerifiedExistence.
+    State state = Erroneous;
+    ClassLocation location;
     std::unique_ptr<ClassFile> loadedClass;
   };
 
-public:
+  // shared_ptr end's up being much more ergonomic than unique_ptr, or returning
+  // a reference to a 'std::pair<LockType, Class>'.
+  using LoadedClass = std::pair<LockType, Class>;
+
   static std::vector<std::string> classPath;
 
-  using LoadedClass = std::unique_ptr<std::pair<LockType, Class>>;
-  using LoadedClassOrErr = std::pair<LoadedClass, std::string>;
+  using LoadedClassOrErr = std::pair<LoadedClass &, std::string>;
   static LoadedClassOrErr loadClass(const std::string_view fullClassName);
+
+private:
+  static std::unordered_map<std::string, LoadedClass> loadedClasses;
 };
 
 #endif // JVM_CLASS_CLASSLOADER_H
