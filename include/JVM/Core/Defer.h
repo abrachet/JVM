@@ -12,7 +12,7 @@ template <typename Callable> struct ScopedExit {
   ~ScopedExit() { c(); }
 };
 
-template <typename Callable> auto defer(Callable &&callable) {
+template <typename Callable>[[nodiscard]] auto defer(Callable &&callable) {
   return ScopedExit<typename std::decay<Callable>::type>(
       std::forward<Callable>(callable));
 }

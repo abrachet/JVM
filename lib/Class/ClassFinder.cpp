@@ -1,5 +1,6 @@
 
 #include "JVM/Class/ClassFinder.h"
+#include "JVM/Core/Defer.h"
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
@@ -70,16 +71,15 @@ static bool endsWith(const std::string &str, std::string_view search) {
 static bool jarContainsFile(std::string_view jarPath,
                             std::string_view className) {
   std::string str(jarPath);
-  auto [zip, _] = openZip(str);
+  zip_t *zip = openZip(str).first;
   if (!zip)
     return false;
-
+  auto _ = defer([zip] { zip_close(zip); });
   auto *ptr = zip_fopen(zip, className.data(), ZIP_FL_UNCHANGED);
   if (!ptr)
     return false;
 
   (void)::zip_fclose(ptr);
-  (void)::zip_close(zip);
   return true;
 }
 
@@ -111,40 +111,30 @@ ClassLocation findClassLocation(std::string className,
 std::unique_ptr<FileBuffer> ZipFileBuffer::create(std::string_view zipFile,
                                                   std::string_view entry) {
   assert(!entry.data()[entry.size()] && "must be c-string");
-  auto [zip, _] = openZip(zipFile.data());
+  zip_t *zip = openZip(zipFile.data()).first;
   if (!zip)
     return nullptr;
-
+  auto closeZip = defer([zip] { zip_close(zip); });
   zip_stat_t sb;
   zip_stat_init(&sb);
-  if (zip_stat(zip, entry.data(), 0, &sb) == -1 ||
-      !(sb.valid & ZIP_STAT_SIZE)) {
-    // TODO: Create a defer class to call functions on return, this is annoying.
-    zip_close(zip);
+  if (zip_stat(zip, entry.data(), 0, &sb) == -1 || !(sb.valid & ZIP_STAT_SIZE))
     return nullptr;
-  }
+
   std::unique_ptr<ZipFileBuffer> ptr(new ZipFileBuffer);
   ptr->fileSize = sb.size;
   void *mapping = mmap(nullptr, sb.size + 1, PROT_READ | PROT_WRITE,
                        MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-  if (mapping == MAP_FAILED) {
-    zip_close(zip);
+  if (mapping == MAP_FAILED)
     return nullptr;
-  }
   ptr->mappedFile = reinterpret_cast<char *>(mapping);
 
   zip_file_t *file = zip_fopen(zip, entry.data(), 0);
-  if (!file) {
-    zip_close(zip);
+  if (!file)
     return nullptr;
-  }
-  if (zip_fread(file, mapping, sb.size) != sb.size) {
-    (void)zip_fclose(file);
-    (void)zip_close(zip);
+  auto closeFile = defer([file] { zip_fclose(file); });
+  if (zip_fread(file, mapping, sb.size) != sb.size)
     return nullptr;
-  }
-  (void)zip_fclose(file);
-  (void)zip_close(zip);
+
   return ptr;
 }
 
