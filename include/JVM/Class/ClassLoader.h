@@ -1,4 +1,7 @@
 
+#ifndef JVM_CLASS_CLASSLOADER_H
+#define JVM_CLASS_CLASSLOADER_H
+
 #include "JVM/Class/ClassFile.h"
 #include "JVM/Class/ClassFinder.h"
 #include "JVM/string_view"
@@ -35,3 +38,5 @@ public:
   using LoadedClassOrErr = std::pair<LoadedClass, std::string>;
   static LoadedClassOrErr loadClass(const std::string_view fullClassName);
 };
+
+#endif // JVM_CLASS_CLASSLOADER_H
