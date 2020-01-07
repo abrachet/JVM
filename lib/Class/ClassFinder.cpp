@@ -87,18 +87,20 @@ static bool jarContainsFile(std::string_view jarPath,
 // and look a the respective magic of a zip file and class file.
 ClassLocation findClassLocation(std::string className,
                                 const std::vector<std::string> &classPath) {
+  assert(!endsWith(className, ".class") && "Invalid className");
+  std::string classFilePath = className + ".class";
   for (const std::string &str : classPath) {
 #ifdef JVM_CLASSFILE_CLASSPATH_EXTENSION
     if (endsWith(str, ".class") && endsWith(str, className + ".class"))
       return {std::move(className), str};
 #endif
-    if (endsWith(str, ".jar") && jarContainsFile(str, className))
+    if (endsWith(str, ".jar") && jarContainsFile(str, classFilePath))
       return {std::move(className), str, ClassLocation::InJar};
 
     std::string path = str;
     if (path.back() != '/')
       path += '/';
-    path += className;
+    path += classFilePath;
     if (!::access(path.c_str(), F_OK))
       return {std::move(className), std::move(path)};
   }

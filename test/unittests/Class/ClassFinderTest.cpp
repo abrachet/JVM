@@ -63,9 +63,9 @@ TEST(ClassFinder, FindRTJar) {
 
 TEST(ClassFinder, FindClassLocation) {
   EXPECT_NE(::open("Test.class", O_CREAT, 0644), -1);
-  ClassLocation loc = findClassLocation("Test.class", {"."});
+  ClassLocation loc = findClassLocation("Test", {"."});
   EXPECT_EQ(loc.type, ClassLocation::File);
-  EXPECT_EQ(loc.className, std::string("Test.class"));
+  EXPECT_EQ(loc.className, std::string("Test"));
   EXPECT_EQ(loc.path, std::string("./Test.class"));
 
   loc = findClassLocation("No exist", {"."});
