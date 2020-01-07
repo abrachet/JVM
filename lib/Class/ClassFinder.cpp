@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+#include <sys/mman.h>
 #include <unistd.h>
 #include <zip.h>
 
@@ -77,11 +78,10 @@ static bool jarContainsFile(std::string_view jarPath,
   if (!ptr)
     return false;
 
+  (void)::zip_fclose(ptr);
   (void)::zip_close(zip);
   return true;
 }
-
-#include <iostream>
 
 // TODO: don't rely on file names stat the file to see if its a directory
 // and look a the respective magic of a zip file and class file.
@@ -106,4 +106,49 @@ ClassLocation findClassLocation(std::string className,
   }
 
   return {};
+}
+
+std::unique_ptr<FileBuffer> ZipFileBuffer::create(std::string_view zipFile,
+                                                  std::string_view entry) {
+  assert(!entry.data()[entry.size()] && "must be c-string");
+  auto [zip, _] = openZip(zipFile.data());
+  if (!zip)
+    return nullptr;
+
+  zip_stat_t sb;
+  zip_stat_init(&sb);
+  if (zip_stat(zip, entry.data(), 0, &sb) == -1 ||
+      !(sb.valid & ZIP_STAT_SIZE)) {
+    // TODO: Create a defer class to call functions on return, this is annoying.
+    zip_close(zip);
+    return nullptr;
+  }
+  std::unique_ptr<ZipFileBuffer> ptr(new ZipFileBuffer);
+  ptr->fileSize = sb.size;
+  void *mapping = mmap(nullptr, sb.size + 1, PROT_READ | PROT_WRITE,
+                       MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  if (mapping == MAP_FAILED) {
+    zip_close(zip);
+    return nullptr;
+  }
+  ptr->mappedFile = reinterpret_cast<char *>(mapping);
+
+  zip_file_t *file = zip_fopen(zip, entry.data(), 0);
+  if (!file) {
+    zip_close(zip);
+    return nullptr;
+  }
+  if (zip_fread(file, mapping, sb.size) != sb.size) {
+    (void)zip_fclose(file);
+    (void)zip_close(zip);
+    return nullptr;
+  }
+  (void)zip_fclose(file);
+  (void)zip_close(zip);
+  return ptr;
+}
+
+ZipFileBuffer::~ZipFileBuffer() {
+  if (mappedFile)
+    munmap((void *)mappedFile, fileSize);
 }
