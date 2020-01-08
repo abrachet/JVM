@@ -33,6 +33,8 @@ ClassFileReader::ClassFileOrError ClassFileReader::read() {
   if (std::string s = readMethods(*classFile); s != "")
     return {nullptr, s};
 
+  classFile->underlyingFile = reader->takeFileBuffer();
+
   return {std::move(classFile), std::string{}};
 }
 

@@ -2,7 +2,9 @@
 #ifndef JVM_CLASS_CLASSFINDER_H
 #define JVM_CLASS_CLASSFINDER_H
 
+#include "JVM/Core/FileBuffer.h"
 #include "JVM/string_view"
+#include <cassert>
 #include <functional>
 #include <string>
 #include <vector>
@@ -18,6 +20,22 @@ struct ClassLocation {
   ClassLocation(std::string className, std::string path,
                 LocationType type = File)
       : className(className), path(path), type(type) {}
+};
+
+class ZipFileBuffer : public FileBuffer {
+  size_t fileSize;
+  char *mappedFile;
+
+  ZipFileBuffer() {}
+
+public:
+  static std::unique_ptr<FileBuffer> create(std::string_view zipFile,
+                                            std::string_view entry);
+  ~ZipFileBuffer() override;
+
+  operator const char *() const override { return mappedFile; }
+  operator char *() override { return mappedFile; }
+  size_t size() const override { return fileSize; }
 };
 
 std::string findRTJar(std::string &path);

@@ -2,6 +2,7 @@
 add_library(Class
     ClassFileReader.cpp
     ClassFinder.cpp
+    ClassLoader.cpp
 )
 
 find_library(ZIP zip)

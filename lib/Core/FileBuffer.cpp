@@ -4,7 +4,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 
-FileBuffer::~FileBuffer() {
+MMappedFileBuffer::~MMappedFileBuffer() {
   if (fd != -1 && buf != MAP_FAILED)
     munmap(buf, len + 1);
 }
@@ -23,5 +23,5 @@ std::unique_ptr<FileBuffer> FileBuffer::create(const std::string& filename) {
   madvise(mapping, sb.st_size + 1, MADV_SEQUENTIAL);
   // Can't use make_unique with private ctor.
   return std::unique_ptr<FileBuffer>(
-      new FileBuffer(fd, sb.st_size, static_cast<char*>(mapping)));
+      new MMappedFileBuffer(fd, sb.st_size, static_cast<char*>(mapping)));
 }

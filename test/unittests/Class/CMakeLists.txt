@@ -1,6 +1,7 @@
 
 add_executable(class_test
   ClassFinderTest.cpp
+  ClassLoaderTest.cpp
   ClassReaderCPBasicTest.cpp
   ClassReaderCPMethodsTest.cpp
   ClassReaderFieldsTest.cpp

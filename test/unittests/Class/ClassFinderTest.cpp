@@ -2,6 +2,7 @@
 #include "JVM/Class/ClassFinder.h"
 #include "gtest/gtest.h"
 #include <cstdlib>
+#include <fstream>
 
 #include <fcntl.h>
 
@@ -63,13 +64,32 @@ TEST(ClassFinder, FindRTJar) {
 
 TEST(ClassFinder, FindClassLocation) {
   EXPECT_NE(::open("Test.class", O_CREAT, 0644), -1);
-  ClassLocation loc = findClassLocation("Test.class", {"."});
+  ClassLocation loc = findClassLocation("Test", {"."});
   EXPECT_EQ(loc.type, ClassLocation::File);
-  EXPECT_EQ(loc.className, std::string("Test.class"));
+  EXPECT_EQ(loc.className, std::string("Test"));
   EXPECT_EQ(loc.path, std::string("./Test.class"));
 
   loc = findClassLocation("No exist", {"."});
   EXPECT_EQ(loc.type, ClassLocation::NoExist);
   EXPECT_EQ(loc.className, std::string());
   EXPECT_EQ(loc.path, std::string());
+}
+
+TEST(ClassFinder, ZipFileBuffer) {
+  std::ofstream s("file");
+  s << "Hello";
+  s.put(0);
+  s.close();
+  std::unique_ptr<FileBuffer> buff;
+
+  if (std::system("zip Test.zip file > /dev/null"))
+    goto cleanup;
+
+  buff = ZipFileBuffer::create("Test.zip", "file");
+  ASSERT_TRUE(buff);
+
+  ASSERT_STREQ((const char *)*buff, "Hello");
+
+cleanup:
+  (void)::remove("file");
 }

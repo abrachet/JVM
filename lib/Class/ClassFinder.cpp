@@ -1,9 +1,11 @@
 
 #include "JVM/Class/ClassFinder.h"
+#include "JVM/Core/Defer.h"
 #include <cassert>
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
+#include <sys/mman.h>
 #include <unistd.h>
 #include <zip.h>
 
@@ -70,39 +72,74 @@ static bool endsWith(const std::string &str, std::string_view search) {
 static bool jarContainsFile(std::string_view jarPath,
                             std::string_view className) {
   std::string str(jarPath);
-  auto [zip, _] = openZip(str);
+  zip_t *zip = openZip(str).first;
   if (!zip)
     return false;
-
+  auto _ = defer([zip] { zip_close(zip); });
   auto *ptr = zip_fopen(zip, className.data(), ZIP_FL_UNCHANGED);
   if (!ptr)
     return false;
 
-  (void)::zip_close(zip);
+  (void)::zip_fclose(ptr);
   return true;
 }
-
-#include <iostream>
 
 // TODO: don't rely on file names stat the file to see if its a directory
 // and look a the respective magic of a zip file and class file.
 ClassLocation findClassLocation(std::string className,
                                 const std::vector<std::string> &classPath) {
+  assert(!endsWith(className, ".class") && "Invalid className");
+  std::string classFilePath = className + ".class";
   for (const std::string &str : classPath) {
 #ifdef JVM_CLASSFILE_CLASSPATH_EXTENSION
     if (endsWith(str, ".class") && endsWith(str, className + ".class"))
       return {std::move(className), str};
 #endif
-    if (endsWith(str, ".jar") && jarContainsFile(str, className))
+    if (endsWith(str, ".jar") && jarContainsFile(str, classFilePath))
       return {std::move(className), str, ClassLocation::InJar};
 
     std::string path = str;
     if (path.back() != '/')
       path += '/';
-    path += className;
+    path += classFilePath;
     if (!::access(path.c_str(), F_OK))
       return {std::move(className), std::move(path)};
   }
 
   return {};
+}
+
+std::unique_ptr<FileBuffer> ZipFileBuffer::create(std::string_view zipFile,
+                                                  std::string_view entry) {
+  assert(!entry.data()[entry.size()] && "must be c-string");
+  zip_t *zip = openZip(zipFile.data()).first;
+  if (!zip)
+    return nullptr;
+  auto closeZip = defer([zip] { zip_close(zip); });
+  zip_stat_t sb;
+  zip_stat_init(&sb);
+  if (zip_stat(zip, entry.data(), 0, &sb) == -1 || !(sb.valid & ZIP_STAT_SIZE))
+    return nullptr;
+
+  std::unique_ptr<ZipFileBuffer> ptr(new ZipFileBuffer);
+  ptr->fileSize = sb.size;
+  void *mapping = mmap(nullptr, sb.size + 1, PROT_READ | PROT_WRITE,
+                       MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  if (mapping == MAP_FAILED)
+    return nullptr;
+  ptr->mappedFile = reinterpret_cast<char *>(mapping);
+
+  zip_file_t *file = zip_fopen(zip, entry.data(), 0);
+  if (!file)
+    return nullptr;
+  auto closeFile = defer([file] { zip_fclose(file); });
+  if (zip_fread(file, mapping, sb.size) != sb.size)
+    return nullptr;
+
+  return ptr;
+}
+
+ZipFileBuffer::~ZipFileBuffer() {
+  if (mappedFile)
+    munmap((void *)mappedFile, fileSize);
 }

@@ -37,6 +37,9 @@ public:
   ClassFileReader(const std::string &filename)
       : reader(FileReader<true>::create(filename)) {}
 
+  ClassFileReader(std::unique_ptr<FileBuffer> fileBuffer)
+      : reader(FileReader<true>::create(std::move(fileBuffer))) {}
+
   using ClassFileOrError = std::pair<std::unique_ptr<ClassFile>, std::string>;
 
   std::unique_ptr<FileBuffer> takeFileBuffer() {
