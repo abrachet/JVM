@@ -4,4 +4,7 @@ add_library(Class
     ClassFinder.cpp
 )
 
-target_link_libraries(Class zip)
+find_library(ZIP zip)
+# TODO: Find zip.h better.
+include_directories("/usr/local/include")
+target_link_libraries(Class ${ZIP})

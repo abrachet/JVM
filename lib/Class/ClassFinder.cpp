@@ -1,6 +1,7 @@
 
 #include "JVM/Class/ClassFinder.h"
 #include <cassert>
+#include <cerrno>
 #include <cstdlib>
 #include <cstring>
 #include <unistd.h>
