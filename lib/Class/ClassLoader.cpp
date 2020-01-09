@@ -28,7 +28,7 @@ static ClassFileReader::ClassFileOrError readClass(const ClassLocation &loc) {
 
 std::string ClassLoader::loadSuperClasses(ClassLoader::Class &clazz) {
   auto &constPool = clazz.loadedClass->getConstPool();
-  auto loadClassFromPool = [&constPool](uint64_t index) -> std::string {
+  auto loadClassFromPool = [&](uint64_t index) -> std::string {
     if (index == 0)
       return {};
     if (constPool.getEntries()[index]->tag != ::Class::ConstPool::Class)
@@ -38,8 +38,9 @@ std::string ClassLoader::loadSuperClasses(ClassLoader::Class &clazz) {
         constPool.get<::Class::ConstPool::ClassInfo>(index);
     const auto &name =
         constPool.get<::Class::ConstPool::Utf8Info>(superClass.nameIndex);
-    auto [_, err] = loadClass({reinterpret_cast<const char *>(name.bytes),
-                               static_cast<size_t>(name.length)});
+    auto [ref, err] = loadClass({reinterpret_cast<const char *>(name.bytes),
+                                 static_cast<size_t>(name.length)});
+    clazz.superClasses.emplace_back(ref);
     return err;
   };
 

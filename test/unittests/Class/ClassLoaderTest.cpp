@@ -41,4 +41,5 @@ TEST(Loader, LoadSuper) {
   ASSERT_TRUE(err.empty()) << err;
   auto state = ClassLoader::findClassState("java/lang/Object");
   EXPECT_EQ(state, ClassLoader::Class::Loaded);
+  EXPECT_EQ(loadedClass.second.superClasses.size(), 1);
 }
