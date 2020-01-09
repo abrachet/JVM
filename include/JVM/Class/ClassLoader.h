@@ -50,7 +50,10 @@ public:
     return Class::State::Unknown;
   }
 
+  static int numLoadedClasses() { return loadedClasses.size(); }
+
 private:
+  static std::mutex loadedClassesGuard;
   static std::unordered_map<std::string, LoadedClass> loadedClasses;
 
   static std::string loadSuperClasses(Class &);

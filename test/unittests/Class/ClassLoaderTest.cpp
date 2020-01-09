@@ -3,7 +3,9 @@
 #include "JVM/Class/ClassFinder.h"
 #include "gtest/gtest.h"
 
+#include <array>
 #include <fcntl.h>
+#include <thread>
 
 TEST(Loader, NoExist) {
   auto [loadedClass, err] = ClassLoader::loadClass("No exist");
@@ -58,4 +60,22 @@ TEST(Loader, LoadInterfaces) {
   state = ClassLoader::findClassState("Interface");
   EXPECT_EQ(state, ClassLoader::Class::Loaded);
   EXPECT_EQ(loadedClass.second.superClasses.size(), 2);
+}
+
+TEST(Loader, LoadMultiThread) {
+  if (ClassLoader::classPath.size() < 2) {
+    std::string rtJar;
+    ASSERT_FALSE(findRTJar(rtJar).size());
+    ASSERT_TRUE(rtJar.size());
+    ClassLoader::classPath.push_back(rtJar);
+  }
+  auto [_, err] = ClassLoader::loadClass("java/lang/Object");
+  ASSERT_TRUE(err.empty()) << err;
+  int prevSize = ClassLoader::numLoadedClasses();
+  std::array<std::thread, 4> threads;
+  for (int i = 0; i < threads.size(); i++)
+    threads[i] = std::thread([] { ClassLoader::loadClass("Methods"); });
+  for (auto &thread : threads)
+    thread.join();
+  EXPECT_EQ(ClassLoader::numLoadedClasses(), prevSize + 1);
 }

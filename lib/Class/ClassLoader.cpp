@@ -2,11 +2,13 @@
 #include "JVM/Class/ClassLoader.h"
 #include "JVM/Class/ClassFileReader.h"
 #include "JVM/Class/ClassFinder.h"
+#include "JVM/Core/Defer.h"
 #include <string>
 
 using namespace std::string_literals;
 
 std::vector<std::string> ClassLoader::classPath = {"."};
+std::mutex ClassLoader::loadedClassesGuard;
 std::unordered_map<std::string, ClassLoader::LoadedClass>
     ClassLoader::loadedClasses;
 
@@ -55,21 +57,32 @@ std::string ClassLoader::loadSuperClasses(ClassLoader::Class &clazz) {
 
 ClassLoader::LoadedClassOrErr
 ClassLoader::loadClass(const std::string_view fullClassName) {
+  // TODO: Make class that can hold reference or error, this is just dumb.
   static ClassLoader::LoadedClass nullLoadedClass;
 
   std::string className(fullClassName.data(), fullClassName.size());
   auto it = loadedClasses.find(className);
-  if (it != loadedClasses.end())
+  if (it != loadedClasses.end()) {
+    auto &[lock, lClass] = it->second;
+    auto &cv = lock.first;
+    auto &mtx = lock.second;
+    std::scoped_lock l(mtx);
+    auto _ = defer([&cv] { cv.notify_one(); });
     return {it->second, {}};
+  }
 
   ClassLocation loc = findClassLocation(className, classPath);
   if (loc.type == ClassLocation::NoExist)
     return {nullLoadedClass, "Class '"s + className + "' does not exist."};
 
+  loadedClassesGuard.lock();
   auto &loadedClass = loadedClasses[className];
-  auto &[lock, lClass] = loadedClass;
-
-  // TODO: Need to aquire lock here.
+  auto &lock = loadedClass.first;
+  auto &mtx = lock.second;
+  std::scoped_lock l(mtx);
+  loadedClassesGuard.unlock();
+  auto &lClass = loadedClass.second;
+  auto &cv = lock.first;
 
   auto [classFile, err] = readClass(loc);
   if (err.size()) {
@@ -85,5 +98,11 @@ ClassLoader::loadClass(const std::string_view fullClassName) {
 
   lClass.state = Class::Loaded;
 end:
+  auto _ = defer([&cv, &lClass] {
+    if (lClass.state == Class::Erroneous)
+      cv.notify_all();
+    else
+      cv.notify_one();
+  });
   return {loadedClass, {}};
 }
