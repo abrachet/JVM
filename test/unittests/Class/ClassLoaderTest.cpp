@@ -43,3 +43,19 @@ TEST(Loader, LoadSuper) {
   EXPECT_EQ(state, ClassLoader::Class::Loaded);
   EXPECT_EQ(loadedClass.second.superClasses.size(), 1);
 }
+
+TEST(Loader, LoadInterfaces) {
+  if (ClassLoader::classPath.size() < 2) {
+    std::string rtJar;
+    ASSERT_FALSE(findRTJar(rtJar).size());
+    ASSERT_TRUE(rtJar.size());
+    ClassLoader::classPath.push_back(rtJar);
+  }
+  auto [loadedClass, err] = ClassLoader::loadClass("C");
+  ASSERT_TRUE(err.empty()) << err;
+  auto state = ClassLoader::findClassState("java/lang/Object");
+  EXPECT_EQ(state, ClassLoader::Class::Loaded);
+  state = ClassLoader::findClassState("Interface");
+  EXPECT_EQ(state, ClassLoader::Class::Loaded);
+  EXPECT_EQ(loadedClass.second.superClasses.size(), 2);
+}
