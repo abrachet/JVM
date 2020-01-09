@@ -10,6 +10,7 @@ class ClassReader : public ClassReaderBase {
 };
 
 using namespace Class;
+using namespace std::string_literals;
 
 // Tests that the reader fails with a sensible warning when the class file
 // magic int is not as expected.
@@ -62,34 +63,18 @@ constexpr int stringNameTypeIndex =
     ;
 
 TEST_F(ClassReader, ConstTableString) {
-  auto &entries = classFile->getConstPool().getEntries();
+  auto &constPool = classFile->getConstPool();
 
-  ASSERT_GT(entries.size(), stringLiteralIndex + 1);
-  ASSERT_EQ(entries[stringLiteralIndex]->tag, ConstPool::Utf8);
-  auto &utf8 = *reinterpret_cast<const ConstPool::Utf8Info *>(
-      entries[stringLiteralIndex].get());
-  ASSERT_EQ(strlen("string literal"), utf8.length);
-  int diff = strncmp(reinterpret_cast<const char *>(utf8.bytes),
-                     "string literal", utf8.length);
-  EXPECT_FALSE(diff);
+  auto &utf8 = constPool.get<ConstPool::Utf8Info>(stringLiteralIndex);
+  EXPECT_EQ("string literal"s, std::string(utf8));
 
-  ASSERT_EQ(entries[stringNameTypeIndex]->tag, ConstPool::NameAndType);
-  auto &nameType = *reinterpret_cast<const ConstPool::NameAndTypeInfo *>(
-      entries[stringNameTypeIndex].get());
-  ASSERT_EQ(entries[nameType.nameIndex]->tag, ConstPool::Utf8);
-  auto &utf82 = *reinterpret_cast<const ConstPool::Utf8Info *>(
-      entries[nameType.nameIndex].get());
-  ASSERT_EQ(strlen("testString"), utf82.length);
-  diff = strncmp(reinterpret_cast<const char *>(utf82.bytes), "testString",
-                 utf82.length);
-  EXPECT_FALSE(diff);
-  ASSERT_EQ(entries[nameType.descriptorIndex]->tag, ConstPool::Utf8);
-  auto &utf83 = *reinterpret_cast<const ConstPool::Utf8Info *>(
-      entries[nameType.descriptorIndex].get());
-  ASSERT_EQ(strlen("Ljava/lang/String;"), utf83.length);
-  diff = strncmp(reinterpret_cast<const char *>(utf83.bytes),
-                 "Ljava/lang/String;", utf83.length);
-  EXPECT_FALSE(diff);
+  auto &nameType =
+      constPool.get<ConstPool::NameAndTypeInfo>(stringNameTypeIndex);
+  auto &utf82 = constPool.get<ConstPool::Utf8Info>(nameType.nameIndex);
+  EXPECT_EQ("testString"s, std::string(utf82));
+
+  auto utf83 = constPool.get<ConstPool::Utf8Info>(nameType.descriptorIndex);
+  EXPECT_EQ("Ljava/lang/String;"s, std::string(utf83));
 }
 
 constexpr int intLiteralIndex =
@@ -103,36 +88,18 @@ constexpr int intNameTypeIndex =
 // Tests that the int in the const table is of the same value as expected in
 // Basic.java
 TEST_F(ClassReader, ConstTableInteger) {
-  auto &entries = classFile->getConstPool().getEntries();
+  auto &constPool = classFile->getConstPool();
 
-  ASSERT_GT(entries.size(), intLiteralIndex);
-  ASSERT_EQ(entries[intLiteralIndex]->tag, ConstPool::Integer);
-  auto &integer = *reinterpret_cast<const ConstPool::IntegerInfo *>(
-      entries[intLiteralIndex].get());
-  static_assert(std::is_same<decltype(integer.bytes), int32_t>::value);
+  auto &integer = constPool.get<ConstPool::IntegerInfo>(intLiteralIndex);
   EXPECT_EQ(integer.bytes, 32768);
+  static_assert(std::is_same<decltype(integer.bytes), int32_t>::value);
 
-  ASSERT_GT(entries.size(), intNameTypeIndex);
-  ASSERT_EQ(entries[intNameTypeIndex]->tag, ConstPool::NameAndType);
-  auto &nameType = *reinterpret_cast<const ConstPool::NameAndTypeInfo *>(
-      entries[intNameTypeIndex].get());
-  int nameIndex = nameType.nameIndex;
-  ASSERT_GT(entries.size(), nameIndex);
-  ASSERT_EQ(entries[nameIndex]->tag, ConstPool::Utf8);
-  auto &utf8 =
-      *reinterpret_cast<const ConstPool::Utf8Info *>(entries[nameIndex].get());
-  EXPECT_EQ(strlen("testInt"), utf8.length);
-  int diff = strncmp(reinterpret_cast<const char *>(utf8.bytes), "testInt",
-                     utf8.length);
-  EXPECT_FALSE(diff);
+  auto &nameType = constPool.get<ConstPool::NameAndTypeInfo>(intNameTypeIndex);
+  auto &utf8 = constPool.get<ConstPool::Utf8Info>(nameType.nameIndex);
+  EXPECT_EQ("testInt"s, std::string(utf8));
 
-  int typeIndex = nameType.descriptorIndex;
-  ASSERT_GT(entries.size(), typeIndex);
-  ASSERT_EQ(entries[typeIndex]->tag, ConstPool::Utf8);
-  auto &utf82 =
-      *reinterpret_cast<const ConstPool::Utf8Info *>(entries[typeIndex].get());
-  EXPECT_EQ(utf82.length, 1);
-  EXPECT_EQ(utf82.bytes[0], 'I');
+  auto &utf82 = constPool.get<ConstPool::Utf8Info>(nameType.descriptorIndex);
+  EXPECT_EQ("I"s, std::string(utf82));
 }
 
 constexpr int longLiteralIndex =
@@ -144,35 +111,18 @@ constexpr int longNameTypeIndex =
     ;
 
 TEST_F(ClassReader, ConstTableLong) {
-  auto &entries = classFile->getConstPool().getEntries();
+  auto &constPool = classFile->getConstPool();
 
-  ASSERT_GT(entries.size(), longLiteralIndex);
-  ASSERT_EQ(entries[longLiteralIndex]->tag, ConstPool::Long);
-  EXPECT_EQ(entries[longLiteralIndex + 1], nullptr);
-  auto &longLit = *reinterpret_cast<const ConstPool::LongInfo *>(
-      entries[longLiteralIndex].get());
+  auto &longLit = constPool.get<ConstPool::LongInfo>(longLiteralIndex);
   static_assert(std::is_same<decltype(longLit.bytes), int64_t>::value);
   EXPECT_EQ(longLit.bytes, 2);
 
-  ASSERT_GT(entries.size(), longNameTypeIndex);
-  ASSERT_EQ(entries[longNameTypeIndex]->tag, ConstPool::NameAndType);
-  auto &nameType = *reinterpret_cast<const ConstPool::NameAndTypeInfo *>(
-      entries[longNameTypeIndex].get());
-  int nameIndex = nameType.nameIndex;
-  ASSERT_EQ(entries[nameIndex]->tag, ConstPool::Utf8);
-  auto &utf8 =
-      *reinterpret_cast<const ConstPool::Utf8Info *>(entries[nameIndex].get());
-  ASSERT_EQ(strlen("testLong"), utf8.length);
-  EXPECT_FALSE(strncmp(reinterpret_cast<const char *>(utf8.bytes), "testLong",
-                       utf8.length));
+  auto &nameType = constPool.get<ConstPool::NameAndTypeInfo>(longNameTypeIndex);
+  auto &utf8 = constPool.get<ConstPool::Utf8Info>(nameType.nameIndex);
+  EXPECT_EQ("testLong"s, std::string(utf8));
 
-  int typeIndex = nameType.descriptorIndex;
-  ASSERT_GT(entries.size(), typeIndex);
-  ASSERT_EQ(entries[typeIndex]->tag, ConstPool::Utf8);
-  auto &utf82 =
-      *reinterpret_cast<const ConstPool::Utf8Info *>(entries[typeIndex].get());
-  EXPECT_EQ(utf82.length, 1);
-  EXPECT_EQ(utf82.bytes[0], 'J');
+  auto &utf82 = constPool.get<ConstPool::Utf8Info>(nameType.descriptorIndex);
+  EXPECT_EQ("J"s, std::string(utf82));
 }
 
 constexpr int doubleLiteralIndex =
@@ -180,13 +130,9 @@ constexpr int doubleLiteralIndex =
     ;
 
 TEST_F(ClassReader, ConstTableDouble) {
-  auto &entries = classFile->getConstPool().getEntries();
+  auto &constPool = classFile->getConstPool();
 
-  ASSERT_GT(entries.size(), doubleLiteralIndex);
-  ASSERT_EQ(entries[doubleLiteralIndex]->tag, ConstPool::Double);
-  auto &doub = *reinterpret_cast<const ConstPool::DoubleInfo *>(
-      entries[doubleLiteralIndex].get());
-
+  auto &doub = constPool.get<ConstPool::DoubleInfo>(doubleLiteralIndex);
   static_assert(std::is_same<decltype(doub.bytes), decimal64>::value);
   EXPECT_EQ(doub.bytes, 2.0);
 }
@@ -196,13 +142,9 @@ constexpr int floatLiteralIndex =
     ;
 
 TEST_F(ClassReader, ConstTableFloat) {
-  auto &entries = classFile->getConstPool().getEntries();
+  auto &constPool = classFile->getConstPool();
 
-  ASSERT_GT(entries.size(), floatLiteralIndex);
-  ASSERT_EQ(entries[floatLiteralIndex]->tag, ConstPool::Float);
-  auto &flo = *reinterpret_cast<const ConstPool::FloatInfo *>(
-      entries[floatLiteralIndex].get());
-
+  auto &flo = constPool.get<ConstPool::FloatInfo>(floatLiteralIndex);
   static_assert(std::is_same<decltype(flo.bytes), decimal32>::value);
   EXPECT_EQ(flo.bytes, 4.0);
 }
@@ -212,28 +154,17 @@ constexpr int intFieldRef =
     ;
 
 TEST_F(ClassReader, ConstTableFieldRef) {
-  auto &entries = classFile->getConstPool().getEntries();
+  auto &constPool = classFile->getConstPool();
 
-  ASSERT_GT(entries.size(), intFieldRef);
-  ASSERT_EQ(entries[intFieldRef]->tag, ConstPool::Fieldref);
-  auto &fieldRef = *reinterpret_cast<const ConstPool::FieldrefInfo *>(
-      entries[intFieldRef].get());
+  auto &fieldRef = constPool.get<ConstPool::FieldrefInfo>(intFieldRef);
+  auto &classInfo = constPool.get<ConstPool::ClassInfo>(fieldRef.classIndex);
+  auto &utf8 = constPool.get<ConstPool::Utf8Info>(classInfo.nameIndex);
+  EXPECT_EQ("Basic"s, std::string(utf8));
 
-  int classIndex = fieldRef.classIndex;
-  ASSERT_GT(entries.size(), intFieldRef);
-  ASSERT_EQ(entries[classIndex]->tag, ConstPool::Class);
-  auto &classInfo = *reinterpret_cast<const ConstPool::ClassInfo *>(
-      entries[classIndex].get());
-  int nameIndex = classInfo.nameIndex;
-  auto &utf8 =
-      *reinterpret_cast<const ConstPool::Utf8Info *>(entries[nameIndex].get());
-  EXPECT_EQ(strlen("Basic"), utf8.length);
-  EXPECT_FALSE(strncmp(reinterpret_cast<const char *>(utf8.bytes), "Basic",
-                       utf8.length));
-
-  int nameType = fieldRef.nameAndTypeIndex;
-  ASSERT_GT(entries.size(), nameType);
-  ASSERT_EQ(entries[nameType]->tag, ConstPool::NameAndType);
+  auto &nameType =
+      constPool.get<ConstPool::NameAndTypeInfo>(fieldRef.nameAndTypeIndex);
+  auto &utf82 = constPool.get<ConstPool::Utf8Info>(nameType.nameIndex);
+  EXPECT_EQ("testInt"s, std::string(utf82));
 }
 
 constexpr int accessFlags =
@@ -245,39 +176,19 @@ TEST_F(ClassReader, AccessFlags) {
 }
 
 TEST_F(ClassReader, ThisClass) {
-  auto &entries = classFile->getConstPool().getEntries();
+  auto &constPool = classFile->getConstPool();
 
-  int thisIndex = classFile->getThisClass();
-  ASSERT_GT(entries.size(), thisIndex);
-  ASSERT_EQ(entries[thisIndex]->tag, ConstPool::Class);
   auto &classInfo =
-      *reinterpret_cast<const ConstPool::ClassInfo *>(entries[thisIndex].get());
-
-  int nameIndex = classInfo.nameIndex;
-  ASSERT_GT(entries.size(), nameIndex);
-  ASSERT_EQ(entries[nameIndex]->tag, ConstPool::Utf8);
-  auto &utf8 =
-      *reinterpret_cast<const ConstPool::Utf8Info *>(entries[nameIndex].get());
-  ASSERT_EQ(strlen("Basic"), utf8.length);
-  EXPECT_FALSE(strncmp(reinterpret_cast<const char *>(utf8.bytes), "Basic",
-                       utf8.length));
+      constPool.get<ConstPool::ClassInfo>(classFile->getThisClass());
+  auto &utf8 = constPool.get<ConstPool::Utf8Info>(classInfo.nameIndex);
+  EXPECT_EQ("Basic"s, std::string(utf8));
 }
 
 TEST_F(ClassReader, SuperClass) {
-  auto &entries = classFile->getConstPool().getEntries();
+  auto &constPool = classFile->getConstPool();
 
-  int superIndex = classFile->getSuperClass();
-  ASSERT_GT(entries.size(), superIndex);
-  ASSERT_EQ(entries[superIndex]->tag, ConstPool::Class);
-  auto &classInfo = *reinterpret_cast<const ConstPool::ClassInfo *>(
-      entries[superIndex].get());
-
-  int nameIndex = classInfo.nameIndex;
-  ASSERT_GT(entries.size(), nameIndex);
-  ASSERT_EQ(entries[nameIndex]->tag, ConstPool::Utf8);
-  auto &utf8 =
-      *reinterpret_cast<const ConstPool::Utf8Info *>(entries[nameIndex].get());
-  ASSERT_EQ(strlen("java/lang/Object"), utf8.length);
-  EXPECT_FALSE(strncmp(reinterpret_cast<const char *>(utf8.bytes),
-                       "java/lang/Object", utf8.length));
+  auto &classInfo =
+      constPool.get<ConstPool::ClassInfo>(classFile->getSuperClass());
+  auto &utf8 = constPool.get<ConstPool::Utf8Info>(classInfo.nameIndex);
+  EXPECT_EQ("java/lang/Object"s, std::string(utf8));
 }

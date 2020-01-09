@@ -7,6 +7,7 @@
 #include <cassert>
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <vector>
 
 class ClassFileReader;
@@ -93,6 +94,10 @@ struct ConstPool {
     static constexpr Type type = Utf8;
     uint16_t length;
     const uint8_t *bytes;
+
+    operator std::string() const {
+      return {reinterpret_cast<const char *>(bytes), length};
+    }
   };
 
   struct MethodHandleInfo : public ConstPoolBase {
