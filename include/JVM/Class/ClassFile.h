@@ -51,6 +51,7 @@ struct ConstPool {
   template <typename IntT, Type CpType>
   struct IntegralInfo : public ConstPoolBase {
     IntegralInfo(uint32_t bytes = 0) : ConstPoolBase(CpType), bytes(bytes) {}
+    static constexpr Type type = CpType;
     IntT bytes;
   };
 
@@ -58,6 +59,7 @@ struct ConstPool {
     RefInfo(uint16_t classIndex = 0, uint16_t nameAndTypeIndex = 0)
         : ConstPoolBase(t), classIndex(classIndex),
           nameAndTypeIndex(nameAndTypeIndex) {}
+    static constexpr Type type = t;
     uint16_t classIndex;
     uint16_t nameAndTypeIndex;
   };
@@ -65,12 +67,14 @@ struct ConstPool {
   struct ClassInfo : public ConstPoolBase {
     ClassInfo(uint16_t nameIndex = 0)
         : ConstPoolBase(Class), nameIndex(nameIndex) {}
+    static constexpr Type type = Class;
     uint16_t nameIndex;
   };
 
   struct StringInfo : public ConstPoolBase {
     StringInfo(uint16_t stringIndex = 0)
         : ConstPoolBase(String), stringIndex(stringIndex) {}
+    static constexpr Type type = String;
     uint16_t stringIndex;
   };
 
@@ -78,6 +82,7 @@ struct ConstPool {
     NameAndTypeInfo(uint16_t nameIndex = 0, uint16_t descriptorIndex = 0)
         : ConstPoolBase(NameAndType), nameIndex(nameIndex),
           descriptorIndex(descriptorIndex) {}
+    static constexpr Type type = NameAndType;
     uint16_t nameIndex;
     uint16_t descriptorIndex;
   };
@@ -85,6 +90,7 @@ struct ConstPool {
   struct Utf8Info : public ConstPoolBase {
     Utf8Info(uint16_t length = 0, const uint8_t *bytes = nullptr)
         : ConstPoolBase(Utf8), length(length), bytes(bytes) {}
+    static constexpr Type type = Utf8;
     uint16_t length;
     const uint8_t *bytes;
   };
@@ -95,6 +101,7 @@ struct ConstPool {
           referenceIndex(refInd) {
       assert(refKind < 10 && refKind > 0 && "Invalid range for reference kind");
     }
+    static constexpr Type type = MethodHandle;
     uint8_t referenceKind;
     uint16_t referenceIndex;
   };
@@ -102,6 +109,7 @@ struct ConstPool {
   struct MethodTypeInfo : public ConstPoolBase {
     MethodTypeInfo(uint16_t descInd = 0)
         : ConstPoolBase(MethodType), descriptorIndex(descInd) {}
+    static constexpr Type type = MethodType;
     uint16_t descriptorIndex;
   };
 
@@ -109,7 +117,7 @@ struct ConstPool {
     InvokeDynamicInfo(uint16_t bsMethodIndex = 0, uint16_t nameTypeInd = 0)
         : ConstPoolBase(InvokeDynamic), bootstrapMethodAttrIndex(bsMethodIndex),
           nameAndTypeIndex(nameTypeInd) {}
-
+    static constexpr Type type = InvokeDynamic;
     uint16_t bootstrapMethodAttrIndex;
     uint16_t nameAndTypeIndex;
   };
@@ -126,6 +134,12 @@ struct ConstPool {
 
   const std::vector<std::unique_ptr<ConstPoolBase>> &getEntries() const {
     return entries;
+  }
+
+  template <typename T> const T &get(uint64_t index) const {
+    assert(index < entries.size());
+    assert(entries[index]->tag == T::type);
+    return *reinterpret_cast<T *>(entries[index].get());
   }
 
 private:

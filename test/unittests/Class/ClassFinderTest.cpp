@@ -54,12 +54,15 @@ TEST(ClassFinder, FindRTJar) {
     ::rmdir("jre");
     return;
   }
-
-  setenv("JAVA_HOME", std::getenv("PWD"), true);
+  const char *pwd = std::getenv("PWD");
+  ASSERT_TRUE(pwd);
+  const char *oldJHome = std::getenv("JAVA_HOME");
+  setenv("JAVA_HOME", pwd, true);
   std::string path;
   std::string err = findRTJar(path);
   ASSERT_TRUE(err.empty());
-  ASSERT_EQ(path, std::string(std::getenv("PWD")) + "/jre/lib/rt.jar");
+  setenv("JAVA_HOME", oldJHome, true);
+  ASSERT_EQ(path, std::string(pwd) + "/jre/lib/rt.jar");
 }
 
 TEST(ClassFinder, FindClassLocation) {
@@ -73,6 +76,30 @@ TEST(ClassFinder, FindClassLocation) {
   EXPECT_EQ(loc.type, ClassLocation::NoExist);
   EXPECT_EQ(loc.className, std::string());
   EXPECT_EQ(loc.path, std::string());
+  (void)::remove("Test.class");
+}
+
+TEST(ClassFinder, FindFromJar) {
+  EXPECT_NE(::open("Test.class", O_CREAT, 0644), -1);
+  ASSERT_EQ(std::system("zip Test.jar Test.class > /dev/null"), 0);
+  (void)::remove("Test.class");
+  ClassLocation loc = findClassLocation("Test", {".", "Test.jar"});
+  EXPECT_EQ(loc.type, ClassLocation::InJar);
+  EXPECT_EQ(loc.className, std::string("Test"));
+  EXPECT_EQ(loc.path, std::string("Test.jar"));
+  (void)::remove("Test.jar");
+}
+
+TEST(ClassFinder, FindJavaLangObject) {
+  const char *jhome = std::getenv("JAVA_HOME");
+  ASSERT_TRUE(jhome) << "JAVA_HOME must be set";
+  std::string path;
+  std::string err = findRTJar(path);
+  ASSERT_TRUE(err.empty()) << err;
+  ClassLocation loc = findClassLocation("java/lang/Object", {path});
+  EXPECT_EQ(loc.type, ClassLocation::InJar);
+  EXPECT_EQ(loc.className, std::string("java/lang/Object"));
+  EXPECT_EQ(loc.path, path);
 }
 
 TEST(ClassFinder, ZipFileBuffer) {

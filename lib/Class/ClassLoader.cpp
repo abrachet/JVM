@@ -26,11 +26,37 @@ static ClassFileReader::ClassFileOrError readClass(const ClassLocation &loc) {
   return reader.read();
 }
 
+std::string ClassLoader::loadSuperClasses(ClassLoader::Class &clazz) {
+  auto &constPool = clazz.loadedClass->getConstPool();
+  auto loadClassFromPool = [&constPool](uint64_t index) -> std::string {
+    if (index == 0)
+      return {};
+    if (constPool.getEntries()[index]->tag != ::Class::ConstPool::Class)
+      return "Invalid class file. Super or interface field does not refer to a "
+             "ClassInfo structure.";
+    const auto &superClass =
+        constPool.get<::Class::ConstPool::ClassInfo>(index);
+    const auto &name =
+        constPool.get<::Class::ConstPool::Utf8Info>(superClass.nameIndex);
+    auto [_, err] = loadClass({reinterpret_cast<const char *>(name.bytes),
+                               static_cast<size_t>(name.length)});
+    return err;
+  };
+
+  uint16_t super = clazz.loadedClass->getSuperClass();
+  if (std::string str = loadClassFromPool(super); str.size())
+    return str;
+  for (uint16_t interface : clazz.loadedClass->getInterfaces())
+    if (std::string str = loadClassFromPool(interface); str.size())
+      return str;
+  return {};
+}
+
 ClassLoader::LoadedClassOrErr
 ClassLoader::loadClass(const std::string_view fullClassName) {
   static ClassLoader::LoadedClass nullLoadedClass;
 
-  std::string className = fullClassName.data();
+  std::string className(fullClassName.data(), fullClassName.size());
   auto it = loadedClasses.find(className);
   if (it != loadedClasses.end())
     return {it->second, {}};
@@ -52,6 +78,9 @@ ClassLoader::loadClass(const std::string_view fullClassName) {
 
   lClass.loadedClass = std::move(classFile);
   lClass.location = loc;
+
+  if (std::string str = loadSuperClasses(lClass); str.size())
+    return {nullLoadedClass, str};
 
   lClass.state = Class::Loaded;
 end:

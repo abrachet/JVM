@@ -30,9 +30,13 @@ static std::pair<zip_t *, std::string> openZip(const std::string &path) {
 }
 
 std::string findRTJar(std::string &path) {
-  path = std::getenv("JAVA_HOME");
-  if (path.empty())
+  const char *jhome = std::getenv("JAVA_HOME");
+  if (!jhome)
     return "Can't find rt.jar: JAVA_HOME not set.";
+  path = jhome;
+  assert(!path.empty());
+  if (path.back() != '/')
+    path += '/';
   path += "jre/lib/rt.jar";
 
   auto [zip, err] = openZip(path);
@@ -66,6 +70,8 @@ std::string registerFromJar(const std::string &path,
 static bool endsWith(const std::string &str, std::string_view search) {
   const char *data = str.c_str();
   assert(!search.data()[search.size()] && "search not null terminated");
+  if (str.size() < search.size())
+    return false;
   return !strcmp(data + str.size() - search.size(), search.data());
 }
 
