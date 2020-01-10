@@ -35,10 +35,11 @@ std::string ClassLoader::loadSuperClasses(ClassLoader::Class &clazz) {
         constPool.get<::Class::ConstPool::ClassInfo>(index);
     const auto &name =
         constPool.get<::Class::ConstPool::Utf8Info>(superClass.nameIndex);
-    auto [ref, err] = loadClass({reinterpret_cast<const char *>(name.bytes),
-                                 static_cast<size_t>(name.length)});
-    clazz.superClasses.emplace_back(ref);
-    return err;
+    auto classOrError = loadClass({reinterpret_cast<const char *>(name.bytes),
+                                   static_cast<size_t>(name.length)});
+    if (classOrError)
+      clazz.superClasses.emplace_back(classOrError.get());
+    return classOrError.getError();
   };
 
   uint16_t super = clazz.loadedClass->getSuperClass();
@@ -50,13 +51,9 @@ std::string ClassLoader::loadSuperClasses(ClassLoader::Class &clazz) {
   return {};
 }
 
-ClassLoader::LoadedClassOrErr
+ErrorOr<ClassLoader::LoadedClass &>
 ClassLoader::loadClass(const std::string_view fullClassName) {
-  // TODO: Make class that can hold reference or error, this is just dumb.
-  static ClassLoader::LoadedClass nullLoadedClass;
-
   std::string className(fullClassName.data(), fullClassName.size());
-
   loadedClassesMutex.lock();
   if (auto it = loadedClasses.find(className); it != loadedClasses.end()) {
     loadedClassesMutex.unlock();
@@ -64,12 +61,12 @@ ClassLoader::loadClass(const std::string_view fullClassName) {
     auto &[cv, mtx] = lock;
     std::unique_lock l(mtx);
     cv.wait(l, [&it] { return it->second.second.state == Class::Loaded; });
-    return {it->second, {}};
+    return it->second;
   }
   loadedClassesMutex.unlock();
   ClassLocation loc = findClassLocation(className, classPath);
   if (loc.type == ClassLocation::NoExist)
-    return {nullLoadedClass, "Class '"s + className + "' does not exist."};
+    return "Class '"s + className + "' does not exist.";
 
   loadedClassesMutex.lock();
   auto &loadedClass = loadedClasses[className];
@@ -89,10 +86,10 @@ ClassLoader::loadClass(const std::string_view fullClassName) {
   lClass.location = loc;
 
   if (std::string str = loadSuperClasses(lClass); str.size())
-    return {nullLoadedClass, str};
+    return str;
 
   lClass.state = Class::Loaded;
 end:
   auto _ = defer([&cv = cv] { cv.notify_all(); });
-  return {loadedClass, {}};
+  return loadedClass;
 }

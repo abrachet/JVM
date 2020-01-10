@@ -4,6 +4,7 @@
 
 #include "JVM/Class/ClassFile.h"
 #include "JVM/Class/ClassFinder.h"
+#include "JVM/Core/ErrorOr.h"
 #include "JVM/string_view"
 #include <condition_variable>
 #include <memory>
@@ -39,8 +40,7 @@ public:
   inline static std::vector<std::string> classPath = {"."};
 
   struct LoadedClass : public std::pair<LockType, Class> {};
-  using LoadedClassOrErr = std::pair<LoadedClass &, std::string>;
-  static LoadedClassOrErr loadClass(const std::string_view fullClassName);
+  static ErrorOr<LoadedClass &> loadClass(const std::string_view fullClassName);
 
   static Class::State findClassState(const std::string_view fullClassName) {
     std::string str(fullClassName.data(), fullClassName.size());
