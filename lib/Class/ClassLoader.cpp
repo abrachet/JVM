@@ -7,11 +7,6 @@
 
 using namespace std::string_literals;
 
-std::vector<std::string> ClassLoader::classPath = {"."};
-std::mutex ClassLoader::loadedClassesGuard;
-std::unordered_map<std::string, ClassLoader::LoadedClass>
-    ClassLoader::loadedClasses;
-
 static ClassFileReader::ClassFileOrError readClass(const ClassLocation &loc) {
   assert(loc.type != ClassLocation::NoExist);
   if (loc.type == ClassLocation::File) {
@@ -61,28 +56,28 @@ ClassLoader::loadClass(const std::string_view fullClassName) {
   static ClassLoader::LoadedClass nullLoadedClass;
 
   std::string className(fullClassName.data(), fullClassName.size());
-  auto it = loadedClasses.find(className);
-  if (it != loadedClasses.end()) {
+
+  loadedClassesMutex.lock();
+  if (auto it = loadedClasses.find(className); it != loadedClasses.end()) {
+    loadedClassesMutex.unlock();
     auto &[lock, lClass] = it->second;
-    auto &cv = lock.first;
-    auto &mtx = lock.second;
-    std::scoped_lock l(mtx);
-    auto _ = defer([&cv] { cv.notify_one(); });
+    auto &[cv, mtx] = lock;
+    std::unique_lock l(mtx);
+    cv.wait(l, [&it] { return it->second.second.state == Class::Loaded; });
     return {it->second, {}};
   }
-
+  loadedClassesMutex.unlock();
   ClassLocation loc = findClassLocation(className, classPath);
   if (loc.type == ClassLocation::NoExist)
     return {nullLoadedClass, "Class '"s + className + "' does not exist."};
 
-  loadedClassesGuard.lock();
+  loadedClassesMutex.lock();
   auto &loadedClass = loadedClasses[className];
-  auto &lock = loadedClass.first;
-  auto &mtx = lock.second;
-  std::scoped_lock l(mtx);
-  loadedClassesGuard.unlock();
-  auto &lClass = loadedClass.second;
-  auto &cv = lock.first;
+  loadedClassesMutex.unlock();
+
+  auto &[lock, lClass] = loadedClass;
+  auto &[cv, mtx] = lock;
+  std::unique_lock l(mtx);
 
   auto [classFile, err] = readClass(loc);
   if (err.size()) {
@@ -98,11 +93,6 @@ ClassLoader::loadClass(const std::string_view fullClassName) {
 
   lClass.state = Class::Loaded;
 end:
-  auto _ = defer([&cv, &lClass] {
-    if (lClass.state == Class::Erroneous)
-      cv.notify_all();
-    else
-      cv.notify_one();
-  });
+  auto _ = defer([&cv = cv] { cv.notify_all(); });
   return {loadedClass, {}};
 }

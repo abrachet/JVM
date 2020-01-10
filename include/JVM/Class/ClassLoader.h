@@ -36,7 +36,7 @@ public:
     std::vector<std::reference_wrapper<LoadedClass>> superClasses;
   };
 
-  static std::vector<std::string> classPath;
+  inline static std::vector<std::string> classPath = {"."};
 
   struct LoadedClass : public std::pair<LockType, Class> {};
   using LoadedClassOrErr = std::pair<LoadedClass &, std::string>;
@@ -44,17 +44,21 @@ public:
 
   static Class::State findClassState(const std::string_view fullClassName) {
     std::string str(fullClassName.data(), fullClassName.size());
+    std::scoped_lock l(loadedClassesMutex);
     auto it = loadedClasses.find(str);
     if (it != loadedClasses.end())
       return it->second.second.state;
     return Class::State::Unknown;
   }
 
-  static int numLoadedClasses() { return loadedClasses.size(); }
+  static int numLoadedClasses() {
+    std::scoped_lock l(loadedClassesMutex);
+    return loadedClasses.size();
+  }
 
 private:
-  static std::mutex loadedClassesGuard;
-  static std::unordered_map<std::string, LoadedClass> loadedClasses;
+  inline static std::mutex loadedClassesMutex;
+  inline static std::unordered_map<std::string, LoadedClass> loadedClasses;
 
   static std::string loadSuperClasses(Class &);
 };
