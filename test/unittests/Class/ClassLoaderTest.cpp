@@ -1,6 +1,7 @@
 
 #include "JVM/Class/ClassLoader.h"
 #include "JVM/Class/ClassFinder.h"
+#include "JVM/VM/Instructions.h"
 #include "gtest/gtest.h"
 
 #include <array>
@@ -81,4 +82,24 @@ TEST(Loader, LoadMultiThread) {
   for (auto &thread : threads)
     thread.join();
   EXPECT_EQ(ClassLoader::numLoadedClasses(), prevSize + 1);
+}
+
+TEST(Loader, LoadMethod) {
+  auto classOrError = ClassLoader::loadClass("Methods");
+  ASSERT_TRUE(classOrError) << classOrError.getError();
+  auto &classFile = classOrError.get().second.loadedClass;
+  auto &methods = classFile->getMethods();
+  auto &cpEntries = classFile->getConstPool().getEntries();
+  ASSERT_EQ(methods[1].attributeCount, 1);
+  int attrNameIdx = methods[1].attributes[0].attributeNameIndex;
+  auto &utf8 =
+      classFile->getConstPool().get<Class::ConstPool::Utf8Info>(attrNameIdx);
+  ASSERT_EQ(std::string("Code"), std::string(utf8));
+  using Class::CodeAttribute;
+  CodeAttribute ca = CodeAttribute::fromAttr(methods[1].attributes[0]);
+  EXPECT_EQ(ca.maxStack, 1);
+  EXPECT_EQ(ca.maxLocals, 1);
+  EXPECT_EQ(ca.exceptionTableLength, 0);
+  EXPECT_EQ(ca.code[0], Instructions::iconst_1);
+  EXPECT_EQ(ca.code[1], Instructions::ireturn);
 }

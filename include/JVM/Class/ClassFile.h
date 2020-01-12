@@ -176,8 +176,25 @@ struct Attribute {
   uint32_t attributeLength;
   const void *mem;
 
+  Attribute(const Attribute &) = default;
   Attribute(uint16_t nameIndex = 0, uint32_t len = 0, const void *mem = nullptr)
       : attributeNameIndex(nameIndex), attributeLength(len), mem(mem) {}
+};
+
+struct CodeAttribute : public Attribute {
+  uint16_t maxStack;
+  uint16_t maxLocals;
+  uint32_t codeLength;
+  const uint8_t *code;
+  uint16_t exceptionTableLength;
+  // TODO: Exception table.
+
+  static CodeAttribute fromAttr(const Attribute &);
+
+  CodeAttribute(const CodeAttribute &) = default;
+
+private:
+  CodeAttribute(Attribute attr) : Attribute(attr) {}
 };
 
 struct Method {
