@@ -1,6 +1,6 @@
 
 add_executable(vm_test
-  BasicTest.cpp
+  StackTest.cpp
 )
 
 include_directories(INCLUDE_DIR)
