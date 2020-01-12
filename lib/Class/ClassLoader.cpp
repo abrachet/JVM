@@ -54,16 +54,16 @@ std::string ClassLoader::loadSuperClasses(ClassLoader::Class &clazz) {
 ErrorOr<ClassLoader::LoadedClass &>
 ClassLoader::loadClass(const std::string_view fullClassName) {
   std::string className(fullClassName.data(), fullClassName.size());
-  loadedClassesMutex.lock();
+  loadedClassesMutex.lock_shared();
   if (auto it = loadedClasses.find(className); it != loadedClasses.end()) {
-    loadedClassesMutex.unlock();
+    loadedClassesMutex.unlock_shared();
     auto &[lock, lClass] = it->second;
     auto &[cv, mtx] = lock;
     std::unique_lock l(mtx);
     cv.wait(l, [&it] { return it->second.second.state == Class::Loaded; });
     return it->second;
   }
-  loadedClassesMutex.unlock();
+  loadedClassesMutex.unlock_shared();
   ClassLocation loc = findClassLocation(className, classPath);
   if (loc.type == ClassLocation::NoExist)
     return "Class '"s + className + "' does not exist.";

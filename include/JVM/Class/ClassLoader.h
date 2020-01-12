@@ -9,6 +9,7 @@
 #include <condition_variable>
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -44,7 +45,7 @@ public:
 
   static Class::State findClassState(const std::string_view fullClassName) {
     std::string str(fullClassName.data(), fullClassName.size());
-    std::scoped_lock l(loadedClassesMutex);
+    std::shared_lock l(loadedClassesMutex);
     auto it = loadedClasses.find(str);
     if (it != loadedClasses.end())
       return it->second.second.state;
@@ -52,12 +53,12 @@ public:
   }
 
   static int numLoadedClasses() {
-    std::scoped_lock l(loadedClassesMutex);
+    std::shared_lock l(loadedClassesMutex);
     return loadedClasses.size();
   }
 
 private:
-  inline static std::mutex loadedClassesMutex;
+  inline static std::shared_mutex loadedClassesMutex;
   inline static std::unordered_map<std::string, LoadedClass> loadedClasses;
 
   static std::string loadSuperClasses(Class &);
