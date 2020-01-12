@@ -3,8 +3,8 @@
 #define JVM_CORE_BIGENDIANBYTEREADER_H
 
 #ifndef __BYTE_ORDER
-#define __BYTE_ORDER 1 // Assume little endian.
-#define __LITTLE_ENDIAN 1
+#define __BYTE_ORDER 1234 // Assume little endian.
+#define __LITTLE_ENDIAN 1234
 #endif
 
 template <typename T> void readFromPointer(T &t, const uint8_t *&ptr) {
