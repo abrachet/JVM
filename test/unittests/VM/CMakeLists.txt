@@ -12,6 +12,10 @@ target_link_libraries(vm_test
   VM
 )
 
+target_compile_definitions(vm_test PUBLIC 
+  LIBJAVA_PATH="${LIBJAVA_PATH}"
+  LIBJVM_PATH="${LIBJVM_PATH}")
+
 add_custom_command(
   TARGET vm_test
   POST_BUILD
