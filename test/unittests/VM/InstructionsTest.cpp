@@ -27,6 +27,17 @@ TEST_F(Ins, Nop) {
   EXPECT_EQ(threadContext->stack.sp, stackStart);
 }
 
+TEST_F(Ins, Aconst_null) {
+  uint8_t instructions[] = {Instructions::aconst_null, 0};
+  threadContext->pc = instructions;
+  threadContext->callNext();
+  EXPECT_EQ(threadContext->pc, instructions + 1);
+  EXPECT_EQ(threadContext->stack.sp, (uint64_t *)stackStart - 1);
+  uint64_t pop = threadContext->stack.pop<2>();
+  EXPECT_EQ(pop, 0);
+  EXPECT_EQ(threadContext->stack.sp, stackStart);
+}
+
 TEST_F(Ins, Iconst) {
   uint8_t instructions[] = {Instructions::iconst_m1, 0};
   threadContext->pc = instructions;
@@ -89,5 +100,25 @@ TEST_F(Ins, Iconst) {
   EXPECT_EQ(threadContext->stack.sp, (uint32_t *)stackStart - 1);
   pop = static_cast<int32_t>(threadContext->stack.pop<1>());
   EXPECT_EQ(pop, 5);
+  EXPECT_EQ(threadContext->stack.sp, stackStart);
+}
+
+TEST_F(Ins, Lconst) {
+  uint8_t instructions[] = {Instructions::lconst_0, 0};
+  threadContext->pc = instructions;
+  threadContext->callNext();
+  EXPECT_EQ(threadContext->pc, instructions + 1);
+  EXPECT_EQ(threadContext->stack.sp, (uint64_t *)stackStart - 1);
+  uint64_t pop = threadContext->stack.pop<2>();
+  EXPECT_EQ(pop, 0);
+  EXPECT_EQ(threadContext->stack.sp, stackStart);
+
+  instructions[0] = Instructions::lconst_1;
+  threadContext->pc = instructions;
+  threadContext->callNext();
+  EXPECT_EQ(threadContext->pc, instructions + 1);
+  EXPECT_EQ(threadContext->stack.sp, (uint64_t *)stackStart - 1);
+  pop = threadContext->stack.pop<2>();
+  EXPECT_EQ(pop, 1);
   EXPECT_EQ(threadContext->stack.sp, stackStart);
 }
