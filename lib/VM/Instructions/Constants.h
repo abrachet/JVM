@@ -2,7 +2,7 @@
 #ifndef INC_CONSTANTS_CONSTANTS_H
 #define INC_CONSTANTS_CONSTANTS_H
 
-#include "../Instruction.h"
+#include "Instruction.h"
 #include "JVM/VM/Instructions.h"
 
 void nop(ThreadContext &);

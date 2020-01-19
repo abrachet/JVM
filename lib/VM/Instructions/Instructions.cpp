@@ -2,7 +2,7 @@
 #include "JVM/VM/Instructions.h"
 #include <cassert>
 
-#include "Constants/Constants.h"
+#include "Constants.h"
 
 #define unimplemented(str)                                                     \
   [](ThreadContext &) -> void {                                                \
