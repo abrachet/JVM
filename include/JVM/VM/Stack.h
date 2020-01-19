@@ -1,4 +1,7 @@
 
+#ifndef JVM_VM_STACK_H
+#define JVM_VM_STACK_H
+
 #include "JVM/Core/ErrorOr.h"
 #include <cassert>
 #include <cstddef>
@@ -44,3 +47,5 @@ private:
     sp = reinterpret_cast<T *>(sp) - 1;
   }
 };
+
+#endif // JVM_VM_STACK_H

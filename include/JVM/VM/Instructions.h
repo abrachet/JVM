@@ -1,5 +1,14 @@
 
+
+#ifndef JVM_VM_INSTRUCTIONS_H
+#define JVM_VM_INSTRUCTIONS_H
+
+#include "JVM/VM/ThreadContext.h"
 #include <cstdint>
+#include <functional>
+
+using InsT = std::function<void(ThreadContext &)>;
+extern InsT instructions[256];
 
 namespace Instructions {
 
@@ -237,3 +246,5 @@ constexpr Instruction impdep1("impdep1", 254);
 constexpr Instruction impdep2("impdep2", 255);
 
 } // namespace Instructions
+
+#endif // JVM_VM_INSTRUCTIONS_H

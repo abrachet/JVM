@@ -1,5 +1,6 @@
 
 add_executable(vm_test
+  InstructionsTest.cpp
   JNITest.cpp
   StackTest.cpp
 )

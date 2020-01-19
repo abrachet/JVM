@@ -2,6 +2,8 @@
 #ifndef JVM_CORE_BIGENDIANBYTEREADER_H
 #define JVM_CORE_BIGENDIANBYTEREADER_H
 
+#include <cstdint>
+
 #ifndef __BYTE_ORDER
 #define __BYTE_ORDER 1234 // Assume little endian.
 #define __LITTLE_ENDIAN 1234
@@ -18,6 +20,14 @@ template <typename T> void readFromPointer(T &t, const uint8_t *&ptr) {
     t = __builtin_bswap16(t);
 #endif
   ptr += sizeof(T);
+}
+
+template <typename T> T readFromPointer(const void *&ptr) {
+  T t;
+  const uint8_t *ptr8 = reinterpret_cast<const uint8_t *>(ptr);
+  readFromPointer(t, ptr8);
+  ptr = ptr8;
+  return t;
 }
 
 #endif // JVM_CORE_BIGENDIANBYTEREADER_H

@@ -2,7 +2,10 @@
 add_library(VM
   JNI.cpp
   Stack.cpp
+  ThreadContext.cpp
 )
+
+add_subdirectory(Instructions)
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
   target_link_options(VM PRIVATE "-rpath" "${JAVA_HOME}/jre/lib/server/" "-rpath" "${JAVA_HOME}/jre/lib/")
