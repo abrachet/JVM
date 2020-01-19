@@ -7,16 +7,16 @@
 
 struct Ins : public testing::Test {
   std::unique_ptr<ThreadContext> threadContext;
+  void *stackStart;
 
   Ins() {
     ErrorOr<Stack> stack = Stack::createStack(0x1000);
     assert(stack);
     threadContext = std::make_unique<ThreadContext>(std::move(*stack));
+    stackStart = (char *)threadContext->stack.stack + threadContext->stack.size;
   }
 
-  void SetUp() override {
-    threadContext->stack.sp = threadContext->stack.stack;
-  }
+  void SetUp() override { threadContext->stack.sp = stackStart; }
 };
 
 TEST_F(Ins, Nop) {
@@ -24,5 +24,70 @@ TEST_F(Ins, Nop) {
   threadContext->pc = instructions;
   threadContext->callNext();
   EXPECT_EQ(threadContext->pc, instructions + 1);
-  EXPECT_EQ(threadContext->stack.sp, threadContext->stack.stack);
+  EXPECT_EQ(threadContext->stack.sp, stackStart);
+}
+
+TEST_F(Ins, Iconst) {
+  uint8_t instructions[] = {Instructions::iconst_m1, 0};
+  threadContext->pc = instructions;
+  threadContext->callNext();
+  EXPECT_EQ(threadContext->pc, instructions + 1);
+  EXPECT_EQ(threadContext->stack.sp, (uint32_t *)stackStart - 1);
+  int32_t pop = static_cast<int32_t>(threadContext->stack.pop<1>());
+  EXPECT_EQ(pop, -1);
+  EXPECT_EQ(threadContext->stack.sp, stackStart);
+
+  instructions[0] = Instructions::iconst_0;
+  threadContext->pc = instructions;
+  threadContext->callNext();
+  EXPECT_EQ(threadContext->pc, instructions + 1);
+  EXPECT_EQ(threadContext->stack.sp, (uint32_t *)stackStart - 1);
+  pop = static_cast<int32_t>(threadContext->stack.pop<1>());
+  EXPECT_EQ(pop, 0);
+  EXPECT_EQ(threadContext->stack.sp, stackStart);
+
+  instructions[0] = Instructions::iconst_1;
+  threadContext->pc = instructions;
+  threadContext->callNext();
+  EXPECT_EQ(threadContext->pc, instructions + 1);
+  EXPECT_EQ(threadContext->stack.sp, (uint32_t *)stackStart - 1);
+  pop = static_cast<int32_t>(threadContext->stack.pop<1>());
+  EXPECT_EQ(pop, 1);
+  EXPECT_EQ(threadContext->stack.sp, stackStart);
+
+  instructions[0] = Instructions::iconst_2;
+  threadContext->pc = instructions;
+  threadContext->callNext();
+  EXPECT_EQ(threadContext->pc, instructions + 1);
+  EXPECT_EQ(threadContext->stack.sp, (uint32_t *)stackStart - 1);
+  pop = static_cast<int32_t>(threadContext->stack.pop<1>());
+  EXPECT_EQ(pop, 2);
+  EXPECT_EQ(threadContext->stack.sp, stackStart);
+
+  instructions[0] = Instructions::iconst_3;
+  threadContext->pc = instructions;
+  threadContext->callNext();
+  EXPECT_EQ(threadContext->pc, instructions + 1);
+  EXPECT_EQ(threadContext->stack.sp, (uint32_t *)stackStart - 1);
+  pop = static_cast<int32_t>(threadContext->stack.pop<1>());
+  EXPECT_EQ(pop, 3);
+  EXPECT_EQ(threadContext->stack.sp, stackStart);
+
+  instructions[0] = Instructions::iconst_4;
+  threadContext->pc = instructions;
+  threadContext->callNext();
+  EXPECT_EQ(threadContext->pc, instructions + 1);
+  EXPECT_EQ(threadContext->stack.sp, (uint32_t *)stackStart - 1);
+  pop = static_cast<int32_t>(threadContext->stack.pop<1>());
+  EXPECT_EQ(pop, 4);
+  EXPECT_EQ(threadContext->stack.sp, stackStart);
+
+  instructions[0] = Instructions::iconst_5;
+  threadContext->pc = instructions;
+  threadContext->callNext();
+  EXPECT_EQ(threadContext->pc, instructions + 1);
+  EXPECT_EQ(threadContext->stack.sp, (uint32_t *)stackStart - 1);
+  pop = static_cast<int32_t>(threadContext->stack.pop<1>());
+  EXPECT_EQ(pop, 5);
+  EXPECT_EQ(threadContext->stack.sp, stackStart);
 }

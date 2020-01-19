@@ -2,9 +2,17 @@
 #ifndef INC_CONSTANTS_CONSTANTS_H
 #define INC_CONSTANTS_CONSTANTS_H
 
-#include "JVM/VM/Instructions.h"
 #include "../Instruction.h"
+#include "JVM/VM/Instructions.h"
 
-void nop(ThreadContext&);
+void nop(ThreadContext &);
+
+void iconst_m1(ThreadContext &);
+void iconst_0(ThreadContext &);
+void iconst_1(ThreadContext &);
+void iconst_2(ThreadContext &);
+void iconst_3(ThreadContext &);
+void iconst_4(ThreadContext &);
+void iconst_5(ThreadContext &);
 
 #endif // INC_CONSTANTS_CONSTANTS_H

@@ -12,4 +12,11 @@
 InsT instructions[256] = {
     [Instructions::nop] = nop,
     [Instructions::aconst_null] = unimplemented("aconst_null"),
+    [Instructions::iconst_m1] = iconst_m1,
+    [Instructions::iconst_0] = iconst_0,
+    [Instructions::iconst_1] = iconst_1,
+    [Instructions::iconst_2] = iconst_2,
+    [Instructions::iconst_3] = iconst_3,
+    [Instructions::iconst_4] = iconst_4,
+    [Instructions::iconst_5] = iconst_5,
 };
