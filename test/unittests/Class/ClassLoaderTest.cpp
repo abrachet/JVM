@@ -89,7 +89,6 @@ TEST(Loader, LoadMethod) {
   ASSERT_TRUE(classOrError) << classOrError.getError();
   auto &classFile = classOrError.get().second.loadedClass;
   auto &methods = classFile->getMethods();
-  auto &cpEntries = classFile->getConstPool().getEntries();
   ASSERT_EQ(methods[1].attributeCount, 1);
   int attrNameIdx = methods[1].attributes[0].attributeNameIndex;
   auto &utf8 =
