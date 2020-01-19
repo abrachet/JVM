@@ -44,3 +44,12 @@ TEST(Stack, StackOverflow) {
   EXPECT_TRUE(b);
   s->stack = saveStack;
 }
+
+TEST(Stack, Pop) {
+  ErrorOr<Stack> s = Stack::createStack(4096);
+  ASSERT_TRUE(s);
+  s->push<1>(48);
+  uint64_t i = s->pop<1>();
+  EXPECT_EQ(i, 48);
+  EXPECT_EQ(s->sp, (const char *)s->stack + s->size);
+}
