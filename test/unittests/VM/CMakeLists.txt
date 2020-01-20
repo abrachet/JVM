@@ -2,6 +2,7 @@
 add_executable(vm_test
   JNITest.cpp
   StackTest.cpp
+  TypeReaderTests.cpp
 )
 
 add_subdirectory(InstructionTests)

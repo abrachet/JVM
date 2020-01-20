@@ -3,6 +3,7 @@ add_library(VM
   JNI.cpp
   Stack.cpp
   ThreadContext.cpp
+  TypeReader.cpp
 )
 
 add_subdirectory(Instructions)
