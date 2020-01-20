@@ -1,9 +1,10 @@
 
 add_executable(vm_test
-  InstructionsTest.cpp
   JNITest.cpp
   StackTest.cpp
 )
+
+add_subdirectory(InstructionTests)
 
 include_directories(INCLUDE_DIR)
 
