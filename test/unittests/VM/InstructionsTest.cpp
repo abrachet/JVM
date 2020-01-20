@@ -1,5 +1,6 @@
 
 #include "JVM/VM/Instructions.h"
+#include "JVM/Core/float_cast.h"
 #include "JVM/VM/Stack.h"
 #include "JVM/VM/ThreadContext.h"
 #include "gtest/gtest.h"
@@ -120,5 +121,54 @@ TEST_F(Ins, Lconst) {
   EXPECT_EQ(threadContext->stack.sp, (uint64_t *)stackStart - 1);
   pop = threadContext->stack.pop<2>();
   EXPECT_EQ(pop, 1);
+  EXPECT_EQ(threadContext->stack.sp, stackStart);
+}
+
+TEST_F(Ins, Fconst) {
+  uint8_t instructions[] = {Instructions::fconst_0, 0};
+  threadContext->pc = instructions;
+  threadContext->callNext();
+  EXPECT_EQ(threadContext->pc, instructions + 1);
+  EXPECT_EQ(threadContext->stack.sp, (uint32_t *)stackStart - 1);
+  uint64_t pop = threadContext->stack.pop<1>();
+  EXPECT_EQ(float_cast<float>(pop), 0.0);
+  EXPECT_EQ(threadContext->stack.sp, stackStart);
+
+  instructions[0] = Instructions::fconst_1;
+  threadContext->pc = instructions;
+  threadContext->callNext();
+  EXPECT_EQ(threadContext->pc, instructions + 1);
+  EXPECT_EQ(threadContext->stack.sp, (uint32_t *)stackStart - 1);
+  pop = threadContext->stack.pop<1>();
+  EXPECT_EQ(float_cast<float>(pop), 1.0);
+  EXPECT_EQ(threadContext->stack.sp, stackStart);
+
+  instructions[0] = Instructions::fconst_2;
+  threadContext->pc = instructions;
+  threadContext->callNext();
+  EXPECT_EQ(threadContext->pc, instructions + 1);
+  EXPECT_EQ(threadContext->stack.sp, (uint32_t *)stackStart - 1);
+  pop = threadContext->stack.pop<1>();
+  EXPECT_EQ(float_cast<float>(pop), 2.0);
+  EXPECT_EQ(threadContext->stack.sp, stackStart);
+}
+
+TEST_F(Ins, Dconst) {
+  uint8_t instructions[] = {Instructions::dconst_0, 0};
+  threadContext->pc = instructions;
+  threadContext->callNext();
+  EXPECT_EQ(threadContext->pc, instructions + 1);
+  EXPECT_EQ(threadContext->stack.sp, (uint64_t *)stackStart - 1);
+  uint64_t pop = threadContext->stack.pop<2>();
+  EXPECT_EQ(float_cast<double>(pop), 0.0);
+  EXPECT_EQ(threadContext->stack.sp, stackStart);
+
+  instructions[0] = Instructions::dconst_1;
+  threadContext->pc = instructions;
+  threadContext->callNext();
+  EXPECT_EQ(threadContext->pc, instructions + 1);
+  EXPECT_EQ(threadContext->stack.sp, (uint64_t *)stackStart - 1);
+  pop = threadContext->stack.pop<2>();
+  EXPECT_EQ(float_cast<double>(pop), 1.0);
   EXPECT_EQ(threadContext->stack.sp, stackStart);
 }

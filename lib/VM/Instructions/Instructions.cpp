@@ -21,4 +21,9 @@ InsT instructions[256] = {
     [Instructions::iconst_5] = iconst_5,
     [Instructions::lconst_0] = lconst_0,
     [Instructions::lconst_1] = lconst_1,
+    [Instructions::fconst_0] = fconst_0,
+    [Instructions::fconst_1] = fconst_1,
+    [Instructions::fconst_2] = fconst_2,
+    [Instructions::dconst_0] = dconst_0,
+    [Instructions::dconst_1] = dconst_1,
 };

@@ -16,5 +16,10 @@ void iconst_4(ThreadContext &);
 void iconst_5(ThreadContext &);
 void lconst_0(ThreadContext &);
 void lconst_1(ThreadContext &);
+void fconst_0(ThreadContext &);
+void fconst_1(ThreadContext &);
+void fconst_2(ThreadContext &);
+void dconst_0(ThreadContext &);
+void dconst_1(ThreadContext &);
 
 #endif // INC_CONSTANTS_CONSTANTS_H
