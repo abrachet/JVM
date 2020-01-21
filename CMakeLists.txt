@@ -11,6 +11,10 @@ option(TESTS "Generate build target for unit testing." ON)
 add_compile_options("-fno-rtti" "-fno-exceptions" "-Wall")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address")
 
+if (TESTS)
+    add_definitions(-DTESTING)
+endif()
+
 if (NOT DEFINED ENV{JAVA_HOME})
     message(FATAL "JAVA_HOME must be defined!")
 else()

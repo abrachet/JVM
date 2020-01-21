@@ -44,3 +44,30 @@ TEST(JNI, LoadLibjava) {
   (void)::dup(newOut);
   EXPECT_EQ(current, jtty);
 }
+
+static bool called = false;
+
+uint64_t invokable3(uint64_t a, uint64_t b, uint64_t c) {
+  called = true;
+  return a + b + c;
+}
+
+uint64_t invokable4(uint64_t a, uint64_t b, uint64_t c, uint64_t d) {
+  called = true;
+  return a + b + c + d;
+}
+
+template <typename FuncT>
+uint64_t invoke(FuncT *handle, const std::vector<uint64_t> &arguments) {
+  return invoke((void *)handle, arguments);
+}
+
+TEST(JNI, Invoke) {
+  uint64_t got = invoke(invokable3, {1, 2, 3});
+  EXPECT_EQ(got, 6);
+  EXPECT_TRUE(called);
+  called = false;
+  got = invoke(invokable4, {1, 2, 3, 4});
+  EXPECT_EQ(got, 10);
+  EXPECT_TRUE(called);
+}
