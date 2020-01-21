@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 
+// TODO: Some asserts need to throw InvalidClassException.
+
 static std::string getSymbolName(const std::string &className,
                                  const Class::ConstPool &constPool,
                                  const Class::Method &method) {
@@ -46,6 +48,8 @@ static void callNative(ThreadContext &tc, const Class::ConstPool &constPool,
                        const Class::Method &method) {
   std::string sym = getSymbolName(tc.loadedClassName, constPool, method);
   void *handle = getMethodHandle(sym.c_str());
+  // TODO: This should throw UnsatisfiedLinkError.
+  assert(handle && "Symbol not found");
   auto &utf8 =
       constPool.get<Class::ConstPool::Utf8Info>(method.descriptorIndex);
   ErrorOr<FuncOrSingleType> typeOrErr =
@@ -72,4 +76,5 @@ void invokestatic(ThreadContext &tc) {
   const Class::Method &method = *methodOrErr;
   if (method.accessFlags & Class::Method::Native)
     return callNative(tc, classFile->getConstPool(), method);
+  // TODO: implement calling jvm methods.
 }
