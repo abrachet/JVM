@@ -93,3 +93,15 @@ end:
   auto _ = defer([&cv = cv] { cv.notify_all(); });
   return loadedClass;
 }
+
+ErrorOr<ClassLoader::LoadedClass &>
+ClassLoader::getLoadedClass(const std::string_view fullClassName) {
+  loadedClassesMutex.lock();
+  auto it = loadedClasses.find(
+      std::string(fullClassName.data(), fullClassName.size()));
+  auto end = loadedClasses.end();
+  loadedClassesMutex.unlock();
+  if (it != end)
+    return it->second;
+  return std::string("Class not found");
+}

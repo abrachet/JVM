@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include "Constants.h"
+#include "References.h"
 
 #define unimplemented(str)                                                     \
   [](ThreadContext &) -> void {                                                \
@@ -26,4 +27,6 @@ InsT instructions[256] = {
     [Instructions::fconst_2] = fconst_2,
     [Instructions::dconst_0] = dconst_0,
     [Instructions::dconst_1] = dconst_1,
+
+    [Instructions::invokestatic] = invokestatic,
 };

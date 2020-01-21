@@ -42,6 +42,8 @@ public:
 
   struct LoadedClass : public std::pair<LockType, Class> {};
   static ErrorOr<LoadedClass &> loadClass(const std::string_view fullClassName);
+  static ErrorOr<LoadedClass &>
+  getLoadedClass(const std::string_view fullClassName);
 
   static Class::State findClassState(const std::string_view fullClassName) {
     std::string str(fullClassName.data(), fullClassName.size());

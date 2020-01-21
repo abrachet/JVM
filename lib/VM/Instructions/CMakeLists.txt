@@ -4,5 +4,6 @@ target_sources(VM PUBLIC
 )
 
 target_sources(VM PRIVATE
-  Constants.cpp  
+  Constants.cpp
+  References.cpp
 )

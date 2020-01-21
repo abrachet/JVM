@@ -28,41 +28,6 @@ constexpr Type Float('F');
 constexpr Type Double('D');
 constexpr Type Object('L');
 
-#if 0
-struct Types {
-  enum Type : char {
-    Function = '(',
-    Void = 'V',
-    Byte = 'B',
-    Short = 'S',
-    Int = 'I',
-    Long = 'J',
-    Char = 'C',
-    Float = 'F',
-    Double = 'D',
-    Object = 'L'
-  };
-
-  Type type;
-
-  Types() : type(static_cast<Type>(0)) {}
-  Types(Type type) : type(type) {}
-  explicit Types(uint64_t c) : type(static_cast<Type>(c)) {}
-
-  bool operator==(Type otherType) const {
-    return otherType == type;
-  }
-
-  bool operator==(Types other) const {
-    return other.type == type;
-  }
-
-  operator Type() const {
-    return type;
-  }
-};
-#endif
-
 using TypeOrObject = std::pair<Type, std::string>;
 using FuncOrSingleType = std::pair<TypeOrObject, std::vector<TypeOrObject>>;
 

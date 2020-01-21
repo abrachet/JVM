@@ -1,6 +1,6 @@
 
-#ifndef INC_CONSTANTS_CONSTANTS_H
-#define INC_CONSTANTS_CONSTANTS_H
+#ifndef INS_CONSTANTS_H
+#define INS_CONSTANTS_H
 
 #include "Instruction.h"
 #include "JVM/VM/Instructions.h"
@@ -22,4 +22,4 @@ void fconst_2(ThreadContext &);
 void dconst_0(ThreadContext &);
 void dconst_1(ThreadContext &);
 
-#endif // INC_CONSTANTS_CONSTANTS_H
+#endif // INS_CONSTANTS_H

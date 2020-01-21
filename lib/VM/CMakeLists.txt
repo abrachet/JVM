@@ -6,6 +6,8 @@ add_library(VM
   TypeReader.cpp
 )
 
+target_link_libraries(VM Class)
+
 add_subdirectory(Instructions)
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")

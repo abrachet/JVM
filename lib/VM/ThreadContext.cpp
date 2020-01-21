@@ -8,3 +8,12 @@ void ThreadContext::callNext() {
   uint8_t ins = readFromPointer<uint8_t>(pc);
   return instructions[ins](*this);
 }
+
+using LoadedClass = ClassLoader::LoadedClass;
+
+LoadedClass &ThreadContext::getLoadedClass() {
+  ErrorOr<LoadedClass &> loadedClassOrErr =
+      ClassLoader::getLoadedClass(loadedClassName);
+  assert(loadedClassOrErr && "class was not loaded");
+  return *loadedClassOrErr;
+}

@@ -26,5 +26,12 @@ add_custom_command(
       "$<TARGET_FILE_DIR:vm_test>/ExternSym.so"
 )
 
+add_custom_command(
+  TARGET vm_test
+  POST_BUILD
+    COMMAND javac "${CMAKE_CURRENT_SOURCE_DIR}/InstructionTests/CallNative.java" &&
+    mv "${CMAKE_CURRENT_SOURCE_DIR}/InstructionTests/CallNative.class" "$<TARGET_FILE_DIR:vm_test>/CallNative.class"
+)
+
 
 add_test(NAME vm_test COMMAND vm_test)
