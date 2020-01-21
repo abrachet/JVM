@@ -2,8 +2,10 @@
 #ifndef JVM_CLASS_CLASSFILE_H
 #define JVM_CLASS_CLASSFILE_H
 
+#include "JVM/Core/ErrorOr.h"
 #include "JVM/Core/FileBuffer.h"
 #include "JVM/Core/decimal.h"
+#include "JVM/string_view"
 #include <cassert>
 #include <cstdint>
 #include <memory>
@@ -96,6 +98,10 @@ struct ConstPool {
     const uint8_t *bytes;
 
     operator std::string() const {
+      return {reinterpret_cast<const char *>(bytes), length};
+    }
+
+    operator std::string_view() const {
       return {reinterpret_cast<const char *>(bytes), length};
     }
   };
@@ -250,6 +256,10 @@ public:
   const Class::Interfaces &getInterfaces() const { return interfaces; }
   const Class::Fields &getFields() const { return fields; }
   const Class::Methods &getMethods() const { return methods; }
+
+  // Class::ConstPool::MethodrefInfo
+  ErrorOr<const Class::Method &>
+  findStaticMethod(const Class::ConstPool::MethodrefInfo &);
 };
 
 #endif // JVM_CLASS_CLASSFILE_H

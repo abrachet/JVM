@@ -97,3 +97,16 @@ TEST_F(ClassReaderMethods, retObject) {
   assertCPStreq("()Ljava/lang/Object;", cpEntries[descIdx]);
   ASSERT_EQ(methods[5].accessFlags, Class::Method::AccessFlags::Public);
 }
+
+TEST_F(ClassReaderMethods, FindMethod) {
+  // ConstPool entry #2 is MethodRef to Methods.retMethods:()LMethods;
+  // Method index 4 refers to this method. Too lazy to find these
+  // programatically in CMakeLists.txt.
+  auto &constPool = classFile->getConstPool();
+  auto &methodRef = constPool.get<ConstPool::MethodrefInfo>(2);
+  auto &methods = classFile->getMethods();
+  ErrorOr<const Class::Method &> methodOrErr =
+      classFile->findStaticMethod(methodRef);
+  ASSERT_TRUE(methodOrErr);
+  EXPECT_EQ(&*methodOrErr, &methods[4]);
+}
