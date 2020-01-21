@@ -7,6 +7,8 @@
 #include "JVM/VM/ThreadContext.h"
 #include "JVM/VM/TypeReader.h"
 #include "JVM/string_view"
+#include <algorithm>
+#include <cassert>
 #include <string>
 #include <vector>
 
@@ -34,10 +36,9 @@ static std::vector<uint64_t> popMethodArgs(ThreadContext &tc,
   };
   std::vector<uint64_t> args;
   // Need to skip the first type which is the return type.
-  auto it = functionType.second.begin() + 1;
-  for (auto end = functionType.second.end(); it != end; ++it) {
-    args.push_back(popArg(it->first));
-  }
+  std::transform(functionType.second.begin() + 1, functionType.second.end(),
+                 std::back_inserter(args),
+                 [&popArg](auto type) { return popArg(type.first); });
   return args;
 }
 
