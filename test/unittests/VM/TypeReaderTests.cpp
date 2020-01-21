@@ -63,3 +63,15 @@ TEST(TypeReader, ComplexFunction) {
   EXPECT_EQ(type->second[2].second, "java/lang/String");
   EXPECT_EQ(type->second[3].first, Char);
 }
+
+TEST(TypeReader, TypeSize) {
+  EXPECT_EQ(Void.getStackEntryCount(), 0);
+  EXPECT_EQ(Byte.getStackEntryCount(), 1);
+  EXPECT_EQ(Short.getStackEntryCount(), 1);
+  EXPECT_EQ(Int.getStackEntryCount(), 1);
+  EXPECT_EQ(Long.getStackEntryCount(), 2);
+  EXPECT_EQ(Char.getStackEntryCount(), 1);
+  EXPECT_EQ(Float.getStackEntryCount(), 1);
+  EXPECT_EQ(Double.getStackEntryCount(), 2);
+  EXPECT_EQ(Object.getStackEntryCount(), 2);
+}
