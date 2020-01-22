@@ -36,7 +36,8 @@ static std::vector<uint64_t> popMethodArgs(ThreadContext &tc,
     assert(t.getStackEntryCount() == 2);
     return tc.stack.pop<2>();
   };
-  std::vector<uint64_t> args;
+  // TODO: put JNIEnv pointer in arg[0] instead of nullptr.
+  std::vector<uint64_t> args{0};
   // Need to skip the first type which is the return type.
   std::transform(functionType.second.begin() + 1, functionType.second.end(),
                  std::back_inserter(args),

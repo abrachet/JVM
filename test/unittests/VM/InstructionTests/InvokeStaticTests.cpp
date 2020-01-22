@@ -6,7 +6,7 @@
 #include "gtest/gtest.h"
 
 static bool called = false;
-extern "C" int Java_CallNative_add(int arg1, int arg2) {
+extern "C" int Java_CallNative_add(void *, int arg1, int arg2) {
   called = true;
   return arg1 + arg2;
 }
