@@ -1,0 +1,13 @@
+
+#if __has_include(<optional>)
+  #include <optional>
+#else
+  #if !__has_include(<experimental/optional>)
+    #error "no optional header"
+  #endif
+  #include <experimental/optional>
+  namespace std {
+    template <typename T>
+    using optional = experimental::optional<T>;
+  }
+#endif

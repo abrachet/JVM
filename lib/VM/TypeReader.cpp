@@ -1,8 +1,8 @@
 
 #include "JVM/VM/TypeReader.h"
 #include "JVM/Core/ErrorOr.h"
+#include "JVM/optional"
 #include <algorithm>
-#include <optional>
 
 static std::optional<TypeOrObject> parseOne(std::string_view &str) {
   auto begin = str.begin();
