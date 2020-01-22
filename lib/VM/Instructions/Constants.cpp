@@ -48,3 +48,12 @@ void dconst_1(ThreadContext &tc) {
   constexpr double one = 1.0;
   return tc.stack.push<2>(float_cast<uint64_t>(one));
 }
+
+template <size_t Size> static inline void push(ThreadContext &tc) {
+  auto read = readFromPointer<Size>(tc.pc);
+  tc.stack.push<Size>(read);
+}
+
+void bipush(ThreadContext &tc) { return push<1>(tc); }
+
+void sipush(ThreadContext &tc) { return push<2>(tc); }

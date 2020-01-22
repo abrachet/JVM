@@ -30,4 +30,17 @@ template <typename T> T readFromPointer(const void *&ptr) {
   return t;
 }
 
+template <size_t Size> struct size_to_type_impl {};
+template <> struct size_to_type_impl<1> { using type = uint8_t; };
+template <> struct size_to_type_impl<2> { using type = uint16_t; };
+template <> struct size_to_type_impl<3> { using type = uint32_t; };
+template <> struct size_to_type_impl<4> { using type = uint64_t; };
+
+template <size_t Size>
+using size_to_type = typename size_to_type_impl<Size>::type;
+
+template <size_t Size> size_to_type<Size> readFromPointer(const void *&ptr) {
+  return readFromPointer<size_to_type<Size>>(ptr);
+}
+
 #endif // JVM_CORE_BIGENDIANBYTEREADER_H

@@ -21,5 +21,7 @@ void fconst_1(ThreadContext &);
 void fconst_2(ThreadContext &);
 void dconst_0(ThreadContext &);
 void dconst_1(ThreadContext &);
+void bipush(ThreadContext &);
+void sipush(ThreadContext &);
 
 #endif // INS_CONSTANTS_H

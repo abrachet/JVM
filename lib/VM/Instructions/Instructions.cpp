@@ -27,6 +27,8 @@ InsT instructions[256] = {
     [Instructions::fconst_2] = fconst_2,
     [Instructions::dconst_0] = dconst_0,
     [Instructions::dconst_1] = dconst_1,
+    [Instructions::bipush] = bipush,
+    [Instructions::sipush] = sipush,
 
     [Instructions::invokestatic] = invokestatic,
 };

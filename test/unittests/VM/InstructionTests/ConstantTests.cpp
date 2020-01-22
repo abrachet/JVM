@@ -1,6 +1,6 @@
 
-#include "JVM/VM/Instructions.h"
 #include "JVM/Core/float_cast.h"
+#include "JVM/VM/Instructions.h"
 #include "JVM/VM/Stack.h"
 #include "JVM/VM/ThreadContext.h"
 #include "gtest/gtest.h"
@@ -171,4 +171,40 @@ TEST_F(Ins, Dconst) {
   pop = threadContext->stack.pop<2>();
   EXPECT_EQ(float_cast<double>(pop), 1.0);
   EXPECT_EQ(threadContext->stack.sp, stackStart);
+}
+
+TEST_F(Ins, Bipush) {
+  uint8_t instructions[] = {Instructions::bipush, 0};
+  threadContext->pc = instructions;
+  threadContext->callNext();
+  EXPECT_EQ(threadContext->pc, instructions + 2);
+  EXPECT_EQ(threadContext->stack.sp, (uint32_t *)stackStart - 1);
+  uint64_t pop = threadContext->stack.pop<1>();
+  EXPECT_EQ(pop, 0);
+  instructions[1] = 17;
+  threadContext->pc = instructions;
+  threadContext->callNext();
+  EXPECT_EQ(threadContext->pc, instructions + 2);
+  EXPECT_EQ(threadContext->stack.sp, (uint32_t *)stackStart - 1);
+  pop = threadContext->stack.pop<1>();
+  EXPECT_EQ(pop, 17);
+}
+
+TEST_F(Ins, Sipush) {
+  uint8_t instructions[] = {Instructions::sipush, 0, 0};
+  threadContext->pc = instructions;
+  threadContext->callNext();
+  EXPECT_EQ(threadContext->pc, instructions + 3);
+  EXPECT_EQ(threadContext->stack.sp, (uint64_t *)stackStart - 1);
+  uint64_t pop = threadContext->stack.pop<2>();
+  EXPECT_EQ(pop, 0);
+  instructions[1] = 17;
+  instructions[2] = 17;
+  uint16_t shortInt = *reinterpret_cast<uint16_t *>(instructions + 1);
+  threadContext->pc = instructions;
+  threadContext->callNext();
+  EXPECT_EQ(threadContext->pc, instructions + 3);
+  EXPECT_EQ(threadContext->stack.sp, (uint64_t *)stackStart - 1);
+  pop = threadContext->stack.pop<2>();
+  EXPECT_EQ(pop, shortInt);
 }
