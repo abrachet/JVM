@@ -7,47 +7,53 @@
 static std::optional<Type::BasicType> parseOne(std::string_view &str) {
   auto begin = str.begin();
   Type::BasicType t;
-  switch (Type::BasicType(*begin)) {
+  if (*begin == '[') {
+    t.array = true;
+    ++begin;
+  }
+  switch (*begin) {
   case Function:
     [[fallthrough]];
   default:
     return {};
   case Void:
-    t = Void;
+    t.c = Void;
     break;
   case Byte:
-    t = Byte;
+    t.c = Byte;
     break;
   case Short:
-    t = Short;
+    t.c = Short;
     break;
   case Char:
-    t = Char;
+    t.c = Char;
     break;
   case Int:
-    t = Int;
+    t.c = Int;
     break;
   case Long:
-    t = Long;
+    t.c = Long;
     break;
   case Float:
-    t = Float;
+    t.c = Float;
     break;
   case Double:
-    t = Double;
+    t.c = Double;
     break;
 
   case Object:
     goto object;
   }
-  str = str.begin() + 1;
+  str = begin + 1;
   assert(t.c != Object);
   return t;
 
 object:
   auto semiColon = std::find(++begin, str.end(), ';');
   str = {semiColon + 1, (size_t)std::distance(semiColon + 1, str.end())};
-  return Type::BasicType(Object, {begin, semiColon});
+  t.c = Object;
+  t.objectName = {begin, semiColon};
+  return t;
 }
 
 ErrorOr<Type> Type::parseType(std::string_view str) {

@@ -62,6 +62,28 @@ TEST(TypeReader, Object) {
   EXPECT_EQ(type.objectName, "java/lang/Object");
 }
 
+TEST(TypeReader, Array) {
+  {
+    ErrorOr<Type> typeOrErr = Type::parseType("[I");
+    ASSERT_TRUE(typeOrErr);
+    EXPECT_FALSE(typeOrErr->isFunctionType());
+    EXPECT_FALSE(typeOrErr->isBasicType());
+    Type::BasicType type = *typeOrErr;
+    EXPECT_TRUE(type.array);
+    EXPECT_EQ(type.c, Int);
+  }
+  {
+    ErrorOr<Type> typeOrErr = Type::parseType("[Ljava/lang/Object;");
+    ASSERT_TRUE(typeOrErr);
+    EXPECT_FALSE(typeOrErr->isFunctionType());
+    EXPECT_FALSE(typeOrErr->isBasicType());
+    Type::BasicType type = *typeOrErr;
+    EXPECT_TRUE(type.array);
+    EXPECT_EQ(type.c, Object);
+    EXPECT_EQ(type.objectName, "java/lang/Object");
+  }
+}
+
 TEST(TypeReader, BasicFunction) {
   ErrorOr<Type> typeOrErr = Type::parseType("(I)J");
   ASSERT_TRUE(typeOrErr);
@@ -73,20 +95,39 @@ TEST(TypeReader, BasicFunction) {
 }
 
 TEST(TypeReader, ComplexFunction) {
-  ErrorOr<Type> typeOrErr =
-      Type::parseType("(Ljava/lang/Object;Ljava/lang/String;C)J");
-  ASSERT_TRUE(typeOrErr);
-  const Type &type = *typeOrErr;
-  ASSERT_TRUE(type.isFunctionType());
-  EXPECT_EQ(type.getReturnType(), Long);
-  const auto &params = type.getFunctionArgs();
-  ASSERT_EQ(params.size(), 3);
-  EXPECT_EQ(params[0], Object);
-  EXPECT_EQ(params[0].objectName, "java/lang/Object");
-  EXPECT_EQ(params[1], Object);
-  EXPECT_EQ(params[1].objectName, "java/lang/String");
-  EXPECT_EQ(params[2], Char);
-  EXPECT_EQ(params[2].objectName, "");
+  {
+    ErrorOr<Type> typeOrErr =
+        Type::parseType("(Ljava/lang/Object;Ljava/lang/String;C)J");
+    ASSERT_TRUE(typeOrErr);
+    const Type &type = *typeOrErr;
+    ASSERT_TRUE(type.isFunctionType());
+    EXPECT_EQ(type.getReturnType(), Long);
+    const auto &params = type.getFunctionArgs();
+    ASSERT_EQ(params.size(), 3);
+    EXPECT_EQ(params[0], Object);
+    EXPECT_EQ(params[0].objectName, "java/lang/Object");
+    EXPECT_EQ(params[1], Object);
+    EXPECT_EQ(params[1].objectName, "java/lang/String");
+    EXPECT_EQ(params[2], Char);
+    EXPECT_EQ(params[2].objectName, "");
+  }
+  {
+    ErrorOr<Type> typeOrErr = Type::parseType("([Ljava/lang/Object;[I)[C");
+    ASSERT_TRUE(typeOrErr);
+    EXPECT_TRUE(typeOrErr->isFunctionType());
+    auto retType = typeOrErr->getReturnType();
+    EXPECT_TRUE(retType.array);
+    EXPECT_EQ(retType.c, Char);
+    const auto &params = typeOrErr->getFunctionArgs();
+    ASSERT_EQ(params.size(), 2);
+    auto type = params[0];
+    EXPECT_TRUE(type.array);
+    EXPECT_EQ(type.c, Object);
+    EXPECT_EQ(type.objectName, "java/lang/Object");
+    type = params[1];
+    EXPECT_TRUE(type.array);
+    EXPECT_EQ(type.c, Int);
+  }
 }
 
 TEST(TypeReader, TypeSize) {

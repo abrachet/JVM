@@ -18,7 +18,9 @@ struct Type {
     BasicType(char c) : c(c) {}
     BasicType(char c, std::string str) : c(c), objectName(str) {}
     size_t getStackEntryCount() const;
-    constexpr operator char() const { return c; }
+    bool operator==(BasicType other) const {
+      return c == other.c && array == other.array;
+    }
   };
 
 private:
@@ -39,7 +41,7 @@ public:
     assert(!isFunctionType());
     return type.array;
   }
-  bool isBasicType() const { return !function; }
+  bool isBasicType() const { return !isFunctionType() && !isArrayType(); }
 
   BasicType getReturnType() const {
     assert(isFunctionType());
@@ -52,13 +54,13 @@ public:
   }
 
   operator BasicType() const {
-    assert(isBasicType());
+    assert(!isFunctionType());
     return type;
   }
 
   operator char() const {
     assert(isBasicType());
-    return static_cast<char>(type);
+    return type.c;
   }
 
   size_t getStackEntryCount() const {
