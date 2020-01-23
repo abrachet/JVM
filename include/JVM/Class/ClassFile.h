@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 class ClassFileReader;
@@ -151,6 +152,16 @@ struct ConstPool {
     assert(index < entries.size());
     assert(entries[index]->tag == T::type);
     return *reinterpret_cast<T *>(entries[index].get());
+  }
+
+  template <typename T>
+  const typename std::enable_if<std::is_pointer<T>::value, T>::type
+  get(uint64_t index) const {
+    assert(index < entries.size());
+    using RemovePtr = typename std::remove_pointer<T>::type;
+    if (entries[index]->tag != RemovePtr::type)
+      return nullptr;
+    return reinterpret_cast<T>(entries[index].get());
   }
 
 private:
