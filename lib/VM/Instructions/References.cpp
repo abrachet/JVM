@@ -27,21 +27,21 @@ static std::string getSymbolName(const std::string &className,
 }
 
 static std::vector<uint64_t> popMethodArgs(ThreadContext &tc,
-                                           FuncOrSingleType functionType) {
-  assert(functionType.first.first == Function && "Type was not a function");
-  auto popArg = [&tc](Type t) -> uint64_t {
-    assert(t != Function && t != Void && "Invalid method type");
-    if (t.getStackEntryCount() == 1)
-      return tc.stack.pop<1>();
-    assert(t.getStackEntryCount() == 2);
-    return tc.stack.pop<2>();
-  };
+                                           const Type &functionType) {
+  assert(functionType.isFunctionType() && "Type was not a function");
   // TODO: put JNIEnv pointer in arg[0] instead of nullptr.
   std::vector<uint64_t> args{0};
   // Need to skip the first type which is the return type.
-  std::transform(functionType.second.begin() + 1, functionType.second.end(),
-                 std::back_inserter(args),
-                 [&popArg](auto type) { return popArg(type.first); });
+  const auto &params = functionType.getFunctionArgs();
+  std::transform(params.begin(), params.end(), std::back_inserter(args),
+                 [&tc](auto type) {
+                   // assert(t != Function && t != Void && "Invalid method
+                   // type");
+                   if (type.getStackEntryCount() == 1)
+                     return tc.stack.pop<1>();
+                   assert(type.getStackEntryCount() == 2);
+                   return tc.stack.pop<2>();
+                 });
   return args;
 }
 
@@ -53,12 +53,12 @@ static void callNative(ThreadContext &tc, const Class::ConstPool &constPool,
   assert(handle && "Symbol not found");
   auto &utf8 =
       constPool.get<Class::ConstPool::Utf8Info>(method.descriptorIndex);
-  ErrorOr<FuncOrSingleType> typeOrErr =
-      parseType(static_cast<std::string_view>(utf8));
+  ErrorOr<Type> typeOrErr =
+      Type::parseType(static_cast<std::string_view>(utf8));
   assert(typeOrErr && "Invalid type string");
   std::vector<uint64_t> args = popMethodArgs(tc, *typeOrErr);
   uint64_t retVal = invoke(handle, args);
-  size_t size = typeOrErr->second[0].first.getStackEntryCount();
+  size_t size = typeOrErr->getReturnType().getStackEntryCount();
   if (size == 1)
     tc.stack.push<1>(retVal);
   else if (size == 2)

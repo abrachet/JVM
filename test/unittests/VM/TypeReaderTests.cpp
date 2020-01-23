@@ -3,75 +3,100 @@
 #include "gtest/gtest.h"
 
 TEST(TypeReader, Basic) {
-  ErrorOr<FuncOrSingleType> type = parseType("I");
-  ASSERT_TRUE(type);
-  EXPECT_EQ(type->second.size(), 0);
-  EXPECT_EQ(type->first.first, Int);
-  type = parseType("J");
-  ASSERT_TRUE(type);
-  EXPECT_EQ(type->second.size(), 0);
-  EXPECT_EQ(type->first.first, Long);
-  type = parseType("B");
-  ASSERT_TRUE(type);
-  EXPECT_EQ(type->second.size(), 0);
-  EXPECT_EQ(type->first.first, Byte);
-  type = parseType("S");
-  ASSERT_TRUE(type);
-  EXPECT_EQ(type->second.size(), 0);
-  EXPECT_EQ(type->first.first, Short);
-  type = parseType("C");
-  ASSERT_TRUE(type);
-  EXPECT_EQ(type->second.size(), 0);
-  EXPECT_EQ(type->first.first, Char);
-  type = parseType("F");
-  ASSERT_TRUE(type);
-  EXPECT_EQ(type->second.size(), 0);
-  EXPECT_EQ(type->first.first, Float);
-  type = parseType("D");
-  ASSERT_TRUE(type);
-  EXPECT_EQ(type->second.size(), 0);
-  EXPECT_EQ(type->first.first, Double);
+  {
+    ErrorOr<Type> type = Type::parseType("I");
+    ASSERT_TRUE(type);
+    EXPECT_FALSE(type->isFunctionType());
+    EXPECT_TRUE(type->isBasicType());
+    EXPECT_EQ(*type, Int);
+  }
+  {
+    ErrorOr<Type> type = Type::parseType("J");
+    ASSERT_TRUE(type);
+    EXPECT_FALSE(type->isFunctionType());
+    EXPECT_TRUE(type->isBasicType());
+    EXPECT_EQ(*type, Long);
+  }
+  {
+    ErrorOr<Type> type = Type::parseType("B");
+    ASSERT_TRUE(type);
+    EXPECT_FALSE(type->isFunctionType());
+    EXPECT_TRUE(type->isBasicType());
+    EXPECT_EQ(*type, Byte);
+  }
+  {
+    ErrorOr<Type> type = Type::parseType("S");
+    ASSERT_TRUE(type);
+    EXPECT_FALSE(type->isFunctionType());
+    EXPECT_TRUE(type->isBasicType());
+    EXPECT_EQ(*type, Short);
+  }
+  {
+    ErrorOr<Type> type = Type::parseType("C");
+    ASSERT_TRUE(type);
+    EXPECT_FALSE(type->isFunctionType());
+    EXPECT_TRUE(type->isBasicType());
+    EXPECT_EQ(*type, Char);
+  }
+  {
+    ErrorOr<Type> type = Type::parseType("F");
+    ASSERT_TRUE(type);
+    EXPECT_FALSE(type->isFunctionType());
+    EXPECT_TRUE(type->isBasicType());
+    EXPECT_EQ(*type, Float);
+  }
+  {
+    ErrorOr<Type> type = Type::parseType("D");
+    ASSERT_TRUE(type);
+    EXPECT_FALSE(type->isFunctionType());
+    EXPECT_TRUE(type->isBasicType());
+    EXPECT_EQ(*type, Double);
+  }
 }
 
 TEST(TypeReader, Object) {
-  ErrorOr<FuncOrSingleType> type = parseType("Ljava/lang/Object;");
-  ASSERT_TRUE(type);
-  EXPECT_EQ(type->second.size(), 0);
-  EXPECT_EQ(type->first.first, Object);
-  EXPECT_EQ(type->first.second, "java/lang/Object");
+  ErrorOr<Type> typeOrErr = Type::parseType("Ljava/lang/Object;");
+  ASSERT_TRUE(typeOrErr);
+  Type::BasicType type = *typeOrErr;
+  EXPECT_EQ(type, Object);
+  EXPECT_EQ(type.objectName, "java/lang/Object");
 }
 
 TEST(TypeReader, BasicFunction) {
-  ErrorOr<FuncOrSingleType> type = parseType("(I)J");
-  ASSERT_TRUE(type);
-  EXPECT_EQ(type->second.size(), 2);
-  EXPECT_EQ(type->first.first, Function);
-  EXPECT_EQ(type->second[0].first, Long);
-  EXPECT_EQ(type->second[1].first, Int);
+  ErrorOr<Type> typeOrErr = Type::parseType("(I)J");
+  ASSERT_TRUE(typeOrErr);
+  ASSERT_TRUE(typeOrErr->isFunctionType());
+  EXPECT_EQ(typeOrErr->getReturnType(), Long);
+  const auto &params = typeOrErr->getFunctionArgs();
+  ASSERT_EQ(params.size(), 1);
+  EXPECT_EQ(params[0], Int);
 }
 
 TEST(TypeReader, ComplexFunction) {
-  ErrorOr<FuncOrSingleType> type =
-      parseType("(Ljava/lang/Object;Ljava/lang/String;C)J");
-  ASSERT_TRUE(type);
-  EXPECT_EQ(type->second.size(), 4);
-  EXPECT_EQ(type->first.first, Function);
-  EXPECT_EQ(type->second[0].first, Long);
-  EXPECT_EQ(type->second[1].first, Object);
-  EXPECT_EQ(type->second[1].second, "java/lang/Object");
-  EXPECT_EQ(type->second[2].first, Object);
-  EXPECT_EQ(type->second[2].second, "java/lang/String");
-  EXPECT_EQ(type->second[3].first, Char);
+  ErrorOr<Type> typeOrErr =
+      Type::parseType("(Ljava/lang/Object;Ljava/lang/String;C)J");
+  ASSERT_TRUE(typeOrErr);
+  const Type &type = *typeOrErr;
+  ASSERT_TRUE(type.isFunctionType());
+  EXPECT_EQ(type.getReturnType(), Long);
+  const auto &params = type.getFunctionArgs();
+  ASSERT_EQ(params.size(), 3);
+  EXPECT_EQ(params[0], Object);
+  EXPECT_EQ(params[0].objectName, "java/lang/Object");
+  EXPECT_EQ(params[1], Object);
+  EXPECT_EQ(params[1].objectName, "java/lang/String");
+  EXPECT_EQ(params[2], Char);
+  EXPECT_EQ(params[2].objectName, "");
 }
 
 TEST(TypeReader, TypeSize) {
-  EXPECT_EQ(Void.getStackEntryCount(), 0);
-  EXPECT_EQ(Byte.getStackEntryCount(), 1);
-  EXPECT_EQ(Short.getStackEntryCount(), 1);
-  EXPECT_EQ(Int.getStackEntryCount(), 1);
-  EXPECT_EQ(Long.getStackEntryCount(), 2);
-  EXPECT_EQ(Char.getStackEntryCount(), 1);
-  EXPECT_EQ(Float.getStackEntryCount(), 1);
-  EXPECT_EQ(Double.getStackEntryCount(), 2);
-  EXPECT_EQ(Object.getStackEntryCount(), 2);
+  EXPECT_EQ(Type(Void).getStackEntryCount(), 0);
+  EXPECT_EQ(Type(Byte).getStackEntryCount(), 1);
+  EXPECT_EQ(Type(Short).getStackEntryCount(), 1);
+  EXPECT_EQ(Type(Int).getStackEntryCount(), 1);
+  EXPECT_EQ(Type(Long).getStackEntryCount(), 2);
+  EXPECT_EQ(Type(Char).getStackEntryCount(), 1);
+  EXPECT_EQ(Type(Float).getStackEntryCount(), 1);
+  EXPECT_EQ(Type(Double).getStackEntryCount(), 2);
+  EXPECT_EQ(Type(Object).getStackEntryCount(), 2);
 }

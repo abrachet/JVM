@@ -4,10 +4,10 @@
 #include "JVM/optional"
 #include <algorithm>
 
-static std::optional<TypeOrObject> parseOne(std::string_view &str) {
+static std::optional<Type::BasicType> parseOne(std::string_view &str) {
   auto begin = str.begin();
-  Type t;
-  switch (Type(*begin)) {
+  Type::BasicType t;
+  switch (Type::BasicType(*begin)) {
   case Function:
     [[fallthrough]];
   default:
@@ -41,40 +41,45 @@ static std::optional<TypeOrObject> parseOne(std::string_view &str) {
     goto object;
   }
   str = str.begin() + 1;
-  return TypeOrObject(t, {});
+  assert(t.c != Object);
+  return t;
 
 object:
   auto semiColon = std::find(++begin, str.end(), ';');
   str = {semiColon + 1, (size_t)std::distance(semiColon + 1, str.end())};
-  return TypeOrObject(Object, {begin, semiColon});
+  return Type::BasicType(Object, {begin, semiColon});
 }
 
-ErrorOr<FuncOrSingleType> parseType(std::string_view str) {
+ErrorOr<Type> Type::parseType(std::string_view str) {
   if (str.front() != '(') {
-    std::optional<TypeOrObject> typeOrErr = parseOne(str);
+    std::optional<Type::BasicType> typeOrErr = parseOne(str);
     if (typeOrErr)
-      return FuncOrSingleType{*typeOrErr, {}};
+      return Type(*typeOrErr);
     return std::string("Ill formed type");
   }
   assert(str.front() == '(');
   str = std::string_view(str.begin() + 1, str.size() - 1);
-  std::vector<TypeOrObject> types(1);
+  Type ret;
+  ret.function = true;
   while (str.front() != ')') {
-    std::optional<TypeOrObject> typeOrErr = parseOne(str);
+    std::optional<Type::BasicType> typeOrErr = parseOne(str);
     if (!typeOrErr)
       return std::string("Ill formed type");
-    types.push_back(*typeOrErr);
+    ret.functionParam.push_back(*typeOrErr);
   }
   assert(str.front() == ')');
   str = std::string_view(str.begin() + 1, str.size() - 1);
-  std::optional<TypeOrObject> typeOrErr = parseOne(str);
-  if (!typeOrErr)
+  std::optional<Type::BasicType> retTypeOrErr = parseOne(str);
+  if (!retTypeOrErr)
     return std::string("Ill formed type");
-  types[0] = *typeOrErr;
-  return FuncOrSingleType(TypeOrObject(Function, {}), types);
+  ret.type = *retTypeOrErr;
+  return ret;
 }
 
-size_t Type::getStackEntryCount() const {
+size_t Type::BasicType::getStackEntryCount() const {
+  if (array)
+    return 2;
+
   switch (c) {
   case Void:
     return 0;
