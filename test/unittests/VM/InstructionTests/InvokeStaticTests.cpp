@@ -6,8 +6,12 @@
 #include "gtest/gtest.h"
 
 static bool called = false;
+static int firstArg;
+static int secondArg;
 extern "C" int Java_CallNative_add(void *, int arg1, int arg2) {
   called = true;
+  firstArg = arg1;
+  secondArg = arg2;
   return arg1 + arg2;
 }
 
@@ -58,4 +62,6 @@ TEST_F(InvokeStatic, Native) {
   tc.callNext();
   EXPECT_EQ(tc.stack.pop<1>(), 3);
   EXPECT_TRUE(called);
+  EXPECT_EQ(firstArg, 1);
+  EXPECT_EQ(secondArg, 2);
 }

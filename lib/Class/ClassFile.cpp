@@ -33,7 +33,7 @@ getClassAndTypeName(const Class::ConstPool &constPool, uint16_t index1,
 }
 
 ErrorOr<const Class::Method &>
-ClassFile::findStaticMethod(const MethodrefInfo &methodInfo) {
+ClassFile::findStaticMethod(const MethodrefInfo &methodInfo) const {
   auto &methods = getMethods();
   auto &constPool = getConstPool();
   // auto &classEntry =
