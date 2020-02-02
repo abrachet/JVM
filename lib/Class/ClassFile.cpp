@@ -1,8 +1,8 @@
 
 #include "JVM/Class/ClassFile.h"
 #include "JVM/Core/BigEndianByteReader.h"
+#include "JVM/Core/algorithm.h"
 #include "JVM/string_view"
-#include <algorithm>
 
 using namespace Class;
 
@@ -40,7 +40,7 @@ findMethodFromNameType(const NameType &nameType,
     return nameType ==
            getNameType(constPool, method.nameIndex, method.descriptorIndex);
   };
-  auto it = std::find_if(methods.begin(), methods.end(), finder);
+  auto it = jvm::find_if(methods, finder);
   if (it == methods.end())
     return std::string("Method not found");
   return *it;

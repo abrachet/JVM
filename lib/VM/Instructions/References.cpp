@@ -4,6 +4,7 @@
 #include "JVM/Core/BigEndianByteReader.h"
 #include "JVM/Core/ErrorOr.h"
 #include "JVM/Core/Iterator.h"
+#include "JVM/Core/algorithm.h"
 #include "JVM/VM/JNI.h"
 #include "JVM/VM/ThreadContext.h"
 #include "JVM/VM/TypeReader.h"
@@ -61,7 +62,7 @@ class FunctionCaller {
   std::string getNativeSymbol() const {
     std::string sym = "Java_";
     std::string className(methodClassName);
-    std::replace(className.begin(), className.end(), '/', '_');
+    jvm::replace(className, '/', '_');
     return sym + className + "_" + std::string(functionName);
   }
 
@@ -110,8 +111,8 @@ std::vector<uint64_t> FunctionCaller::popMethodArgs() {
   std::vector<uint64_t> vec{getJavaEnv()};
   const auto &params = functionType.getFunctionArgs();
   vec.resize(params.size() + !isStaticMethod() + 1);
-  auto it = std::transform(params.begin(), params.end(),
-                           jvm::inserter(vec, vec.rbegin()), [this](auto type) {
+  auto it = jvm::transform(params, jvm::inserter(vec, vec.rbegin()),
+                           [this](auto type) {
                              assert(type.c != Function);
                              if (type.getStackEntryCount() == 1)
                                return tc.stack.pop<1>();
