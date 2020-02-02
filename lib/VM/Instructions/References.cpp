@@ -66,6 +66,10 @@ class FunctionCaller {
     return sym + className + "_" + std::string(functionName);
   }
 
+  void pushFrame() { tc.pushFrame(methodClassName); }
+
+  Frame popFrame() { return tc.popFrame(); }
+
   void invokeNative();
   // TODO.
   void invokeJVM() {}
@@ -87,7 +91,11 @@ public:
   }
 
   // TODO aquire locks if method is synchronized.
-  void call() { isNativeMethod() ? invokeNative() : invokeJVM(); }
+  void call() {
+    pushFrame();
+    isNativeMethod() ? invokeNative() : invokeJVM();
+    popFrame();
+  }
 };
 
 ErrorOr<FunctionCaller> FunctionCaller::create(ThreadContext &tc,

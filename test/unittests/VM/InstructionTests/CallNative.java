@@ -11,4 +11,8 @@ class CallNative {
     public static void callRet1() {
         int got = PackagedClass.ret1();
     }
+
+    public static void callTestName() {
+        int got = PackagedClass.testClassName();
+    }
 }

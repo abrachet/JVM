@@ -13,7 +13,7 @@ using LoadedClass = ClassLoader::LoadedClass;
 
 LoadedClass &ThreadContext::getLoadedClass() {
   ErrorOr<LoadedClass &> loadedClassOrErr =
-      ClassLoader::getLoadedClass(loadedClassName);
+      ClassLoader::getLoadedClass(getCurrentClassName());
   assert(loadedClassOrErr && "class was not loaded");
   return *loadedClassOrErr;
 }
