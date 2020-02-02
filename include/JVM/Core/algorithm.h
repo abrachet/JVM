@@ -7,6 +7,8 @@
 
 // TOOD: This code will be a lot less ugly when concepts land.
 
+namespace algo_detail {
+
 template <typename T> class has_begin_impl {
   using yes = char[1];
   using no = char[2];
@@ -23,7 +25,11 @@ public:
 template <typename T>
 struct has_begin : has_begin_impl<typename std::remove_reference<T>::type> {};
 
+} // namespace algo_detail
+
 namespace jvm {
+
+using algo_detail::has_begin;
 
 template <typename Iterable, typename OutputIt, typename UnaryOperation>
 OutputIt transform(Iterable &&range, OutputIt d_first, UnaryOperation unary_op,
