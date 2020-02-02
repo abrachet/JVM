@@ -14,6 +14,12 @@ struct ThreadContext {
   ThreadContext(Stack &&stack) : stack(std::move(stack)) {}
 
   ClassLoader::LoadedClass &getLoadedClass();
+  const ClassFile &getClassFile() {
+    return *getLoadedClass().second.loadedClass;
+  }
+
+  // TODO find class name on the stack
+  std::string_view getCurrentClassName() { return loadedClassName; }
   void callNext();
 };
 

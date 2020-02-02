@@ -259,6 +259,8 @@ class ClassFile {
 
   std::unique_ptr<FileBuffer> underlyingFile;
 
+  using MethodrefInfo = Class::ConstPool::MethodrefInfo;
+
 public:
   uint16_t getMinorVersion() const { return minorVersion; }
   uint16_t getMajorVersion() const { return majorVersion; }
@@ -270,9 +272,13 @@ public:
   const Class::Fields &getFields() const { return fields; }
   const Class::Methods &getMethods() const { return methods; }
 
-  // Class::ConstPool::MethodrefInfo
+  ErrorOr<const Class::Method &> findStaticMethod(const ClassFile &,
+                                                  const MethodrefInfo &) const;
+
   ErrorOr<const Class::Method &>
-  findStaticMethod(const Class::ConstPool::MethodrefInfo &) const;
+  findStaticMethod(const MethodrefInfo &methodRef) const {
+    return findStaticMethod(*this, methodRef);
+  }
 };
 
 #endif // JVM_CLASS_CLASSFILE_H

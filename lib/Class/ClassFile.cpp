@@ -21,10 +21,10 @@ CodeAttribute CodeAttribute::fromAttr(const Attribute &attr) {
 }
 
 using MethodrefInfo = Class::ConstPool::MethodrefInfo;
+using NameType = std::pair<std::string_view, std::string_view>;
 
-static std::pair<std::string_view, std::string_view>
-getClassAndTypeName(const Class::ConstPool &constPool, uint16_t index1,
-                    uint16_t index2) {
+static NameType getNameType(const Class::ConstPool &constPool, uint16_t index1,
+                            uint16_t index2) {
   auto &utf8 = constPool.get<ConstPool::Utf8Info>(index1);
   std::string_view className = static_cast<std::string_view>(utf8);
   auto &utf82 = constPool.get<ConstPool::Utf8Info>(index2);
@@ -32,26 +32,27 @@ getClassAndTypeName(const Class::ConstPool &constPool, uint16_t index1,
   return {className, nameType};
 }
 
-ErrorOr<const Class::Method &>
-ClassFile::findStaticMethod(const MethodrefInfo &methodInfo) const {
-  auto &methods = getMethods();
-  auto &constPool = getConstPool();
-  // auto &classEntry =
-  // constPool.get<ConstPool::ClassInfo>(methodInfo.classIndex);
-  auto &nameTypeInfo =
-      constPool.get<ConstPool::NameAndTypeInfo>(methodInfo.nameAndTypeIndex);
-  auto [className, nameType] = getClassAndTypeName(
-      constPool, nameTypeInfo.nameIndex, nameTypeInfo.descriptorIndex);
-  auto it = std::find_if(methods.begin(), methods.end(),
-                         [&constPool, className = className,
-                          nameType = nameType](const Class::Method &method) {
-                           auto [otherClassName, otherNameType] =
-                               getClassAndTypeName(constPool, method.nameIndex,
-                                                   method.descriptorIndex);
-                           return otherClassName == className &&
-                                  otherNameType == nameType;
-                         });
+static ErrorOr<const Class::Method &>
+findMethodFromNameType(const NameType &nameType,
+                       const Class::ConstPool &constPool,
+                       const Methods &methods) {
+  auto finder = [&nameType, &constPool](const Class::Method &method) {
+    return nameType ==
+           getNameType(constPool, method.nameIndex, method.descriptorIndex);
+  };
+  auto it = std::find_if(methods.begin(), methods.end(), finder);
   if (it == methods.end())
-    return std::string("Couldn't find method");
+    return std::string("Method not found");
   return *it;
+}
+
+ErrorOr<const Class::Method &>
+ClassFile::findStaticMethod(const ClassFile &classFile,
+                            const MethodrefInfo &methodInfo) const {
+  const auto &otherCP = classFile.getConstPool();
+  const auto &ntInfo =
+      otherCP.get<ConstPool::NameAndTypeInfo>(methodInfo.nameAndTypeIndex);
+  NameType nameType =
+      getNameType(otherCP, ntInfo.nameIndex, ntInfo.descriptorIndex);
+  return findMethodFromNameType(nameType, getConstPool(), getMethods());
 }

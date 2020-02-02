@@ -29,8 +29,11 @@ add_custom_command(
 add_custom_command(
   TARGET vm_test
   POST_BUILD
-    COMMAND javac "${CMAKE_CURRENT_SOURCE_DIR}/InstructionTests/CallNative.java" &&
-    mv "${CMAKE_CURRENT_SOURCE_DIR}/InstructionTests/CallNative.class" "$<TARGET_FILE_DIR:vm_test>/CallNative.class"
+    COMMAND cd '${CMAKE_CURRENT_SOURCE_DIR}/InstructionTests' &&
+    javac '${CMAKE_CURRENT_SOURCE_DIR}/InstructionTests/CallNative.java' &&
+    mv '${CMAKE_CURRENT_SOURCE_DIR}/InstructionTests/CallNative.class' '$<TARGET_FILE_DIR:vm_test>/CallNative.class' &&
+    mkdir '$<TARGET_FILE_DIR:vm_test>/java' 2> /dev/null || true &&
+    mv '${CMAKE_CURRENT_SOURCE_DIR}/InstructionTests/java/PackagedClass.class' '$<TARGET_FILE_DIR:vm_test>/java/PackagedClass.class'
 )
 
 

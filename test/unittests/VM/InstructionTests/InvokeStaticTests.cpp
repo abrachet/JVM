@@ -15,6 +15,11 @@ extern "C" int Java_CallNative_add(void *, int arg1, int arg2) {
   return arg1 + arg2;
 }
 
+extern "C" int Java_java_PackagedClass_ret1(void *) {
+  called = true;
+  return 1;
+}
+
 struct InvokeStatic : public ::testing::Test {
   ThreadContext tc;
 
@@ -33,7 +38,14 @@ struct InvokeStatic : public ::testing::Test {
     ASSERT_TRUE(classOrError) << classOrError.getError();
     auto &classFile = classOrError.get().second.loadedClass;
     auto &methods = classFile->getMethods();
-    ASSERT_EQ(methods.size(), 3);
+    EXPECT_EQ(methods.size(), 4);
+  }
+
+  void setUpCallAdd() {
+    auto classOrError = ClassLoader::loadClass(tc.loadedClassName);
+    ASSERT_TRUE(classOrError) << classOrError.getError();
+    auto &classFile = classOrError.get().second.loadedClass;
+    auto &methods = classFile->getMethods();
     ASSERT_EQ(methods[2].attributeCount, 1);
     int attrNameIdx = methods[2].attributes[0].attributeNameIndex;
     auto &utf8 =
@@ -47,9 +59,26 @@ struct InvokeStatic : public ::testing::Test {
     EXPECT_EQ(ca.code[1], Instructions::iconst_2);
     EXPECT_EQ(ca.code[2], Instructions::invokestatic);
   }
+
+  void setUpCallRet1() {
+    auto classOrError = ClassLoader::loadClass(tc.loadedClassName);
+    ASSERT_TRUE(classOrError) << classOrError.getError();
+    auto &classFile = classOrError.get().second.loadedClass;
+    auto &methods = classFile->getMethods();
+    ASSERT_EQ(methods[3].attributeCount, 1);
+    int attrNameIdx = methods[3].attributes[0].attributeNameIndex;
+    auto &utf8 =
+        classFile->getConstPool().get<Class::ConstPool::Utf8Info>(attrNameIdx);
+    ASSERT_EQ(std::string("Code"), std::string(utf8));
+    using Class::CodeAttribute;
+    CodeAttribute ca = CodeAttribute::fromAttr(methods[3].attributes[0]);
+    tc.pc = ca.code;
+    EXPECT_EQ(ca.code[0], Instructions::invokestatic);
+  }
 };
 
-TEST_F(InvokeStatic, Native) {
+TEST_F(InvokeStatic, BasicNative) {
+  setUpCallAdd();
   tc.callNext();
   tc.callNext();
   uint64_t two = tc.stack.pop<1>();
@@ -64,4 +93,10 @@ TEST_F(InvokeStatic, Native) {
   EXPECT_TRUE(called);
   EXPECT_EQ(firstArg, 1);
   EXPECT_EQ(secondArg, 2);
+}
+
+TEST_F(InvokeStatic, PackagedNativeName) {
+  setUpCallRet1();
+  tc.callNext();
+  EXPECT_EQ(tc.stack.pop<1>(), 1);
 }

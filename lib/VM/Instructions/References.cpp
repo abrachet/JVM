@@ -13,80 +13,98 @@
 #include <string>
 #include <vector>
 
-// TODO: Some asserts need to throw InvalidClassException.
-
 class FunctionCaller {
   using MethodrefInfo = Class::ConstPool::MethodrefInfo;
+  using Utf8Info = Class::ConstPool::Utf8Info;
+  using ClassInfo = Class::ConstPool::ClassInfo;
+  using NameAndTypeInfo = Class::ConstPool::NameAndTypeInfo;
 
-  const ClassFile &classFile;
-  const Class::Method &method;
-  const MethodrefInfo &methodRef;
   ThreadContext &tc;
-
+  const MethodrefInfo &methodRef;
+  std::string_view methodClassName;
+  std::string_view functionName;
   Type functionType;
 
-  FunctionCaller(const ClassFile &classFile, const Class::Method &method,
-                 const MethodrefInfo &methodRef, ThreadContext &tc,
-                 Type functionType)
-      : classFile(classFile), method(method), methodRef(methodRef), tc(tc),
-        functionType(functionType) {}
+  const ClassFile *methodClassFile = nullptr;
+  const Class::Method *method = nullptr;
 
-  const auto &getConstPool() const { return classFile.getConstPool(); }
+  const ClassFile &getMethodClassFile() {
+    if (methodClassFile)
+      return *methodClassFile;
+    ErrorOr<ClassLoader::LoadedClass &> loadedClass =
+        ClassLoader::loadClass(methodClassName);
+    assert(loadedClass && "ClassNotFoundException");
+    methodClassFile = loadedClass->second.loadedClass.get();
+    return *methodClassFile;
+  }
+
+  const Class::Method &getMethod() {
+    if (method)
+      return *method;
+    ErrorOr<const Class::Method &> methodOrErr =
+        getMethodClassFile().findStaticMethod(tc.getClassFile(), methodRef);
+    // TODO: better error handling here.
+    assert(methodOrErr && "MethodNotFoundException");
+    method = std::addressof(*methodOrErr);
+    return *method;
+  }
+
+  const Class::ConstPool &getConstPool() const {
+    return tc.getClassFile().getConstPool();
+  }
 
   // TODO: Create JavaEnv structure.
   uint64_t getJavaEnv() const { return 0; }
 
   std::vector<uint64_t> popMethodArgs();
 
-  bool isNativeMethod() const {
-    return method.accessFlags & Class::Method::AccessFlags::Native;
-  }
-
   std::string getNativeSymbol() const {
-    std::string sym("Java_");
-    sym += tc.loadedClassName + "_";
-    auto &utf8 =
-        getConstPool().get<Class::ConstPool::Utf8Info>(method.nameIndex);
-    return sym + static_cast<std::string>(utf8);
+    std::string sym = "Java_";
+    std::string className(methodClassName);
+    std::replace(className.begin(), className.end(), '/', '_');
+    return sym + className + "_" + std::string(functionName);
   }
 
   void invokeNative();
-  // TODO
+  // TODO.
   void invokeJVM() {}
+
+  FunctionCaller(ThreadContext &tc, const MethodrefInfo &methodRef,
+                 Type functionType)
+      : tc(tc), methodRef(methodRef), functionType(functionType) {}
 
 public:
   static ErrorOr<FunctionCaller> create(ThreadContext &tc,
-                                        const ClassFile &classFile,
-                                        uint16_t methodRefIndex) {
-    auto &cp = classFile.getConstPool();
-    const auto *methodRef = cp.get<MethodrefInfo *>(methodRefIndex);
-    if (!methodRef)
-      return std::string("Index does not point to a method");
-    auto methodOrErr = classFile.findStaticMethod(*methodRef);
-    if (!methodOrErr)
-      return methodOrErr.getError();
+                                        uint16_t methodRefIndex);
 
-    const auto *utf8 =
-        cp.get<Class::ConstPool::Utf8Info *>(methodOrErr->descriptorIndex);
-    if (!utf8)
-      return std::string("Invalid method descriptor index");
-    auto typeOrErr = Type::parseType(static_cast<std::string_view>(*utf8));
-    if (!typeOrErr)
-      return typeOrErr.getError();
-
-    return FunctionCaller(classFile, *methodOrErr, *methodRef, tc, *typeOrErr);
+  bool isStaticMethod() {
+    return getMethod().accessFlags & Class::Method::AccessFlags::Static;
   }
 
-  bool isStaticMethod() const {
-    return method.accessFlags & Class::Method::AccessFlags::Static;
+  bool isNativeMethod() {
+    return getMethod().accessFlags & Class::Method::AccessFlags::Native;
   }
 
-  void call() {
-    if (isNativeMethod())
-      return invokeNative();
-    invokeJVM();
-  }
+  // TODO aquire locks if method is synchronized.
+  void call() { isNativeMethod() ? invokeNative() : invokeJVM(); }
 };
+
+ErrorOr<FunctionCaller> FunctionCaller::create(ThreadContext &tc,
+                                               uint16_t methodRefIndex) {
+  const auto &cp = tc.getClassFile().getConstPool();
+  const auto &methodRef = cp.get<MethodrefInfo>(methodRefIndex);
+  const auto &methodClass = cp.get<ClassInfo>(methodRef.classIndex);
+  const auto &nameType = cp.get<NameAndTypeInfo>(methodRef.nameAndTypeIndex);
+  std::string_view functionType = cp.get<Utf8Info>(nameType.descriptorIndex);
+  ErrorOr<Type> typeOrErr = Type::parseType(functionType);
+  if (!typeOrErr)
+    return typeOrErr.getError();
+  FunctionCaller caller(tc, methodRef, *typeOrErr);
+  caller.methodClassName = cp.get<Utf8Info>(methodClass.nameIndex);
+  caller.functionName = cp.get<Utf8Info>(nameType.nameIndex);
+
+  return caller;
+}
 
 std::vector<uint64_t> FunctionCaller::popMethodArgs() {
   std::vector<uint64_t> vec{getJavaEnv()};
@@ -122,11 +140,8 @@ void FunctionCaller::invokeNative() {
 }
 
 void invokestatic(ThreadContext &tc) {
-  auto &[lock, loadedClass] = tc.getLoadedClass();
-  const auto &classFile = loadedClass.loadedClass;
   uint16_t cpIndex = readFromPointer<uint16_t>(tc.pc);
-  ErrorOr<FunctionCaller> caller =
-      FunctionCaller::create(tc, *classFile, cpIndex);
+  ErrorOr<FunctionCaller> caller = FunctionCaller::create(tc, cpIndex);
   assert(caller && "throw here");
   assert(caller->isStaticMethod());
   caller->call();

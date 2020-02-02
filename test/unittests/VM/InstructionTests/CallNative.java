@@ -1,3 +1,4 @@
+import java.PackagedClass;
 
 class CallNative {
 
@@ -5,5 +6,9 @@ class CallNative {
 
     public static void callAdd() {
         int got = add(1, 2);
+    }
+
+    public static void callRet1() {
+        int got = PackagedClass.ret1();
     }
 }
