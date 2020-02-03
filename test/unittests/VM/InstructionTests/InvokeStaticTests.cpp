@@ -118,12 +118,14 @@ TEST_F(InvokeStatic, BasicNative) {
   EXPECT_TRUE(called);
   EXPECT_EQ(firstArg, 1);
   EXPECT_EQ(secondArg, 2);
+  EXPECT_EQ(*reinterpret_cast<const char *>(tc.pc), Instructions::istore_0);
 }
 
 TEST_F(InvokeStatic, PackagedNativeName) {
   setUpCallRet1();
   tc.callNext();
   EXPECT_EQ(tc.stack.pop<1>(), 1);
+  EXPECT_EQ(*reinterpret_cast<const char *>(tc.pc), Instructions::istore_0);
 }
 
 TEST_F(InvokeStatic, NewFrameForNative) {
@@ -133,4 +135,5 @@ TEST_F(InvokeStatic, NewFrameForNative) {
   tc.callNext();
   EXPECT_TRUE(called);
   EXPECT_EQ(tc.stack.pop<1>(), 1);
+  EXPECT_EQ(*reinterpret_cast<const char *>(tc.pc), Instructions::istore_0);
 }

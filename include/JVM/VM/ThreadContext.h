@@ -33,6 +33,7 @@ struct ThreadContext {
   Frame popFrame() {
     Frame frame = frames.back();
     frames.pop_back();
+    pc = frame.returnAddress;
     return frame;
   }
 
