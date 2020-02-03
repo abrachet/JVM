@@ -50,55 +50,44 @@ struct InvokeStatic : public ::testing::Test {
     EXPECT_EQ(methods.size(), 5);
   }
 
-  void setUpCallAdd() {
+private:
+  void setUpMethod(int methodIndex) {
     auto classOrError = ClassLoader::loadClass(tc.getCurrentClassName());
     ASSERT_TRUE(classOrError) << classOrError.getError();
     auto &classFile = classOrError.get().second.loadedClass;
     auto &methods = classFile->getMethods();
-    ASSERT_EQ(methods[2].attributeCount, 1);
-    int attrNameIdx = methods[2].attributes[0].attributeNameIndex;
+    ASSERT_EQ(methods[methodIndex].attributeCount, 1);
+    int attrNameIdx = methods[methodIndex].attributes[0].attributeNameIndex;
     auto &utf8 =
         classFile->getConstPool().get<Class::ConstPool::Utf8Info>(attrNameIdx);
     ASSERT_EQ(std::string("Code"), std::string(utf8));
     using Class::CodeAttribute;
-    CodeAttribute ca = CodeAttribute::fromAttr(methods[2].attributes[0]);
+    CodeAttribute ca =
+        CodeAttribute::fromAttr(methods[methodIndex].attributes[0]);
     tc.pc = ca.code;
     ASSERT_TRUE(tc.pc);
-    EXPECT_EQ(ca.code[0], Instructions::iconst_1);
-    EXPECT_EQ(ca.code[1], Instructions::iconst_2);
-    EXPECT_EQ(ca.code[2], Instructions::invokestatic);
+  }
+
+public:
+  const uint8_t *getCode() const {
+    return reinterpret_cast<const uint8_t *>(tc.pc);
+  }
+
+  void setUpCallAdd() {
+    setUpMethod(2);
+    EXPECT_EQ(getCode()[0], Instructions::iconst_1);
+    EXPECT_EQ(getCode()[1], Instructions::iconst_2);
+    EXPECT_EQ(getCode()[2], Instructions::invokestatic);
   }
 
   void setUpCallRet1() {
-    auto classOrError = ClassLoader::loadClass(tc.getCurrentClassName());
-    ASSERT_TRUE(classOrError) << classOrError.getError();
-    auto &classFile = classOrError.get().second.loadedClass;
-    auto &methods = classFile->getMethods();
-    ASSERT_EQ(methods[3].attributeCount, 1);
-    int attrNameIdx = methods[3].attributes[0].attributeNameIndex;
-    auto &utf8 =
-        classFile->getConstPool().get<Class::ConstPool::Utf8Info>(attrNameIdx);
-    ASSERT_EQ(std::string("Code"), std::string(utf8));
-    using Class::CodeAttribute;
-    CodeAttribute ca = CodeAttribute::fromAttr(methods[3].attributes[0]);
-    tc.pc = ca.code;
-    EXPECT_EQ(ca.code[0], Instructions::invokestatic);
+    setUpMethod(3);
+    EXPECT_EQ(getCode()[0], Instructions::invokestatic);
   }
 
   void setUpCallTestName() {
-    auto classOrError = ClassLoader::loadClass(tc.getCurrentClassName());
-    ASSERT_TRUE(classOrError) << classOrError.getError();
-    auto &classFile = classOrError.get().second.loadedClass;
-    auto &methods = classFile->getMethods();
-    ASSERT_EQ(methods[4].attributeCount, 1);
-    int attrNameIdx = methods[4].attributes[0].attributeNameIndex;
-    auto &utf8 =
-        classFile->getConstPool().get<Class::ConstPool::Utf8Info>(attrNameIdx);
-    ASSERT_EQ(std::string("Code"), std::string(utf8));
-    using Class::CodeAttribute;
-    CodeAttribute ca = CodeAttribute::fromAttr(methods[4].attributes[0]);
-    tc.pc = ca.code;
-    EXPECT_EQ(ca.code[0], Instructions::invokestatic);
+    setUpMethod(4);
+    EXPECT_EQ(getCode()[0], Instructions::invokestatic);
   }
 };
 
@@ -118,14 +107,14 @@ TEST_F(InvokeStatic, BasicNative) {
   EXPECT_TRUE(called);
   EXPECT_EQ(firstArg, 1);
   EXPECT_EQ(secondArg, 2);
-  EXPECT_EQ(*reinterpret_cast<const char *>(tc.pc), Instructions::istore_0);
+  EXPECT_EQ(*getCode(), Instructions::istore_0);
 }
 
 TEST_F(InvokeStatic, PackagedNativeName) {
   setUpCallRet1();
   tc.callNext();
   EXPECT_EQ(tc.stack.pop<1>(), 1);
-  EXPECT_EQ(*reinterpret_cast<const char *>(tc.pc), Instructions::istore_0);
+  EXPECT_EQ(*getCode(), Instructions::istore_0);
 }
 
 TEST_F(InvokeStatic, NewFrameForNative) {
@@ -135,5 +124,5 @@ TEST_F(InvokeStatic, NewFrameForNative) {
   tc.callNext();
   EXPECT_TRUE(called);
   EXPECT_EQ(tc.stack.pop<1>(), 1);
-  EXPECT_EQ(*reinterpret_cast<const char *>(tc.pc), Instructions::istore_0);
+  EXPECT_EQ(*getCode(), Instructions::istore_0);
 }
