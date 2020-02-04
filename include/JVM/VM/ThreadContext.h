@@ -18,6 +18,7 @@ struct ThreadContext {
   std::vector<Frame> frames;
   const void *pc = nullptr;
 
+  // TODO: Need to refactor this out into a static create most likely.
   ThreadContext(Stack &&stack) : stack(std::move(stack)) {}
 
   ClassLoader::LoadedClass &getLoadedClass();
@@ -30,11 +31,22 @@ struct ThreadContext {
     pushFrame({className, returnAddr ? returnAddr : pc, stack.sp});
   }
 
+  const Frame &currentFrame() const { return frames.back(); }
+
   Frame popFrame() {
     Frame frame = frames.back();
     frames.pop_back();
     pc = frame.returnAddress;
     return frame;
+  }
+
+  template <size_t Size> uint64_t loadFromLocal(int index) {
+    static_assert(Stack::validEntrySize(Size), "Invalid stack entry size");
+    const uint32_t *stack =
+        reinterpret_cast<const uint32_t *>(currentFrame().frameStart);
+    stack -= index;
+    stack -= Size;
+    return *reinterpret_cast<const Stack::EntryType<Size> *>(stack);
   }
 
   std::string_view getCurrentClassName() { return frames.back().className; }

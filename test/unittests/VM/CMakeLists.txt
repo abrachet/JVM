@@ -2,6 +2,7 @@
 add_executable(vm_test
   JNITest.cpp
   StackTest.cpp
+  ThreadContextTest.cpp
   TypeReaderTests.cpp
 )
 

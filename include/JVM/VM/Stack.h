@@ -3,6 +3,7 @@
 #define JVM_VM_STACK_H
 
 #include "JVM/Core/ErrorOr.h"
+#include "JVM/Core/type_traits.h"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -57,6 +58,17 @@ private:
     uint64_t ret = *top;
     sp = top + 1;
     return ret;
+  }
+
+  template <size_t> struct Entry;
+  template <> struct Entry<1> : std::type_identity<uint32_t> {};
+  template <> struct Entry<2> : std::type_identity<uint64_t> {};
+
+public:
+  template <size_t Size> using EntryType = typename Entry<Size>::type;
+
+  static constexpr bool validEntrySize(int size) {
+    return size == 1 || size == 2;
   }
 };
 
