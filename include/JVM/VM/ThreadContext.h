@@ -10,7 +10,7 @@
 struct Frame {
   std::string_view className;
   const void *returnAddress = nullptr;
-  const void *frameStart = nullptr;
+  void *frameStart = nullptr;
 };
 
 struct ThreadContext {
@@ -40,13 +40,28 @@ struct ThreadContext {
     return frame;
   }
 
-  template <size_t Size> uint64_t loadFromLocal(int index) {
-    static_assert(Stack::validEntrySize(Size), "Invalid stack entry size");
-    const uint32_t *stack =
-        reinterpret_cast<const uint32_t *>(currentFrame().frameStart);
+private:
+  template <size_t Width> void *getAddressOfLocal(int index) {
+    static_assert(Stack::validEntrySize(Width), "Invalid stack entry size");
+    uint32_t *stack = reinterpret_cast<uint32_t *>(currentFrame().frameStart);
     stack -= index;
-    stack -= Size;
-    return *reinterpret_cast<const Stack::EntryType<Size> *>(stack);
+    stack -= Width;
+    return reinterpret_cast<void *>(stack);
+  }
+
+public:
+  template <size_t Width> uint64_t loadFromLocal(int index) {
+    static_assert(Stack::validEntrySize(Width), "Invalid stack entry size");
+    const uint32_t *stack =
+        reinterpret_cast<const uint32_t *>(getAddressOfLocal<Width>(index));
+    return *reinterpret_cast<const Stack::EntryType<Width> *>(stack);
+  }
+
+  template <size_t Width> void storeInLocal(int index, uint64_t toStore) {
+    static_assert(Stack::validEntrySize(Width), "Invalid stack entry size");
+    auto *addr = reinterpret_cast<Stack::EntryType<Width> *>(
+        getAddressOfLocal<Width>(index));
+    *addr = toStore;
   }
 
   std::string_view getCurrentClassName() { return frames.back().className; }
