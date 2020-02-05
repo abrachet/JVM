@@ -36,3 +36,16 @@ TEST_F(InvokeStaticJVM, Basic) {
   EXPECT_EQ(one, 1);
   tc.stack.push<1>(one);
 }
+
+TEST_F(InvokeStaticJVM, Return) {
+  setUpCallReturnArgJVM();
+  // Need to manually allocate space for local in callReturnArgJVM.
+  tc.stack.push<1>(0xDEAD);
+  callMultiple(2);
+  EXPECT_EQ(getCode()[0], Instructions::iload_0);
+  EXPECT_EQ(getCode()[1], Instructions::ireturn);
+  ASSERT_EQ(tc.getMethodName(), "returnArgJVM");
+  callMultiple(2);
+  ASSERT_EQ(tc.getMethodName(), "callReturnArgJVM");
+  EXPECT_EQ(tc.stack.pop<1>(), 1);
+}

@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include "Constants.h"
+#include "Control.h"
 #include "Loads.h"
 #include "References.h"
 
@@ -45,5 +46,21 @@ InsT instructions[256] = {
     [Instructions::istore_1] =
         [](ThreadContext &tc) { tc.storeInLocal<1>(1, tc.stack.pop<1>()); },
 
+    // Stack
+
+    // Math
+
+    // Conversions
+
+    // Comparasions
+
+    // Control
+    [Instructions::ireturn] = ireturn,
+
+    // References
     [Instructions::invokestatic] = invokestatic,
+
+    // Extended
+
+    // Reserved
 };

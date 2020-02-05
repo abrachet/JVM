@@ -1,9 +1,9 @@
 
-target_sources(VM PUBLIC
+target_sources(VM 
+PUBLIC
   Instructions.cpp
-)
-
-target_sources(VM PRIVATE
+PRIVATE
   Constants.cpp
+  Control.cpp
   References.cpp
 )
