@@ -73,16 +73,10 @@ class FunctionCaller {
   Frame popFrame() { return tc.popFrame(); }
 
   size_t getArgSize() const {
-#if 0
-    return jvm::accumulate(getType().getFunctionArgs(), 0, [](int current, const auto &type) {
-      return current + type.getStackEntryCount();
-    });
-#endif
-    const auto &types = getType().getFunctionArgs();
-    size_t total = 0;
-    for (const auto &type : types)
-      total += type.getStackEntryCount();
-    return total;
+    return jvm::accumulate(getType().getFunctionArgs(), 0,
+                           [](int current, const auto &type) {
+                             return current + type.getStackEntryCount();
+                           });
   }
 
   void *findFrameStart() const {
