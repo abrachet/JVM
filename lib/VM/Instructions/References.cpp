@@ -50,6 +50,8 @@ class FunctionCaller {
     return *method;
   }
 
+  const Type &getType() const { return functionType; }
+
   const Class::ConstPool &getConstPool() const {
     return tc.getClassFile().getConstPool();
   }
@@ -70,9 +72,25 @@ class FunctionCaller {
 
   Frame popFrame() { return tc.popFrame(); }
 
+  size_t getArgSize() const {
+#if 0
+    return jvm::accumulate(getType().getFunctionArgs(), 0, [](int current, const auto &type) {
+      return current + type.getStackEntryCount();
+    });
+#endif
+    const auto &types = getType().getFunctionArgs();
+    size_t total = 0;
+    for (const auto &type : types)
+      total += type.getStackEntryCount();
+    return total;
+  }
+
+  void *findFrameStart() const {
+    return reinterpret_cast<uint32_t *>(tc.stack.sp) + getArgSize();
+  }
+
   void invokeNative();
-  // TODO.
-  void invokeJVM() {}
+  void invokeJVM();
 
   FunctionCaller(ThreadContext &tc, const MethodrefInfo &methodRef,
                  Type functionType)
@@ -94,7 +112,6 @@ public:
   void call() {
     pushFrame();
     isNativeMethod() ? invokeNative() : invokeJVM();
-    popFrame();
   }
 };
 
@@ -146,6 +163,27 @@ void FunctionCaller::invokeNative() {
     tc.stack.push<1>(ret);
   else
     assert(size == 0 && "Invalid stack size for return type");
+  popFrame();
+}
+
+void FunctionCaller::invokeJVM() {
+  assert(!isNativeMethod());
+  const Class::Method &method = getMethod();
+  ErrorOr<Class::CodeAttribute> codeOrErr =
+      method.findCodeAttr(getMethodClassFile().getConstPool());
+  assert(codeOrErr);
+  const Class::CodeAttribute &attr = *codeOrErr;
+  tc.currentFrame().frameStart = findFrameStart();
+  const auto &cp = getMethodClassFile().getConstPool();
+  const auto &nameType =
+      cp.get<Class::ConstPool::NameAndTypeInfo>(methodRef.nameAndTypeIndex);
+  tc.currentFrame().nameIndex = nameType.nameIndex;
+  tc.currentFrame().typeIndex = nameType.descriptorIndex;
+  assert(tc.currentFrame().className == methodClassName);
+  int extraLocals = attr.maxLocals - getArgSize();
+  for (int i = 0; i < extraLocals; i++)
+    tc.stack.push<1>(0xDEAD);
+  tc.pc = attr.code;
 }
 
 void invokestatic(ThreadContext &tc) {

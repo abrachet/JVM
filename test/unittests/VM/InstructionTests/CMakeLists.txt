@@ -2,7 +2,8 @@
 target_sources(vm_test PUBLIC
   ConstantTests.cpp
   General.cpp
-  InvokeStaticTests.cpp
+  InvokeStaticJVMTest.cpp
+  InvokeStaticNativeTest.cpp
   LoadsTest.cpp
 )
 

@@ -3,6 +3,7 @@
 #define JVM_CORE_ALGORITHM_H
 
 #include <algorithm>
+#include <numeric>
 #include <type_traits>
 
 // TOOD: This code will be a lot less ugly when concepts land.
@@ -47,6 +48,12 @@ template <typename Iterable, typename UnaryPredicate>
 auto find_if(Iterable &&range, UnaryPredicate p,
              std::enable_if_t<has_begin<Iterable>::value> * = nullptr) {
   return std::find_if(std::begin(range), std::end(range), p);
+}
+
+template <typename Iterable, typename T, typename BinaryFunction>
+T accumulate(Iterable &&range, T init, BinaryFunction op) {
+  static_assert(has_begin<Iterable>::value);
+  return std::accumulate(std::begin(range), std::end(range), init, op);
 }
 
 } // namespace jvm

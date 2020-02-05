@@ -8,9 +8,36 @@
 #include <vector>
 
 struct Frame {
-  std::string_view className;
   const void *returnAddress = nullptr;
   void *frameStart = nullptr;
+  std::string_view className;
+  uint16_t nameIndex = 0;
+  uint16_t typeIndex = 0;
+  uint32_t pad __attribute__((unused));
+
+  Frame(std::string_view className, const void *returnAddress = nullptr,
+        void *frameStart = nullptr, uint16_t nameIndex = 0,
+        uint16_t typeIndex = 0)
+      : returnAddress(returnAddress), frameStart(frameStart),
+        className(className), nameIndex(nameIndex), typeIndex(typeIndex) {}
+
+  std::string_view getMethodName() const {
+    if (!nameIndex)
+      return "<unkown method name>";
+    auto classOrErr = ClassLoader::getLoadedClass(className);
+    assert(classOrErr);
+    const auto &cp = classOrErr->second.loadedClass->getConstPool();
+    return cp.get<Class::ConstPool::Utf8Info>(nameIndex);
+  }
+
+  std::string_view getMethodTypeName() const {
+    if (!typeIndex)
+      return "<unkown method type name>";
+    auto classOrErr = ClassLoader::getLoadedClass(className);
+    assert(classOrErr);
+    const auto &cp = classOrErr->second.loadedClass->getConstPool();
+    return cp.get<Class::ConstPool::Utf8Info>(typeIndex);
+  }
 };
 
 struct ThreadContext {
@@ -26,12 +53,23 @@ struct ThreadContext {
     return *getLoadedClass().second.loadedClass;
   }
 
+  std::string_view getMethodName() const {
+    return currentFrame().getMethodName();
+  }
+
+  std::string_view getMethodTypeName() const {
+    return currentFrame().getMethodTypeName();
+  }
+
   void pushFrame(Frame &&f) { frames.push_back(f); }
   void pushFrame(std::string_view className, const void *returnAddr = nullptr) {
     pushFrame({className, returnAddr ? returnAddr : pc, stack.sp});
   }
 
+  size_t numFrames() const { return frames.size(); }
+
   const Frame &currentFrame() const { return frames.back(); }
+  Frame &currentFrame() { return frames.back(); }
 
   Frame popFrame() {
     Frame frame = frames.back();

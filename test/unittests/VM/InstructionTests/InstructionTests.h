@@ -25,24 +25,25 @@ public:
     }
     auto classOrError = ClassLoader::loadClass(getClassName());
     ASSERT_TRUE(classOrError) << classOrError.getError();
-    tc.pushFrame(getClassName());
   }
 
 protected:
   void setUpMethod(int methodIndex) {
     auto classOrError = ClassLoader::loadClass(getClassName());
     ASSERT_TRUE(classOrError) << classOrError.getError();
-    auto &classFile = classOrError.get().second.loadedClass;
-    auto &methods = classFile->getMethods();
-    ASSERT_EQ(methods[methodIndex].attributeCount, 1);
-    int attrNameIdx = methods[methodIndex].attributes[0].attributeNameIndex;
+    const auto &classFile = classOrError.get().second.loadedClass;
+    const auto &methods = classFile->getMethods();
+    const auto &method = methods.at(methodIndex);
+    ASSERT_EQ(method.attributeCount, 1);
+    int attrNameIdx = method.attributes[0].attributeNameIndex;
     auto &utf8 =
         classFile->getConstPool().template get<Class::ConstPool::Utf8Info>(
             attrNameIdx);
-    ASSERT_EQ(std::string("Code"), std::string(utf8));
+    ASSERT_EQ("Code", std::string_view(utf8));
     using Class::CodeAttribute;
-    CodeAttribute ca =
-        CodeAttribute::fromAttr(methods[methodIndex].attributes[0]);
+    CodeAttribute ca = CodeAttribute::fromAttr(method.attributes[0]);
+    tc.pushFrame(Frame(getClassName(), nullptr, tc.stack.sp, method.nameIndex,
+                       method.descriptorIndex));
     tc.pc = ca.code;
     ASSERT_TRUE(tc.pc);
   }

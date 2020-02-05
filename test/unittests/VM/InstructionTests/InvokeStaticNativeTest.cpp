@@ -29,7 +29,7 @@ extern "C" int Java_java_PackagedClass_testClassName(void *) {
   return currentContext->getCurrentClassName() == "java/PackagedClass";
 }
 
-struct InvokeStatic : public MethodCaller<> {
+struct InvokeStaticNative : public MethodCaller<> {
 
   std::string_view getClassName() override { return "CallNative"; }
 
@@ -51,7 +51,7 @@ struct InvokeStatic : public MethodCaller<> {
   }
 };
 
-TEST_F(InvokeStatic, BasicNative) {
+TEST_F(InvokeStaticNative, BasicNative) {
   setUpCallAdd();
   tc.callNext();
   tc.callNext();
@@ -70,14 +70,14 @@ TEST_F(InvokeStatic, BasicNative) {
   EXPECT_EQ(*getCode(), Instructions::istore_0);
 }
 
-TEST_F(InvokeStatic, PackagedNativeName) {
+TEST_F(InvokeStaticNative, PackagedNativeName) {
   setUpCallRet1();
   tc.callNext();
   EXPECT_EQ(tc.stack.pop<1>(), 1);
   EXPECT_EQ(*getCode(), Instructions::istore_0);
 }
 
-TEST_F(InvokeStatic, NewFrameForNative) {
+TEST_F(InvokeStaticNative, NewFrameForNative) {
   setUpCallTestName();
   currentContext = &tc;
   called = false;

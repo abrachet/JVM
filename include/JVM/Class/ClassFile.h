@@ -237,6 +237,15 @@ struct Method {
   uint16_t descriptorIndex;
   uint16_t attributeCount;
   std::vector<Attribute> attributes;
+
+  ErrorOr<CodeAttribute> findCodeAttr(const ConstPool &cp) const {
+    for (const auto &attr : attributes) {
+      if (static_cast<std::string_view>(
+              cp.get<ConstPool::Utf8Info>(attr.attributeNameIndex)) == "Code")
+        return CodeAttribute::fromAttr(attr);
+    }
+    return std::string("Code attribute not found");
+  }
 };
 
 } // namespace Class
