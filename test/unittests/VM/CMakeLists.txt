@@ -37,5 +37,11 @@ add_custom_command(
     mv '${CMAKE_CURRENT_SOURCE_DIR}/InstructionTests/java/PackagedClass.class' '$<TARGET_FILE_DIR:vm_test>/java/PackagedClass.class'
 )
 
+add_custom_command(
+  TARGET vm_test
+  POST_BUILD
+    COMMAND javac '${CMAKE_CURRENT_SOURCE_DIR}/InstructionTests/General.java' &&
+    mv '${CMAKE_CURRENT_SOURCE_DIR}/InstructionTests/General.class' '$<TARGET_FILE_DIR:vm_test>/General.class'
+)
 
 add_test(NAME vm_test COMMAND vm_test)

@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include "Constants.h"
+#include "Loads.h"
 #include "References.h"
 
 #define unimplemented(str)                                                     \
@@ -11,6 +12,7 @@
   }
 
 InsT instructions[256] = {
+    // Constants
     [Instructions::nop] = nop,
     [Instructions::aconst_null] = aconst_null,
     [Instructions::iconst_m1] = iconst_m1,
@@ -29,6 +31,19 @@ InsT instructions[256] = {
     [Instructions::dconst_1] = dconst_1,
     [Instructions::bipush] = bipush,
     [Instructions::sipush] = sipush,
+
+    // Loads
+    [Instructions::iload_0] = iload_0,
+    [Instructions::iload_1] = iload_1,
+    [Instructions::iload_2] = iload_2,
+    [Instructions::iload_3] = iload_3,
+
+    // Stores
+    // This is just temporary to get the loads test to work.
+    [Instructions::istore_0] =
+        [](ThreadContext &tc) { tc.storeInLocal<1>(0, tc.stack.pop<1>()); },
+    [Instructions::istore_1] =
+        [](ThreadContext &tc) { tc.storeInLocal<1>(1, tc.stack.pop<1>()); },
 
     [Instructions::invokestatic] = invokestatic,
 };
