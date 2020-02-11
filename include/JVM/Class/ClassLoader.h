@@ -36,6 +36,7 @@ public:
     std::unique_ptr<ClassFile> loadedClass;
     // super in [0], interfaces in [1:]
     std::vector<std::reference_wrapper<LoadedClass>> superClasses;
+    std::recursive_mutex monitor;
   };
 
   inline static std::vector<std::string> classPath = {"."};

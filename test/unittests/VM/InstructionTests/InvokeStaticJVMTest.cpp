@@ -5,6 +5,9 @@
 #include "JVM/VM/Stack.h"
 #include "JVM/VM/ThreadContext.h"
 #include "gtest/gtest.h"
+#include <condition_variable>
+#include <mutex>
+#include <thread>
 
 struct InvokeStaticJVM : public MethodCaller<> {
 
@@ -15,6 +18,12 @@ struct InvokeStaticJVM : public MethodCaller<> {
     EXPECT_EQ(getCode()[0], Instructions::iconst_1);
     EXPECT_EQ(getCode()[1], Instructions::invokestatic);
     EXPECT_EQ(getCode()[4], Instructions::istore_0);
+  }
+
+  void setUpCallSynced() {
+    setUpMethod(6);
+    EXPECT_EQ(getCode()[0], Instructions::invokestatic);
+    EXPECT_EQ(getCode()[3], Instructions::pop);
   }
 };
 
@@ -48,4 +57,29 @@ TEST_F(InvokeStaticJVM, Return) {
   callMultiple(2);
   ASSERT_EQ(tc.getMethodName(), "callReturnArgJVM");
   EXPECT_EQ(tc.stack.pop<1>(), 1);
+}
+
+TEST_F(InvokeStaticJVM, Synchronized) {
+  setUpCallSynced();
+  ASSERT_EQ(tc.getMethodName(), "callSynced");
+  tc.callNext();
+  EXPECT_EQ(getCode()[0], Instructions::iconst_1);
+  EXPECT_EQ(getCode()[1], Instructions::ireturn);
+  std::mutex m;
+  std::unique_lock lock(m);
+  std::condition_variable cv;
+  std::thread t1([this, &cv, &m] {
+    ASSERT_FALSE(tc.getLoadedClass().second.monitor.try_lock());
+    cv.notify_one();
+    std::unique_lock lock(m);
+    cv.wait(lock);
+    EXPECT_TRUE(tc.getLoadedClass().second.monitor.try_lock());
+    tc.getLoadedClass().second.monitor.unlock();
+  });
+  cv.wait(lock);
+  lock.unlock();
+  callMultiple(2);
+  tc.getLoadedClass().second.monitor.unlock();
+  cv.notify_all();
+  t1.join();
 }

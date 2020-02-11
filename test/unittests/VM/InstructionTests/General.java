@@ -14,4 +14,12 @@ class General {
     public static void callReturnArgJVM() {
         int local = returnArgJVM(1);
     }
+
+    public static synchronized int synced() {
+        return 1;
+    }
+
+    public static void callSynced() {
+        synced();
+    }
 }

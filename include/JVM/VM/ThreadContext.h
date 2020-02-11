@@ -13,7 +13,7 @@ struct Frame {
   std::string_view className;
   uint16_t nameIndex = 0;
   uint16_t typeIndex = 0;
-  uint32_t pad __attribute__((unused));
+  bool syncronizedMethod = false;
 
   Frame(std::string_view className, const void *returnAddress = nullptr,
         void *frameStart = nullptr, uint16_t nameIndex = 0,

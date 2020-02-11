@@ -26,10 +26,10 @@ class FunctionCaller {
   std::string_view functionName;
   Type functionType;
 
-  const ClassFile *methodClassFile = nullptr;
-  const Class::Method *method = nullptr;
+  mutable const ClassFile *methodClassFile = nullptr;
+  mutable const Class::Method *method = nullptr;
 
-  const ClassFile &getMethodClassFile() {
+  const ClassFile &getMethodClassFile() const {
     if (methodClassFile)
       return *methodClassFile;
     ErrorOr<ClassLoader::LoadedClass &> loadedClass =
@@ -39,7 +39,7 @@ class FunctionCaller {
     return *methodClassFile;
   }
 
-  const Class::Method &getMethod() {
+  const Class::Method &getMethod() const {
     if (method)
       return *method;
     ErrorOr<const Class::Method &> methodOrErr =
@@ -68,7 +68,11 @@ class FunctionCaller {
     return sym + className + "_" + std::string(functionName);
   }
 
-  void pushFrame() { tc.pushFrame(methodClassName); }
+  void pushFrame() {
+    tc.pushFrame(methodClassName);
+    if (isSynchronizedMethod())
+      tc.currentFrame().syncronizedMethod = true;
+  }
 
   Frame popFrame() { return tc.popFrame(); }
 
@@ -83,6 +87,18 @@ class FunctionCaller {
     return reinterpret_cast<uint32_t *>(tc.stack.sp) + getArgSize();
   }
 
+  bool isSynchronizedMethod() const {
+    return getMethod().accessFlags & Class::Method::AccessFlags::Synchronized;
+  }
+
+  void aquireClassMonitor() {
+    ErrorOr<ClassLoader::LoadedClass &> loadedClassOrErr =
+        ClassLoader::loadClass(methodClassName);
+    assert(loadedClassOrErr);
+    ClassLoader::LoadedClass &loadedClass = *loadedClassOrErr;
+    loadedClass.second.monitor.lock();
+  }
+
   void invokeNative();
   void invokeJVM();
 
@@ -94,16 +110,18 @@ public:
   static ErrorOr<FunctionCaller> create(ThreadContext &tc,
                                         uint16_t methodRefIndex);
 
-  bool isStaticMethod() {
+  bool isStaticMethod() const {
     return getMethod().accessFlags & Class::Method::AccessFlags::Static;
   }
 
-  bool isNativeMethod() {
+  bool isNativeMethod() const {
     return getMethod().accessFlags & Class::Method::AccessFlags::Native;
   }
 
   // TODO aquire locks if method is synchronized.
   void call() {
+    if (isStaticMethod() && isSynchronizedMethod())
+      aquireClassMonitor();
     pushFrame();
     isNativeMethod() ? invokeNative() : invokeJVM();
   }
