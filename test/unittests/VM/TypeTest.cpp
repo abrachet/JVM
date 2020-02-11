@@ -1,5 +1,5 @@
 
-#include "JVM/VM/TypeReader.h"
+#include "JVM/VM/Type.h"
 #include "gtest/gtest.h"
 
 TEST(TypeReader, Basic) {

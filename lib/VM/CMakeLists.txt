@@ -3,7 +3,7 @@ add_library(VM
   JNI.cpp
   Stack.cpp
   ThreadContext.cpp
-  TypeReader.cpp
+  Type.cpp
 )
 
 target_link_libraries(VM Class)

@@ -7,7 +7,7 @@
 #include "JVM/Core/algorithm.h"
 #include "JVM/VM/JNI.h"
 #include "JVM/VM/ThreadContext.h"
-#include "JVM/VM/TypeReader.h"
+#include "JVM/VM/Type.h"
 #include "JVM/string_view"
 #include <algorithm>
 #include <cassert>

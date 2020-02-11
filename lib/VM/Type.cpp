@@ -1,5 +1,5 @@
 
-#include "JVM/VM/TypeReader.h"
+#include "JVM/VM/Type.h"
 #include "JVM/Core/ErrorOr.h"
 #include "JVM/optional"
 #include <algorithm>
