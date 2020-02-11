@@ -1,7 +1,6 @@
 
 #include "Control.h"
 
-// TODO: monitorexit on syncronized methods.
 template <size_t TypeWidth> void treturn(ThreadContext &tc) {
   if (tc.currentFrame().syncronizedMethod)
     tc.getLoadedClass().second.monitor.unlock();

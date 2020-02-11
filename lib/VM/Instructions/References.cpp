@@ -118,7 +118,6 @@ public:
     return getMethod().accessFlags & Class::Method::AccessFlags::Native;
   }
 
-  // TODO aquire locks if method is synchronized.
   void call() {
     if (isStaticMethod() && isSynchronizedMethod())
       aquireClassMonitor();
