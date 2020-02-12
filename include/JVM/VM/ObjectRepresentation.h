@@ -18,9 +18,8 @@ class ObjectRepresentation {
   std::vector<std::pair<Type, uint64_t>> memberFields;
   uint64_t size;
 
-  ObjectRepresentation() = default;
-
 public:
+  ObjectRepresentation() = default;
   static ErrorOr<ObjectRepresentation> createFromClassFile(const ClassFile &);
 
   uint64_t getObjectSize() const { return size; }

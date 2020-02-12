@@ -3,6 +3,7 @@
 #include "JVM/Class/ClassFileReader.h"
 #include "JVM/Class/ClassFinder.h"
 #include "JVM/Core/Defer.h"
+#include "JVM/VM/ObjectRepresentation.h"
 #include <string>
 
 using namespace std::string_literals;
@@ -84,6 +85,13 @@ ClassLoader::loadClass(const std::string_view fullClassName) {
 
   lClass.loadedClass = std::move(classFile);
   lClass.location = loc;
+  {
+    auto orOrErr =
+        ObjectRepresentation::createFromClassFile(*lClass.loadedClass);
+    if (!orOrErr)
+      return orOrErr.getError();
+    lClass.objectRepresentation = *orOrErr;
+  }
 
   if (std::string str = loadSuperClasses(lClass); str.size())
     return str;

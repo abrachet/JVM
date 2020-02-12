@@ -5,6 +5,7 @@
 #include "JVM/Class/ClassFile.h"
 #include "JVM/Class/ClassFinder.h"
 #include "JVM/Core/ErrorOr.h"
+#include "JVM/VM/ObjectRepresentation.h"
 #include "JVM/string_view"
 #include <condition_variable>
 #include <memory>
@@ -37,6 +38,8 @@ public:
     // super in [0], interfaces in [1:]
     std::vector<std::reference_wrapper<LoadedClass>> superClasses;
     std::recursive_mutex monitor;
+
+    ObjectRepresentation objectRepresentation;
   };
 
   inline static std::vector<std::string> classPath = {"."};
