@@ -1,6 +1,7 @@
 
 add_executable(vm_test
   ClassLoaderTest.cpp
+  InMemoryObjectTest.cpp
   JNITest.cpp
   ObjectRepresentationTest.cpp
   StackTest.cpp
