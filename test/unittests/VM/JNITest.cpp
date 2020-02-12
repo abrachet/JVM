@@ -2,7 +2,7 @@
 
 #include "JVM/VM/JNI.h"
 #include "JVM/Class/ClassFinder.h"
-#include "JVM/Class/ClassLoader.h"
+#include "JVM/VM/ClassLoader.h"
 #include "gtest/gtest.h"
 #include <cstdlib>
 #include <dlfcn.h>

@@ -3,7 +3,6 @@ add_library(Class
     ClassFile.cpp
     ClassFileReader.cpp
     ClassFinder.cpp
-    ClassLoader.cpp
 )
 
 target_link_libraries(Class Core)

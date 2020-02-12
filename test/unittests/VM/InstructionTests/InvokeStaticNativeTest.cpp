@@ -1,6 +1,6 @@
 
 #include "InstructionTests.h"
-#include "JVM/Class/ClassLoader.h"
+#include "JVM/VM/ClassLoader.h"
 #include "JVM/VM/Instructions.h"
 #include "JVM/VM/Stack.h"
 #include "JVM/VM/ThreadContext.h"

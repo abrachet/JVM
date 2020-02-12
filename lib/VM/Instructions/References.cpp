@@ -1,10 +1,10 @@
 
 #include "JVM/Class/ClassFile.h"
-#include "JVM/Class/ClassLoader.h"
 #include "JVM/Core/BigEndianByteReader.h"
 #include "JVM/Core/ErrorOr.h"
 #include "JVM/Core/Iterator.h"
 #include "JVM/Core/algorithm.h"
+#include "JVM/VM/ClassLoader.h"
 #include "JVM/VM/JNI.h"
 #include "JVM/VM/ThreadContext.h"
 #include "JVM/VM/Type.h"

@@ -2,7 +2,7 @@
 #ifndef JVM_VM_THREADCONTEXT_H
 #define JVM_VM_THREADCONTEXT_H
 
-#include "JVM/Class/ClassLoader.h"
+#include "JVM/VM/ClassLoader.h"
 #include "JVM/VM/Stack.h"
 #include <functional>
 #include <vector>

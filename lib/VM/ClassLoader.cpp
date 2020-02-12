@@ -1,5 +1,5 @@
 
-#include "JVM/Class/ClassLoader.h"
+#include "JVM/VM/ClassLoader.h"
 #include "JVM/Class/ClassFileReader.h"
 #include "JVM/Class/ClassFinder.h"
 #include "JVM/Core/Defer.h"

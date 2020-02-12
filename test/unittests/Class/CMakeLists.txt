@@ -14,6 +14,7 @@ target_link_libraries(class_test
   gtest_main
   Class
   Core
+  VM
 )
 
 execute_process(
