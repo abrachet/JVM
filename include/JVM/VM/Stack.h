@@ -67,6 +67,11 @@ private:
 public:
   template <size_t Size> using EntryType = typename Entry<Size>::type;
 
+  constexpr static size_t stackEntryBytes = sizeof(void *) / 2;
+
+  // TODO: Probably impossible by now to remove this engrained assumption.
+  static_assert(stackEntryBytes == 4, "64 bit machine expected");
+
   static constexpr bool validEntrySize(int size) {
     return size == 1 || size == 2;
   }

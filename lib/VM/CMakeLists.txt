@@ -1,6 +1,7 @@
 
 add_library(VM
   JNI.cpp
+  ObjectRepresentation.cpp
   Stack.cpp
   ThreadContext.cpp
   Type.cpp

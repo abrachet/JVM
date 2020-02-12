@@ -1,6 +1,7 @@
 
 add_executable(vm_test
   JNITest.cpp
+  ObjectRepresentationTest.cpp
   StackTest.cpp
   ThreadContextTest.cpp
   TypeTest.cpp
@@ -43,5 +44,25 @@ add_custom_command(
     COMMAND javac '${CMAKE_CURRENT_SOURCE_DIR}/InstructionTests/General.java' &&
     mv '${CMAKE_CURRENT_SOURCE_DIR}/InstructionTests/General.class' '$<TARGET_FILE_DIR:vm_test>/General.class'
 )
+
+add_custom_command(
+  TARGET vm_test
+  POST_BUILD
+    COMMAND javac '${CMAKE_CURRENT_SOURCE_DIR}/ObjectRepresentation.java'
+)
+
+macro(move_file file)
+  add_custom_command(
+    TARGET vm_test
+    POST_BUILD
+      COMMAND mv '${CMAKE_CURRENT_SOURCE_DIR}/${file}' '$<TARGET_FILE_DIR:vm_test>/${file}'
+  )
+endmacro()
+
+move_file("ObjectRepresentationEmpty.class")
+move_file("ObjectRepresentationII.class")
+move_file("ObjectRepresentationIJ.class")
+move_file("ObjectRepresentationJI.class")
+move_file("ObjectRepresentationL.class")
 
 add_test(NAME vm_test COMMAND vm_test)
