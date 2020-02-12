@@ -1,5 +1,6 @@
 
 add_library(VM
+  Allocator.cpp
   ClassLoader.cpp
   JNI.cpp
   ObjectRepresentation.cpp

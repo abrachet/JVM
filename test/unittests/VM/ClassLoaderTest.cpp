@@ -16,3 +16,16 @@ TEST(ClassLoader, ObjectRepresentation) {
   EXPECT_EQ(objectRep.getFieldOffset(0), 0);
   EXPECT_EQ(objectRep.getFieldOffset(1), 8);
 }
+
+TEST(ClassLoader, Name) {
+  if (ClassLoader::classPath.size() < 2) {
+    std::string rtJar;
+    ASSERT_FALSE(findRTJar(rtJar).size());
+    ASSERT_TRUE(rtJar.size());
+    ClassLoader::classPath.push_back(rtJar);
+  }
+  auto classOrError = ClassLoader::loadClass("ObjectRepresentationIJ");
+  ASSERT_TRUE(classOrError) << classOrError.getError();
+  std::string_view name = classOrError->second.name;
+  EXPECT_EQ(name, "ObjectRepresentationIJ");
+}

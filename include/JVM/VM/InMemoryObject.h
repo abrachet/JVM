@@ -3,10 +3,15 @@
 #define JVM_VM_INMEMORYOBJECT_H
 
 #include "JVM/VM/ClassLoader.h"
+#include "JVM/VM/Stack.h"
 #include <mutex>
 #include <string_view>
 
-struct InMemoryObject {
+namespace jvm {
+constexpr size_t requiredTypeAlignment = Stack::stackEntryBytes * 2;
+}
+
+struct alignas(jvm::requiredTypeAlignment) InMemoryObject {
   std::string_view className;
   std::recursive_mutex monitor;
 

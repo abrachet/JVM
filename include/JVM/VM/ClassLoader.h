@@ -34,6 +34,8 @@ public:
 
     State state = Erroneous;
     ClassLocation location;
+    std::string_view name;
+
     std::unique_ptr<ClassFile> loadedClass;
     // super in [0], interfaces in [1:]
     std::vector<std::reference_wrapper<LoadedClass>> superClasses;

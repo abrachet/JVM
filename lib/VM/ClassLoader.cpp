@@ -83,6 +83,7 @@ ClassLoader::loadClass(const std::string_view fullClassName) {
     goto end;
   }
 
+  lClass.name = fullClassName;
   lClass.loadedClass = std::move(classFile);
   lClass.location = loc;
   {
