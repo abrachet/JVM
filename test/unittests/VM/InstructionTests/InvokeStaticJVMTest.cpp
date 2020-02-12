@@ -78,9 +78,8 @@ TEST_F(InvokeStaticJVM, Synchronized) {
     loadedClass.second.monitor.unlock();
   });
   cv.wait(lock);
-  lock.unlock();
   callMultiple(2);
-  tc.getLoadedClass().second.monitor.unlock();
-  cv.notify_all();
+  lock.unlock();
+  cv.notify_one();
   t1.join();
 }
