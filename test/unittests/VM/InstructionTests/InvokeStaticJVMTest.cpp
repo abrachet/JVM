@@ -69,12 +69,13 @@ TEST_F(InvokeStaticJVM, Synchronized) {
   std::unique_lock lock(m);
   std::condition_variable cv;
   std::thread t1([this, &cv, &m] {
-    ASSERT_FALSE(tc.getLoadedClass().second.monitor.try_lock());
+    auto &loadedClass = tc.getLoadedClass();
+    ASSERT_FALSE(loadedClass.second.monitor.try_lock());
     cv.notify_one();
     std::unique_lock lock(m);
     cv.wait(lock);
-    EXPECT_TRUE(tc.getLoadedClass().second.monitor.try_lock());
-    tc.getLoadedClass().second.monitor.unlock();
+    EXPECT_TRUE(loadedClass.second.monitor.try_lock());
+    loadedClass.second.monitor.unlock();
   });
   cv.wait(lock);
   lock.unlock();
