@@ -26,7 +26,7 @@ struct Frame {
       return "<unkown method name>";
     auto classOrErr = ClassLoader::getLoadedClass(className);
     assert(classOrErr);
-    const auto &cp = classOrErr->second.loadedClass->getConstPool();
+    const auto &cp = classOrErr->second->loadedClass->getConstPool();
     return cp.get<Class::ConstPool::Utf8Info>(nameIndex);
   }
 
@@ -35,7 +35,7 @@ struct Frame {
       return "<unkown method type name>";
     auto classOrErr = ClassLoader::getLoadedClass(className);
     assert(classOrErr);
-    const auto &cp = classOrErr->second.loadedClass->getConstPool();
+    const auto &cp = classOrErr->second->loadedClass->getConstPool();
     return cp.get<Class::ConstPool::Utf8Info>(typeIndex);
   }
 };
@@ -48,9 +48,9 @@ struct ThreadContext {
   // TODO: Need to refactor this out into a static create most likely.
   ThreadContext(Stack &&stack) : stack(std::move(stack)) {}
 
-  ClassLoader::LoadedClass &getLoadedClass();
+  LoadedClass &getLoadedClass();
   const ClassFile &getClassFile() {
-    return *getLoadedClass().second.loadedClass;
+    return *getLoadedClass().second->loadedClass;
   }
 
   std::string_view getMethodName() const {
