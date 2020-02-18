@@ -11,7 +11,7 @@ TEST(ClassLoader, ObjectRepresentation) {
   }
   auto classOrError = ClassLoader::loadClass("ObjectRepresentationIJ");
   ASSERT_TRUE(classOrError) << classOrError.getError();
-  const auto &objectRep = classOrError->second.objectRepresentation;
+  const auto &objectRep = classOrError->second->objectRepresentation;
   EXPECT_EQ(objectRep.getObjectSize(), 16);
   EXPECT_EQ(objectRep.getFieldOffset(0), 0);
   EXPECT_EQ(objectRep.getFieldOffset(1), 8);
@@ -26,6 +26,6 @@ TEST(ClassLoader, Name) {
   }
   auto classOrError = ClassLoader::loadClass("ObjectRepresentationIJ");
   ASSERT_TRUE(classOrError) << classOrError.getError();
-  std::string_view name = classOrError->second.name;
+  std::string_view name = classOrError->second->name;
   EXPECT_EQ(name, "ObjectRepresentationIJ");
 }

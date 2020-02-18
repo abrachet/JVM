@@ -9,8 +9,6 @@ void ThreadContext::callNext() {
   return instructions[ins](*this);
 }
 
-using LoadedClass = ClassLoader::LoadedClass;
-
 LoadedClass &ThreadContext::getLoadedClass() {
   ErrorOr<LoadedClass &> loadedClassOrErr =
       ClassLoader::getLoadedClass(getCurrentClassName());

@@ -4,6 +4,7 @@
 #include "JVM/Class/ClassFinder.h"
 #include "JVM/Core/Defer.h"
 #include "JVM/VM/ObjectRepresentation.h"
+#include <memory>
 #include <string>
 
 using namespace std::string_literals;
@@ -39,7 +40,7 @@ std::string ClassLoader::loadSuperClasses(ClassLoader::Class &clazz) {
     auto classOrError = loadClass({reinterpret_cast<const char *>(name.bytes),
                                    static_cast<size_t>(name.length)});
     if (classOrError)
-      clazz.superClasses.emplace_back(classOrError.get());
+      clazz.superClasses.emplace_back(*classOrError.get().second);
     return classOrError.getError();
   };
 
@@ -52,7 +53,7 @@ std::string ClassLoader::loadSuperClasses(ClassLoader::Class &clazz) {
   return {};
 }
 
-ErrorOr<ClassLoader::LoadedClass &>
+ErrorOr<LoadedClass &>
 ClassLoader::loadClass(const std::string_view fullClassName) {
   std::string className(fullClassName.data(), fullClassName.size());
   loadedClassesMutex.lock_shared();
@@ -61,7 +62,7 @@ ClassLoader::loadClass(const std::string_view fullClassName) {
     auto &[lock, lClass] = it->second;
     auto &[cv, mtx] = lock;
     std::unique_lock l(mtx);
-    cv.wait(l, [&it] { return it->second.second.state == Class::Loaded; });
+    cv.wait(l, [&it] { return it->second.second->state == Class::Loaded; });
     return it->second;
   }
   loadedClassesMutex.unlock_shared();
@@ -70,10 +71,14 @@ ClassLoader::loadClass(const std::string_view fullClassName) {
     return "Class '"s + className + "' does not exist.";
 
   loadedClassesMutex.lock();
+  bool created = loadedClasses.find(className) == loadedClasses.end();
   auto &loadedClass = loadedClasses[className];
+  if (created)
+    loadedClass.second = std::make_unique<jvm::Class>();
   loadedClassesMutex.unlock();
 
-  auto &[lock, lClass] = loadedClass;
+  auto &[lock, classRef] = loadedClass;
+  auto &lClass = *classRef;
   auto &[cv, mtx] = lock;
   std::unique_lock l(mtx);
 
@@ -103,7 +108,7 @@ end:
   return loadedClass;
 }
 
-ErrorOr<ClassLoader::LoadedClass &>
+ErrorOr<LoadedClass &>
 ClassLoader::getLoadedClass(const std::string_view fullClassName) {
   loadedClassesMutex.lock();
   auto it = loadedClasses.find(

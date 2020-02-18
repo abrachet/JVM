@@ -32,10 +32,10 @@ class FunctionCaller {
   const ClassFile &getMethodClassFile() const {
     if (methodClassFile)
       return *methodClassFile;
-    ErrorOr<ClassLoader::LoadedClass &> loadedClass =
+    ErrorOr<LoadedClass &> loadedClass =
         ClassLoader::loadClass(methodClassName);
     assert(loadedClass && "ClassNotFoundException");
-    methodClassFile = loadedClass->second.loadedClass.get();
+    methodClassFile = loadedClass->second->loadedClass.get();
     return *methodClassFile;
   }
 
@@ -92,11 +92,11 @@ class FunctionCaller {
   }
 
   void aquireClassMonitor() {
-    ErrorOr<ClassLoader::LoadedClass &> loadedClassOrErr =
+    ErrorOr<LoadedClass &> loadedClassOrErr =
         ClassLoader::loadClass(methodClassName);
     assert(loadedClassOrErr);
-    ClassLoader::LoadedClass &loadedClass = *loadedClassOrErr;
-    loadedClass.second.monitor.lock();
+    LoadedClass &loadedClass = *loadedClassOrErr;
+    loadedClass.second->monitor.lock();
   }
 
   void invokeNative();

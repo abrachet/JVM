@@ -31,7 +31,7 @@ protected:
   void setUpMethod(int methodIndex) {
     auto classOrError = ClassLoader::loadClass(getClassName());
     ASSERT_TRUE(classOrError) << classOrError.getError();
-    const auto &classFile = classOrError.get().second.loadedClass;
+    const auto &classFile = classOrError->second->loadedClass;
     const auto &methods = classFile->getMethods();
     const auto &method = methods.at(methodIndex);
     ASSERT_EQ(method.attributeCount, 1);

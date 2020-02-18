@@ -1,10 +1,11 @@
 
 #include "JVM/VM/Allocator.h"
+#include "JVM/VM/Class.h"
 #include "JVM/VM/InMemoryObject.h"
 #include <cstdlib>
 #include <cstring>
 
-InMemoryObject *jvm::allocate(const ClassLoader::Class &clss) {
+InMemoryObject *jvm::allocate(const jvm::Class &clss) {
   size_t objectSize = clss.objectRepresentation.getObjectSize();
   void *const mem = aligned_alloc(jvm::requiredTypeAlignment,
                                   sizeof(InMemoryObject) + objectSize);
