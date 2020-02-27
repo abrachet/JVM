@@ -9,7 +9,7 @@ InMemoryObject *jvm::allocate(const jvm::Class &clss) {
   size_t objectSize = clss.objectRepresentation.getObjectSize();
   void *const mem = aligned_alloc(jvm::requiredTypeAlignment,
                                   sizeof(InMemoryObject) + objectSize);
-  new (mem) InMemoryObject{clss.name};
+  new (mem) InMemoryObject{clss};
   std::memset(reinterpret_cast<char *>(mem) + sizeof(InMemoryObject), 0,
               objectSize);
   assert(!(reinterpret_cast<uintptr_t>(reinterpret_cast<char *>(mem) +

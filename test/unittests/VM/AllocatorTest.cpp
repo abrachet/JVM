@@ -13,7 +13,7 @@ TEST(Allocator, Basic) {
   auto classOrError = ClassLoader::loadClass("ObjectRepresentationIJ");
   ASSERT_TRUE(classOrError) << classOrError.getError();
   InMemoryObject *obj = jvm::allocate(*classOrError->second);
-  EXPECT_EQ(obj->className, "ObjectRepresentationIJ");
+  EXPECT_EQ(obj->getName(), "ObjectRepresentationIJ");
   uint64_t *IJ = reinterpret_cast<uint64_t *>(obj + 1);
   EXPECT_EQ(IJ[0], 0);
   EXPECT_EQ(IJ[1], 0);
