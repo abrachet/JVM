@@ -9,16 +9,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #ifndef JVM_VM_INSTRUCTIONS_H
 #define JVM_VM_INSTRUCTIONS_H
 
 #include "JVM/VM/ThreadContext.h"
+#include <array>
+#include <cassert>
 #include <cstdint>
 #include <functional>
+#include <type_traits>
 
-using InsT = std::function<void(ThreadContext &)>;
-extern InsT instructions[256];
+template <typename Func> class FunctionWrapper;
+
+template <typename Ret, typename... Params>
+class FunctionWrapper<Ret(Params...)> {
+  Ret (*func)(Params...) = nullptr;
+
+public:
+  constexpr FunctionWrapper() = default;
+
+  template <typename Func> constexpr FunctionWrapper(Func &&f) : func(f) {}
+
+  constexpr Ret operator()(Params... params) {
+    assert(func && "function not initialized");
+    return func(params...);
+  }
+};
+
+using InsT = FunctionWrapper<void(ThreadContext &)>;
+extern std::array<InsT, 256> instructions;
 
 namespace Instructions {
 

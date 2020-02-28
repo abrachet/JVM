@@ -10,6 +10,7 @@
 // limitations under the License.
 
 #include "JVM/VM/Instructions.h"
+#include <array>
 #include <cassert>
 
 #include "Constants.h"
@@ -18,59 +19,61 @@
 #include "References.h"
 
 #define unimplemented(str)                                                     \
-  [](ThreadContext &) -> void {                                                \
+  +[](ThreadContext &) -> void {                                               \
     assert(0 && "Instruction '" #str "' is not yet implemented");              \
   }
 
-InsT instructions[256] = {
-    // Constants
-    [Instructions::nop] = nop,
-    [Instructions::aconst_null] = aconst_null,
-    [Instructions::iconst_m1] = iconst_m1,
-    [Instructions::iconst_0] = iconst_0,
-    [Instructions::iconst_1] = iconst_1,
-    [Instructions::iconst_2] = iconst_2,
-    [Instructions::iconst_3] = iconst_3,
-    [Instructions::iconst_4] = iconst_4,
-    [Instructions::iconst_5] = iconst_5,
-    [Instructions::lconst_0] = lconst_0,
-    [Instructions::lconst_1] = lconst_1,
-    [Instructions::fconst_0] = fconst_0,
-    [Instructions::fconst_1] = fconst_1,
-    [Instructions::fconst_2] = fconst_2,
-    [Instructions::dconst_0] = dconst_0,
-    [Instructions::dconst_1] = dconst_1,
-    [Instructions::bipush] = bipush,
-    [Instructions::sipush] = sipush,
+std::array<InsT, 256> instructions = []() constexpr {
+  std::array<InsT, 256> array;
+  array[Instructions::nop] = nop;
+  array[Instructions::aconst_null] = aconst_null;
+  array[Instructions::iconst_m1] = iconst_m1;
+  array[Instructions::iconst_0] = iconst_0;
+  array[Instructions::iconst_1] = iconst_1;
+  array[Instructions::iconst_2] = iconst_2;
+  array[Instructions::iconst_3] = iconst_3;
+  array[Instructions::iconst_4] = iconst_4;
+  array[Instructions::iconst_5] = iconst_5;
+  array[Instructions::lconst_0] = lconst_0;
+  array[Instructions::lconst_1] = lconst_1;
+  array[Instructions::fconst_0] = fconst_0;
+  array[Instructions::fconst_1] = fconst_1;
+  array[Instructions::fconst_2] = fconst_2;
+  array[Instructions::dconst_0] = dconst_0;
+  array[Instructions::dconst_1] = dconst_1;
+  array[Instructions::bipush] = bipush;
+  array[Instructions::sipush] = sipush;
 
-    // Loads
-    [Instructions::iload_0] = iload_0,
-    [Instructions::iload_1] = iload_1,
-    [Instructions::iload_2] = iload_2,
-    [Instructions::iload_3] = iload_3,
+  // Loads
+  array[Instructions::iload_0] = iload_0;
+  array[Instructions::iload_1] = iload_1;
+  array[Instructions::iload_2] = iload_2;
+  array[Instructions::iload_3] = iload_3;
 
-    // Stores
-    // This is just temporary to get the loads test to work.
-    [Instructions::istore_0] =
-        [](ThreadContext &tc) { tc.storeInLocal<1>(0, tc.stack.pop<1>()); },
-    [Instructions::istore_1] =
-        [](ThreadContext &tc) { tc.storeInLocal<1>(1, tc.stack.pop<1>()); },
+  // Stores
+  // This is just temporary to get the loads test to work.
+  array[Instructions::istore_0] =
+      +[](ThreadContext &tc) { tc.storeInLocal<1>(0, tc.stack.pop<1>()); };
+  array[Instructions::istore_1] =
+      +[](ThreadContext &tc) { tc.storeInLocal<1>(1, tc.stack.pop<1>()); };
 
-    // Stack
+  // Stack
 
-    // Math
+  // Math
 
-    // Conversions
+  // Conversions
 
-    // Comparasions
+  // Comparasions
 
-    // Control
-    [Instructions::ireturn] = ireturn,
+  // Control
+  array[Instructions::ireturn] = ireturn;
 
-    // References
-    [Instructions::invokestatic] = invokestatic,
+  // References
+  array[Instructions::invokestatic] = invokestatic;
 
-    // Extended
+  // Extended
 
-    // Reserved
-};
+  // Reserved
+  return array;
+}
+();
