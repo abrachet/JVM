@@ -14,8 +14,10 @@
 #include "JVM/Core/ErrorOr.h"
 #include "JVM/Core/Iterator.h"
 #include "JVM/Core/algorithm.h"
+#include "JVM/VM/Allocator.h"
 #include "JVM/VM/ClassLoader.h"
 #include "JVM/VM/JNI.h"
+#include "JVM/VM/ObjectRepresentation.h"
 #include "JVM/VM/ThreadContext.h"
 #include "JVM/VM/Type.h"
 #include "JVM/string_view"
@@ -213,4 +215,18 @@ void invokestatic(ThreadContext &tc) {
   assert(caller && "throw here");
   assert(caller->isStaticMethod());
   caller->call();
+}
+
+void new_(ThreadContext &tc) {
+  using Utf8Info = Class::ConstPool::Utf8Info;
+  using ClassInfo = Class::ConstPool::ClassInfo;
+  uint16_t cpIndex = readFromPointer<uint16_t>(tc.pc);
+  const auto &cp = tc.getClassFile().getConstPool();
+  const ClassInfo &ci = cp.get<ClassInfo>(cpIndex);
+  ErrorOr<LoadedClass &> loadedClass =
+      *ClassLoader::loadClass(cp.get<Utf8Info>(ci.nameIndex));
+  assert(loadedClass && "Error loading class");
+  InMemoryObject *object = jvm::allocate(*loadedClass->second);
+  assert(object);
+  tc.stack.push<2>(reinterpret_cast<uint64_t>(object));
 }

@@ -5,6 +5,7 @@ target_sources(vm_test PUBLIC
   InvokeStaticJVMTest.cpp
   InvokeStaticNativeTest.cpp
   LoadsTest.cpp
+  NewTest.cpp
 )
 
 target_link_options(vm_test PUBLIC -rdynamic)

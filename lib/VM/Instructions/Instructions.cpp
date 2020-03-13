@@ -70,7 +70,7 @@ std::array<InsT, 256> instructions = []() constexpr {
 
   // References
   array[Instructions::invokestatic] = invokestatic;
-
+  array[Instructions::new_] = new_;
   // Extended
 
   // Reserved

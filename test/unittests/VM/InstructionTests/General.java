@@ -1,5 +1,7 @@
 
 class General {
+    public int i;
+
     public static native int returnArg(int arg);
 
     public static void testIload() {
@@ -21,5 +23,10 @@ class General {
 
     public static void callSynced() {
         synced();
+    }
+
+    public static void createNewGeneral() {
+        General g = new General();
+        int a = g.i;
     }
 }

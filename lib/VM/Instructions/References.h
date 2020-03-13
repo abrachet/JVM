@@ -16,5 +16,6 @@
 #include "JVM/VM/Instructions.h"
 
 void invokestatic(ThreadContext &);
+void new_(ThreadContext &);
 
 #endif // INS_REFERENCES_H
