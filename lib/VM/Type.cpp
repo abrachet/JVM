@@ -104,10 +104,10 @@ size_t Type::BasicType::getStackEntryCount() const {
   case Int:
   case Char:
   case Float:
+  case Object:
     return 1;
   case Long:
   case Double:
-  case Object:
     return 2;
   default:
     assert(0 && "Invalid type");

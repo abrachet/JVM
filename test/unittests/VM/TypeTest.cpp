@@ -149,5 +149,5 @@ TEST(TypeReader, TypeSize) {
   EXPECT_EQ(Type(Char).getStackEntryCount(), 1);
   EXPECT_EQ(Type(Float).getStackEntryCount(), 1);
   EXPECT_EQ(Type(Double).getStackEntryCount(), 2);
-  EXPECT_EQ(Type(Object).getStackEntryCount(), 2);
+  EXPECT_EQ(Type(Object).getStackEntryCount(), 1);
 }

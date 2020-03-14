@@ -90,6 +90,6 @@ class ObjectRepresentationL : public ObjectRepresentationTest {
 };
 
 TEST_F(ObjectRepresentationL, L) {
-  EXPECT_EQ(getOR().getObjectSize(), 8);
+  EXPECT_EQ(getOR().getObjectSize(), 4);
   EXPECT_EQ(getOR().getFieldOffset(0), 0);
 }

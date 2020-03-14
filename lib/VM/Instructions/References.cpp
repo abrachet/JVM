@@ -226,7 +226,6 @@ void new_(ThreadContext &tc) {
   ErrorOr<LoadedClass &> loadedClass =
       *ClassLoader::loadClass(cp.get<Utf8Info>(ci.nameIndex));
   assert(loadedClass && "Error loading class");
-  InMemoryObject *object = jvm::allocate(*loadedClass->second);
-  assert(object);
-  tc.stack.push<2>(reinterpret_cast<uint64_t>(object));
+  uint32_t objRef = jvm::allocate(*loadedClass->second);
+  tc.stack.push<1>(objRef);
 }

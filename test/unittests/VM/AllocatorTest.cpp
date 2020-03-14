@@ -22,7 +22,9 @@ TEST(Allocator, Basic) {
   }
   auto classOrError = ClassLoader::loadClass("ObjectRepresentationIJ");
   ASSERT_TRUE(classOrError) << classOrError.getError();
-  InMemoryObject *obj = jvm::allocate(*classOrError->second);
+  uint32_t objKey = jvm::allocate(*classOrError->second);
+  InMemoryObject *obj = jvm::getObject(objKey);
+  ASSERT_NE(obj, nullptr);
   EXPECT_EQ(obj->getName(), "ObjectRepresentationIJ");
   uint64_t *IJ = reinterpret_cast<uint64_t *>(obj + 1);
   EXPECT_EQ(IJ[0], 0);

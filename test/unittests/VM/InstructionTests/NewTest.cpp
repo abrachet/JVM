@@ -31,7 +31,8 @@ struct New : public MethodCaller<> {
 TEST_F(New, Basic) {
   setUpTestNew();
   tc.callNext();
-  InMemoryObject *ptr = reinterpret_cast<InMemoryObject *>(tc.stack.pop<2>());
+  uint32_t objRef = tc.stack.pop<1>();
+  InMemoryObject *ptr = jvm::getObject(objRef);
   EXPECT_EQ(ptr->getName(), "General");
   jvm::deallocate(ptr);
 }

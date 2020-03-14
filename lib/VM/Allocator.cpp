@@ -14,8 +14,26 @@
 #include "JVM/VM/InMemoryObject.h"
 #include <cstdlib>
 #include <cstring>
+#include <map>
+#include <mutex>
 
-InMemoryObject *jvm::allocate(const jvm::Class &clss) {
+using MapType = std::map<uint32_t, InMemoryObject *>;
+
+static std::mutex mapLock;
+static MapType map;
+
+static uint32_t getLowestKey(const MapType &map) {
+  uint32_t lowest = 0;
+  for (const auto &[key, _] : map) {
+    if (lowest < key)
+      break;
+    assert(lowest == key);
+    lowest++;
+  }
+  return lowest;
+}
+
+uint32_t jvm::allocate(const jvm::Class &clss) {
   size_t objectSize = clss.objectRepresentation.getObjectSize();
   size_t aligned = ((sizeof(InMemoryObject) + objectSize) +
                     (jvm::requiredTypeAlignment - 1)) &
@@ -25,10 +43,27 @@ InMemoryObject *jvm::allocate(const jvm::Class &clss) {
   new (mem) InMemoryObject{clss};
   std::memset(reinterpret_cast<char *>(mem) + sizeof(InMemoryObject), 0,
               objectSize);
-  assert(!(reinterpret_cast<uintptr_t>(reinterpret_cast<char *>(mem) +
-                                       sizeof(InMemoryObject)) %
+  assert(!((reinterpret_cast<uintptr_t>(mem) + sizeof(InMemoryObject)) %
            jvm::requiredTypeAlignment));
-  return reinterpret_cast<InMemoryObject *>(mem);
+
+  std::scoped_lock X(mapLock);
+  uint32_t key = getLowestKey(map);
+  map[key] = reinterpret_cast<InMemoryObject *>(mem);
+  return key;
+}
+
+InMemoryObject *jvm::getObject(uint32_t key) {
+  std::scoped_lock X(mapLock);
+  auto found = map.find(key);
+  assert(found != map.end());
+  return found->second;
 }
 
 void jvm::deallocate(InMemoryObject *ptr) { std::free(ptr); }
+void jvm::deallocate(uint32_t key) {
+  std::scoped_lock X(mapLock);
+  auto found = map.find(key);
+  assert(found != map.end());
+  deallocate(found->second);
+  map.erase(found);
+}
