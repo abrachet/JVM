@@ -26,7 +26,7 @@ TEST(Loader, NoExist) {
 }
 
 TEST(Loader, NoError) {
-  if (ClassLoader::classPath.size() < 2) {
+  if (ClassLoader::classPath.size() < 3) {
     std::string rtJar;
     ASSERT_FALSE(findRTJar(rtJar).size());
     ASSERT_TRUE(rtJar.size());
@@ -47,7 +47,7 @@ TEST(Loader, InvalidClassFile) {
 }
 
 TEST(Loader, LoadSuper) {
-  if (ClassLoader::classPath.size() < 2) {
+  if (ClassLoader::classPath.size() < 3) {
     std::string rtJar;
     ASSERT_FALSE(findRTJar(rtJar).size());
     ASSERT_TRUE(rtJar.size());
@@ -61,7 +61,7 @@ TEST(Loader, LoadSuper) {
 }
 
 TEST(Loader, LoadInterfaces) {
-  if (ClassLoader::classPath.size() < 2) {
+  if (ClassLoader::classPath.size() < 3) {
     std::string rtJar;
     ASSERT_FALSE(findRTJar(rtJar).size());
     ASSERT_TRUE(rtJar.size());
@@ -77,7 +77,7 @@ TEST(Loader, LoadInterfaces) {
 }
 
 TEST(Loader, LoadMultiThread) {
-  if (ClassLoader::classPath.size() < 2) {
+  if (ClassLoader::classPath.size() < 3) {
     std::string rtJar;
     ASSERT_FALSE(findRTJar(rtJar).size());
     ASSERT_TRUE(rtJar.size());
