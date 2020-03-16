@@ -6,4 +6,5 @@ PRIVATE
   Constants.cpp
   Control.cpp
   References.cpp
+  Stack.cpp
 )

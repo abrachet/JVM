@@ -17,6 +17,7 @@
 #include "Control.h"
 #include "Loads.h"
 #include "References.h"
+#include "Stack.h"
 
 #define unimplemented(str)                                                     \
   +[](ThreadContext &) -> void {                                               \
@@ -58,7 +59,7 @@ std::array<InsT, 256> instructions = []() constexpr {
       +[](ThreadContext &tc) { tc.storeInLocal<1>(1, tc.stack.pop<1>()); };
 
   // Stack
-
+  array[Instructions::dup] = Ins::dup;
   // Math
 
   // Conversions
