@@ -28,9 +28,9 @@
 #include <vector>
 
 class ClassLoader {
+public:
   using Class = jvm::Class;
 
-public:
   inline static std::vector<std::string> classPath = {"."};
 
   static ErrorOr<LoadedClass &> loadClass(const std::string_view fullClassName);

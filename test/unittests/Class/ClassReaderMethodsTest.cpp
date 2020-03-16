@@ -108,12 +108,14 @@ TEST_F(ClassReaderMethods, retObject) {
   ASSERT_EQ(methods[5].accessFlags, Class::Method::AccessFlags::Public);
 }
 
+// TOOD: This test is heavily dependent on javac version, use the strategy
+// employed by other tests to have cmake find out the entry.
 TEST_F(ClassReaderMethods, FindMethod) {
-  // ConstPool entry #2 is MethodRef to Methods.retMethods:()LMethods;
+  // ConstPool entry #7 is MethodRef to Methods.retMethods:()LMethods;
   // Method index 4 refers to this method. Too lazy to find these
   // programatically in CMakeLists.txt.
   auto &constPool = classFile->getConstPool();
-  auto &methodRef = constPool.get<ConstPool::MethodrefInfo>(2);
+  auto &methodRef = constPool.get<ConstPool::MethodrefInfo>(7);
   auto &methods = classFile->getMethods();
   ErrorOr<const Class::Method &> methodOrErr =
       classFile->findStaticMethod(methodRef);

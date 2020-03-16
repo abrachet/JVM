@@ -35,15 +35,15 @@ TEST(Loader, NoError) {
   auto classOrError = ClassLoader::loadClass("Basic");
   ASSERT_TRUE(classOrError) << classOrError.getError();
   auto &loadedClass = classOrError.get();
-  EXPECT_EQ(loadedClass.second.location.type, ClassLocation::File);
-  EXPECT_EQ(loadedClass.second.state, ClassLoader::Class::Loaded);
+  EXPECT_EQ(loadedClass.second->location.type, ClassLocation::File);
+  EXPECT_EQ(loadedClass.second->state, ClassLoader::Class::Loaded);
 }
 
 TEST(Loader, InvalidClassFile) {
   EXPECT_NE(::open("Test.class", O_CREAT, 0644), -1);
   auto classOrError = ClassLoader::loadClass("Test");
   ASSERT_TRUE(classOrError) << classOrError.getError();
-  EXPECT_EQ(classOrError.get().second.state, ClassLoader::Class::Erroneous);
+  EXPECT_EQ(classOrError.get().second->state, ClassLoader::Class::Erroneous);
 }
 
 TEST(Loader, LoadSuper) {
@@ -57,7 +57,7 @@ TEST(Loader, LoadSuper) {
   ASSERT_TRUE(classOrError) << classOrError.getError();
   auto state = ClassLoader::findClassState("java/lang/Object");
   EXPECT_EQ(state, ClassLoader::Class::Loaded);
-  EXPECT_EQ(classOrError.get().second.superClasses.size(), 1);
+  EXPECT_EQ(classOrError.get().second->superClasses.size(), 1);
 }
 
 TEST(Loader, LoadInterfaces) {
@@ -73,7 +73,7 @@ TEST(Loader, LoadInterfaces) {
   EXPECT_EQ(state, ClassLoader::Class::Loaded);
   state = ClassLoader::findClassState("Interface");
   EXPECT_EQ(state, ClassLoader::Class::Loaded);
-  EXPECT_EQ(classOrError.get().second.superClasses.size(), 2);
+  EXPECT_EQ(classOrError.get().second->superClasses.size(), 2);
 }
 
 TEST(Loader, LoadMultiThread) {
@@ -97,7 +97,7 @@ TEST(Loader, LoadMultiThread) {
 TEST(Loader, LoadMethod) {
   auto classOrError = ClassLoader::loadClass("Methods");
   ASSERT_TRUE(classOrError) << classOrError.getError();
-  auto &classFile = classOrError.get().second.loadedClass;
+  auto &classFile = classOrError.get().second->loadedClass;
   auto &methods = classFile->getMethods();
   ASSERT_EQ(methods[1].attributeCount, 1);
   int attrNameIdx = methods[1].attributes[0].attributeNameIndex;
