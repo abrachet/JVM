@@ -4,6 +4,8 @@ project(JVM LANGUAGES C CXX ASM)
 
 set(CMAKE_CXX_STANDARD 17)
 
+set(JVM_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+
 include_directories(include)
 
 option(TESTS "Generate build target for unit testing." ON)
