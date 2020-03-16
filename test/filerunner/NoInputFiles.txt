@@ -1,0 +1,5 @@
+This test tests the error message from the JVM when no input file is
+specified
+
+RUN: %{JVM}
+ASSERT: test %{status} -eq 1 && test %{stderr} = "no class file specifed"

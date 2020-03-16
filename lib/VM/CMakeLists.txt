@@ -18,4 +18,7 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
 endif()
 target_link_options(VM PRIVATE -ldl -rpath ${LIBJVM_DIR})
 
-target_compile_definitions(VM PRIVATE LD_SEARCH_PATH=\"${LIBJVM_DIR}:${LIBJAVA_DIR}\")
+target_compile_definitions(VM PRIVATE
+  LD_SEARCH_PATH=\"${LIBJVM_DIR}:${LIBJAVA_DIR}\"
+  JVM_BUILTIN_CLASS_PATH=\"${JVM_INTERNAL_CLASS_DIR}\"
+)

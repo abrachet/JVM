@@ -298,6 +298,9 @@ public:
   findStaticMethod(const MethodrefInfo &methodRef) const {
     return findStaticMethod(*this, methodRef);
   }
+
+  ErrorOr<const Class::Method &>
+  findMethodByNameType(std::string_view name, std::string_view typeName) const;
 };
 
 #endif // JVM_CLASS_CLASSFILE_H

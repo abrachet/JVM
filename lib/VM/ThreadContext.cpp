@@ -12,10 +12,13 @@
 #include "JVM/VM/ThreadContext.h"
 #include "JVM/Core/BigEndianByteReader.h"
 #include "JVM/VM/Instructions.h"
+#include <iostream>
 
 void ThreadContext::callNext() {
   assert(pc && "pc is nullptr");
   uint8_t ins = readFromPointer<uint8_t>(pc);
+  // Instructions::Instruction instruc(ins);
+  std::cerr << (int)ins << '\n';
   return instructions[ins](*this);
 }
 

@@ -63,8 +63,14 @@ type Command struct {
 	Status *ProcessStatus
 }
 
+type Define struct {
+	variable   string
+	definition string
+}
+
 type CommandRunner struct {
 	filename    string
+	definitions []Define
 	tempfile    string
 	parsedLine  string
 	currentLine int
@@ -73,6 +79,11 @@ type CommandRunner struct {
 func (cr *CommandRunner) replaceVariables(line string, prevStatus *ProcessStatus) string {
 	line = strings.ReplaceAll(line, "%{file}", cr.filename)
 	line = strings.ReplaceAll(line, "%{temp}", cr.tempfile)
+	for _, defn := range cr.definitions {
+		replace := fmt.Sprintf("\"%s\"", defn.definition)
+		format := fmt.Sprintf("%%{%s}", defn.variable)
+		line = strings.ReplaceAll(line, format, replace)
+	}
 	if prevStatus != nil {
 		line = strings.ReplaceAll(line, "%{status}", fmt.Sprintf("%d", prevStatus.Status.ExitCode()))
 		line = strings.ReplaceAll(line, "%{stderr}", fmt.Sprintf("\"%s\"", prevStatus.Stderr))
@@ -159,16 +170,31 @@ func (cr *CommandRunner) Cleanup() {
 	os.Remove(cr.tempfile)
 }
 
-func NewCommandRunner(filename string) *CommandRunner {
+func NewCommandRunner(filename string, defines []Define) *CommandRunner {
 	tmpfile, err := ioutil.TempFile("", fmt.Sprintf(".filerunner.%s.*", filename))
 	if err != nil {
 		log.Fatal(err)
 	}
-	return &CommandRunner{filename, tmpfile.Name(), "", 1}
+	return &CommandRunner{filename, defines, tmpfile.Name(), "", 1}
 }
 
 func filerunner() int {
-	filename := os.Args[1]
+	// TODO: allow reading from stdin.
+	filename := "-"
+	var defines []Define
+	for _, str := range os.Args[1:] {
+		if !strings.HasPrefix(str, "-D") {
+			filename = str
+			continue
+		}
+		sub := strings.Split(str[2:], "=")
+		if len(sub) != 2 {
+			fmt.Fprintln(os.Stderr, "Error parsing:", str)
+			return 1
+		}
+		defines = append(defines, Define{sub[0], sub[1]})
+	}
+
 	if index := strings.LastIndexByte(filename, '/'); index != -1 {
 		err := os.Chdir(filename[:index])
 		if err != nil {
@@ -176,14 +202,14 @@ func filerunner() int {
 		}
 		filename = filename[index+1:]
 	}
-	commandRunner := NewCommandRunner(filename)
+	commandRunner := NewCommandRunner(filename, defines)
 	defer commandRunner.Cleanup()
 	err := commandRunner.ParseAll()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "\033[1;31m[   FAIL   ]\033[0m", os.Args[1])
+		fmt.Fprintln(os.Stderr, "\033[1;31m[   FAIL   ]\033[0m", filename)
 		return 1
 	}
-	fmt.Fprintln(os.Stderr, "\033[1;32m[   PASS   ]\033[0m", os.Args[1])
+	fmt.Fprintln(os.Stderr, "\033[1;32m[   PASS   ]\033[0m", filename)
 	return 0
 }
 

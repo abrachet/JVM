@@ -17,6 +17,12 @@
 #include <memory>
 #include <string>
 
+#ifndef JVM_BUILTIN_CLASS_PATH
+std::vector<std::string> ClassLoader::classPath = {"."};
+#else
+std::vector<std::string> ClassLoader::classPath = {".", JVM_BUILTIN_CLASS_PATH};
+#endif
+
 using namespace std::string_literals;
 
 static ClassFileReader::ClassFileOrError readClass(const ClassLocation &loc) {

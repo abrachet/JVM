@@ -9,13 +9,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef INS_CONTROL_H
-#define INS_CONTROL_H
+// This class provides the start method which the jvm creates a frame for
+// before calling main.
+class __JVM_internal_Start {
+    private static native void exit(int exitCode);
 
-#include "Instruction.h"
-#include "JVM/VM/Instructions.h"
-
-void ireturn(ThreadContext &);
-void return_(ThreadContext &);
-
-#endif // INS_CONTROL_H
+    // TODO: this will have exception handling in the future.
+    private static void start() {
+        // JVM puts the return address here then it finds and calls main itself.
+        exit(0);
+    }
+}

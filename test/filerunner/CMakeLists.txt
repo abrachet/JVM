@@ -4,16 +4,19 @@ add_custom_target(filerunner
 )
 
 set(filerunner_srcs
+  DoNothing.java
   FilerunnerFailure.java
   FilerunnerTest.java
+  NoInputFiles.txt
 )
 
-add_custom_target(filerunner_test)
+add_custom_target(filerunner_test
+  DEPENDS filerunner JVM
+)
 
 foreach(file ${filerunner_srcs})
   add_custom_command(
     TARGET filerunner_test
-    DEPENDS filerunner
-    COMMAND ${JVM_SRC_DIR}/utils/filerunner ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+    COMMAND ${JVM_SRC_DIR}/utils/filerunner -DJVM=${CMAKE_BINARY_DIR}/src/JVM ${CMAKE_CURRENT_SOURCE_DIR}/${file}
   )
 endforeach()

@@ -31,7 +31,7 @@ class ClassLoader {
 public:
   using Class = jvm::Class;
 
-  inline static std::vector<std::string> classPath = {"."};
+  static std::vector<std::string> classPath;
 
   static ErrorOr<LoadedClass &> loadClass(const std::string_view fullClassName);
   static ErrorOr<LoadedClass &>

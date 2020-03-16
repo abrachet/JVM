@@ -68,6 +68,7 @@ std::array<InsT, 256> instructions = []() constexpr {
 
   // Control
   array[Instructions::ireturn] = ireturn;
+  array[Instructions::return_] = return_;
 
   // References
   array[Instructions::invokestatic] = invokestatic;

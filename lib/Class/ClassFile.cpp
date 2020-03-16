@@ -66,3 +66,14 @@ ClassFile::findStaticMethod(const ClassFile &classFile,
       getNameType(otherCP, ntInfo.nameIndex, ntInfo.descriptorIndex);
   return findMethodFromNameType(nameType, getConstPool(), getMethods());
 }
+
+std::string_view getMethodName(const Class::ConstPool &constPool,
+                               const Class::Method &method) {
+  return constPool.get<ConstPool::Utf8Info>(method.nameIndex);
+}
+
+ErrorOr<const Class::Method &>
+ClassFile::findMethodByNameType(std::string_view name,
+                                std::string_view typeName) const {
+  return findMethodFromNameType({name, typeName}, getConstPool(), getMethods());
+}

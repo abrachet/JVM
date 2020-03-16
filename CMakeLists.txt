@@ -33,8 +33,11 @@ string(STRIP ${LIBJVM_PATH} LIBJVM_PATH)
 
 string(REGEX REPLACE "libjvm.*" "" LIBJVM_DIR "${LIBJVM_PATH}")
 
-add_subdirectory(src)
+set(JVM_INTERNAL_CLASS_DIR ${CMAKE_BINARY_DIR}/classfiles)
+execute_process(COMMAND sh -c "mkdir '${JVM_INTERNAL_CLASS_DIR}' 2> /dev/null")
+
 add_subdirectory(lib)
+add_subdirectory(src)
 
 if (TESTS)
     add_subdirectory(test)
