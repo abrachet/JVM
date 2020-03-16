@@ -4,6 +4,7 @@ add_custom_target(filerunner
 )
 
 set(filerunner_srcs
+  CallNative.java
   DoNothing.java
   FilerunnerFailure.java
   FilerunnerTest.java
@@ -11,7 +12,7 @@ set(filerunner_srcs
 )
 
 add_custom_target(filerunner_test
-  DEPENDS filerunner JVM
+  DEPENDS filerunner JVM Natives.java
 )
 
 foreach(file ${filerunner_srcs})

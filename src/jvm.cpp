@@ -21,6 +21,12 @@ extern "C" void Java___JVM_internal_Start_exit(void *, int exitCode) {
   std::exit(exitCode);
 }
 
+#ifdef TESTING
+extern "C" void Java_Natives_exit(void *, int exitCode) {
+  std::exit(exitCode);
+}
+#endif
+
 template <typename T> static void dieIfError(const ErrorOr<T> &error) {
   if (!error) {
     std::fprintf(stderr, "JVM Fatal error: %s", error.getError().c_str());
