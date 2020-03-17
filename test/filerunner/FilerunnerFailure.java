@@ -3,7 +3,6 @@
 // ASSERT: javac %{file}
 // RUN: java FilerunnerFailure
 // ASSERT: test %{status} -eq 1 && test %{stderr} = stderr
-// RUN: rm -f *.class
 
 class FilerunnerFailure {
     public static void main(String[] args) {

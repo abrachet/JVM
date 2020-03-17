@@ -4,7 +4,6 @@
 // ASSERT: javac %{file}
 // ASSERT: java FilerunnerTest
 // ASSERT: test %{stdout} = "Hello world"
-// RUN: rm -f FilerunnerTest.class
 
 class FilerunnerTest {
     public static void main(String[] args) {
