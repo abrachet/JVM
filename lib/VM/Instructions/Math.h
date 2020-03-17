@@ -17,7 +17,7 @@
 #include <functional>
 
 template <size_t Width, typename BinaryFunc>
-void mathOperation(ThreadContext &tc) {
+static void mathOperation(ThreadContext &tc) {
   using EntryT = Stack::EntryType<Width>;
   BinaryFunc func;
   EntryT left = tc.stack.pop<Width>();
@@ -25,6 +25,18 @@ void mathOperation(ThreadContext &tc) {
   tc.stack.push<Width>(func(left, right));
 }
 
-void iadd(ThreadContext &tc) { return mathOperation<1, std::plus<>>(tc); }
+static void iadd(ThreadContext &tc) {
+  return mathOperation<1, std::plus<>>(tc);
+}
+static void ladd(ThreadContext &tc) {
+  return mathOperation<2, std::plus<>>(tc);
+}
+
+static void isub(ThreadContext &tc) {
+  return mathOperation<1, std::minus<>>(tc);
+}
+static void lsub(ThreadContext &tc) {
+  return mathOperation<2, std::minus<>>(tc);
+}
 
 #endif // INS_LOADS_H

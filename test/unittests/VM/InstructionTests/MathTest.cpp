@@ -12,26 +12,30 @@
 #include "InstructionTests.h"
 #include "gtest/gtest.h"
 
-struct Math : public InstructionTest {};
+struct Math : public InstructionTest {
+  uint8_t instruction;
+  template <typename T> void test(T left, T right, T expected) {
+    constexpr size_t stackEntrySize = sizeof(T) / Stack::stackEntryBytes;
+    threadContext->pc = &instruction;
+    threadContext->stack.push<stackEntrySize>(left);
+    threadContext->stack.push<stackEntrySize>(right);
+    threadContext->callNext();
+    EXPECT_EQ((T)threadContext->stack.pop<stackEntrySize>(), expected);
+  }
+};
 
 TEST_F(Math, IAdd) {
-  uint8_t instructions[] = {Instructions::iadd, 0};
-  threadContext->pc = instructions;
-  threadContext->stack.push<1>(5);
-  threadContext->stack.push<1>(1);
-  threadContext->callNext();
-  EXPECT_EQ(threadContext->stack.pop<1>(), 6);
+  instruction = Instructions::iadd;
+  test(5, 1, 6);
+  test(std::numeric_limits<int32_t>::max(), 1,
+       std::numeric_limits<int32_t>::min());
+  test(-1, 1, 0);
+}
 
-  threadContext->pc = instructions;
-  threadContext->stack.push<1>(std::numeric_limits<int32_t>::max());
-  threadContext->stack.push<1>(1);
-  threadContext->callNext();
-  EXPECT_EQ((int32_t)threadContext->stack.pop<1>(),
-            std::numeric_limits<int32_t>::min());
-
-  threadContext->pc = instructions;
-  threadContext->stack.push<1>(int32_t(-1));
-  threadContext->stack.push<1>(1);
-  threadContext->callNext();
-  EXPECT_EQ(threadContext->stack.pop<1>(), 0);
+TEST_F(Math, LAdd) {
+  instruction = Instructions::ladd;
+  test(5L, 1L, 6L);
+  test<uint64_t>(std::numeric_limits<int32_t>::max(), 1,
+                 (uint64_t)std::numeric_limits<int32_t>::max() + 1);
+  test<int64_t>(-1, 1, 0);
 }
