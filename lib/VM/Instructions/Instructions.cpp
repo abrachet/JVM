@@ -56,6 +56,7 @@ std::array<InsT, 256> instructions = []() constexpr {
   array[Instructions::iload_3] = iload_3;
 
   array[Instructions::aload_0] = array[Instructions::iload_0];
+  array[Instructions::aload_1] = array[Instructions::iload_1];
 
   // Stores
   // This is just temporary to get the loads test to work.
@@ -63,8 +64,11 @@ std::array<InsT, 256> instructions = []() constexpr {
       +[](ThreadContext &tc) { tc.storeInLocal<1>(0, tc.stack.pop<1>()); };
   array[Instructions::istore_1] =
       +[](ThreadContext &tc) { tc.storeInLocal<1>(1, tc.stack.pop<1>()); };
+  array[Instructions::istore_2] =
+      +[](ThreadContext &tc) { tc.storeInLocal<1>(2, tc.stack.pop<1>()); };
 
   array[Instructions::astore_0] = array[Instructions::istore_0];
+  array[Instructions::astore_1] = array[Instructions::istore_1];
   // Stack
   array[Instructions::dup] = Ins::dup;
 
