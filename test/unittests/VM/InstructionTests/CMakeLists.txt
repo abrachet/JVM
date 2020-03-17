@@ -1,6 +1,7 @@
 
 target_sources(vm_test PUBLIC
   ConstantTests.cpp
+  FieldTest.cpp
   General.cpp
   InvokeStaticJVMTest.cpp
   InvokeStaticNativeTest.cpp

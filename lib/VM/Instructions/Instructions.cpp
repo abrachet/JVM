@@ -13,6 +13,9 @@
 #include <array>
 #include <cassert>
 
+// TOOD: remove this when invokespecial is added properly.
+#include "JVM/Core/BigEndianByteReader.h"
+
 #include "Constants.h"
 #include "Control.h"
 #include "Loads.h"
@@ -52,6 +55,8 @@ std::array<InsT, 256> instructions = []() constexpr {
   array[Instructions::iload_2] = iload_2;
   array[Instructions::iload_3] = iload_3;
 
+  array[Instructions::aload_0] = array[Instructions::iload_0];
+
   // Stores
   // This is just temporary to get the loads test to work.
   array[Instructions::istore_0] =
@@ -59,6 +64,7 @@ std::array<InsT, 256> instructions = []() constexpr {
   array[Instructions::istore_1] =
       +[](ThreadContext &tc) { tc.storeInLocal<1>(1, tc.stack.pop<1>()); };
 
+  array[Instructions::astore_0] = array[Instructions::istore_0];
   // Stack
   array[Instructions::dup] = Ins::dup;
 
@@ -79,6 +85,12 @@ std::array<InsT, 256> instructions = []() constexpr {
   array[Instructions::return_] = return_;
 
   // References
+  array[Instructions::getfield] = getfield;
+  array[Instructions::putfield] = putfield;
+  // This is temporary because current tests don't do need invokespecial to do
+  // anything.
+  array[Instructions::invokespecial] =
+      +[](ThreadContext &tc) { readFromPointer<uint16_t>(tc.pc); };
   array[Instructions::invokestatic] = invokestatic;
   array[Instructions::new_] = new_;
 

@@ -33,6 +33,10 @@ struct alignas(jvm::requiredTypeAlignment) InMemoryObject {
   }
 
   std::string_view getName() const { return clss.name; }
+
+  ObjectRepresentation getObjectRepresentation() {
+    return clss.objectRepresentation;
+  }
 };
 
 #endif // JVM_VM_INMEMORYOBJECT_H

@@ -59,11 +59,16 @@ InMemoryObject *jvm::getObject(uint32_t key) {
   return found->second;
 }
 
-void jvm::deallocate(InMemoryObject *ptr) { std::free(ptr); }
+static void deallocate(InMemoryObject *ptr) { std::free(ptr); }
 void jvm::deallocate(uint32_t key) {
   std::scoped_lock X(mapLock);
   auto found = map.find(key);
   assert(found != map.end());
   deallocate(found->second);
   map.erase(found);
+}
+
+size_t jvm::getNumAllocated() {
+  std::scoped_lock X(mapLock);
+  return map.size();
 }

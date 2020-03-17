@@ -32,5 +32,5 @@ TEST(Allocator, Basic) {
   // Test that writing doesn't cause a fault or upset sanitizers.
   IJ[0] = 100;
   IJ[0] = 100;
-  jvm::deallocate(obj);
+  jvm::deallocate(objKey);
 }

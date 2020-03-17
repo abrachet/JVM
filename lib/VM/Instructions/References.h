@@ -15,6 +15,8 @@
 #include "Instruction.h"
 #include "JVM/VM/Instructions.h"
 
+void getfield(ThreadContext &);
+void putfield(ThreadContext &);
 void invokestatic(ThreadContext &);
 void new_(ThreadContext &);
 

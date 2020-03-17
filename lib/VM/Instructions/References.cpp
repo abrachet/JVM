@@ -229,3 +229,89 @@ void new_(ThreadContext &tc) {
   uint32_t objRef = jvm::allocate(*loadedClass->second);
   tc.stack.push<1>(objRef);
 }
+
+using FieldrefInfo = Class::ConstPool::FieldrefInfo;
+using NameAndTypeInfo = Class::ConstPool::NameAndTypeInfo;
+using Utf8Info = Class::ConstPool::Utf8Info;
+
+static Type getFieldType(const ClassFile &cf, const FieldrefInfo &fieldRef) {
+  uint16_t nameTypeIndex = fieldRef.nameAndTypeIndex;
+  const auto &nt = cf.getConstPool().get<NameAndTypeInfo>(nameTypeIndex);
+  std::string_view type = cf.getConstPool().get<Utf8Info>(nt.descriptorIndex);
+  ErrorOr<Type> typeOrErr = Type::parseType(type);
+  assert(typeOrErr && "couldn't parse type");
+  return *typeOrErr;
+}
+
+static uint32_t getFieldID(const ClassFile &cf, const FieldrefInfo &fieldRef) {
+  const auto &constPool = cf.getConstPool();
+  const auto &fields = cf.getFields();
+  const auto &nameType =
+      constPool.get<NameAndTypeInfo>(fieldRef.nameAndTypeIndex);
+  auto it = jvm::find_if(fields, [&](const auto &field) {
+    return nameType.nameIndex == field.nameIndex &&
+           nameType.descriptorIndex == field.descriptorIndex;
+  });
+  assert(it != fields.end());
+  return std::distance(fields.begin(), it);
+}
+
+static std::pair<void *, size_t> getField(const ClassFile &cf, uint32_t cpIndex,
+                                          uint32_t objectKey) {
+  const auto &fieldRef = cf.getConstPool().get<FieldrefInfo>(cpIndex);
+
+  Type fieldType = getFieldType(cf, fieldRef);
+  uint32_t fieldID = getFieldID(cf, fieldRef);
+  InMemoryObject *object = jvm::getObject(objectKey);
+  assert(object);
+  const auto &objectRep = object->getObjectRepresentation();
+  return {reinterpret_cast<char *>(object->getThisptr()) +
+              objectRep.getFieldOffset(fieldID),
+          fieldType.getStackEntryCount()};
+}
+
+template <size_t StackSize>
+static void pushFromAddr(ThreadContext &tc, const void *ptr) {
+  const auto *p = reinterpret_cast<const Stack::EntryType<StackSize> *>(ptr);
+  tc.stack.push<StackSize>(*p);
+}
+
+void getfield(ThreadContext &tc) {
+  uint16_t cpIndex = readFromPointer<uint16_t>(tc.pc);
+  uint32_t objectKey = tc.stack.pop<1>();
+  auto pair = getField(tc.getClassFile(), cpIndex, objectKey);
+
+  if (pair.second == 1)
+    return pushFromAddr<1>(tc, pair.first);
+  assert(pair.second == 2 && "invalid stack size");
+  return pushFromAddr<2>(tc, pair.first);
+}
+
+template <size_t StackSize>
+static void writeToAddr(void *ptr, uint64_t toWrite) {
+  auto *p = reinterpret_cast<Stack::EntryType<StackSize> *>(ptr);
+  *p = static_cast<Stack::EntryType<StackSize>>(toWrite);
+}
+
+void putfield(ThreadContext &tc) {
+  uint16_t cpIndex = readFromPointer<uint16_t>(tc.pc);
+  const auto &fieldRef =
+      tc.getClassFile().getConstPool().get<FieldrefInfo>(cpIndex);
+  Type fieldType = getFieldType(tc.getClassFile(), fieldRef);
+
+  uint64_t objectOnStack;
+  if (fieldType.getStackEntryCount() == 1)
+    objectOnStack = tc.stack.pop<1>();
+  else {
+    assert(fieldType.getStackEntryCount() == 1);
+    objectOnStack = tc.stack.pop<2>();
+  }
+
+  uint32_t objectKey = tc.stack.pop<1>();
+  auto pair = getField(tc.getClassFile(), cpIndex, objectKey);
+
+  if (pair.second == 1)
+    return writeToAddr<1>(pair.first, objectOnStack);
+  assert(pair.second == 2 && "invalid stack size");
+  return writeToAddr<2>(pair.first, objectOnStack);
+}

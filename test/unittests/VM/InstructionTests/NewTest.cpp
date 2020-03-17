@@ -34,5 +34,5 @@ TEST_F(New, Basic) {
   uint32_t objRef = tc.stack.pop<1>();
   InMemoryObject *ptr = jvm::getObject(objRef);
   EXPECT_EQ(ptr->getName(), "General");
-  jvm::deallocate(ptr);
+  jvm::deallocate(objRef);
 }

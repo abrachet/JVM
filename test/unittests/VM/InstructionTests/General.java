@@ -29,4 +29,15 @@ class General {
         General g = new General();
         int a = g.i;
     }
+
+    public static int returnDefault() {
+        General g = new General();
+        return g.i;
+    }
+
+    public static int setAndReturn() {
+        General g = new General();
+        g.i = 5;
+        return g.i;
+    }
 }

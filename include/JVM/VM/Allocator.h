@@ -22,8 +22,9 @@ uint32_t allocate(const jvm::Class &);
 
 InMemoryObject *getObject(uint32_t);
 
-void deallocate(InMemoryObject *);
 void deallocate(uint32_t);
+
+size_t getNumAllocated();
 
 } // namespace jvm
 
