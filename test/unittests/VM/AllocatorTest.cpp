@@ -34,3 +34,19 @@ TEST(Allocator, Basic) {
   IJ[0] = 100;
   jvm::deallocate(objKey);
 }
+
+TEST(Allocator, DeallocateAll) {
+  if (ClassLoader::classPath.size() < 3) {
+    std::string rtJar;
+    ASSERT_FALSE(findRTJar(rtJar).size());
+    ASSERT_TRUE(rtJar.size());
+    ClassLoader::classPath.push_back(rtJar);
+  }
+  auto classOrError = ClassLoader::loadClass("ObjectRepresentationIJ");
+  ASSERT_TRUE(classOrError) << classOrError.getError();
+  ASSERT_EQ(jvm::getNumAllocated(), 0);
+  (void)jvm::allocate(*classOrError->second);
+  EXPECT_EQ(jvm::getNumAllocated(), 1);
+  jvm::deallocateAll();
+  EXPECT_EQ(jvm::getNumAllocated(), 0);
+}

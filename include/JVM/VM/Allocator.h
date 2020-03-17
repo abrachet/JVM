@@ -18,13 +18,15 @@
 
 namespace jvm {
 
-uint32_t allocate(const jvm::Class &);
+[[nodiscard]] uint32_t allocate(const jvm::Class &);
 
 InMemoryObject *getObject(uint32_t);
 
 void deallocate(uint32_t);
 
 size_t getNumAllocated();
+
+void deallocateAll();
 
 } // namespace jvm
 

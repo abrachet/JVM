@@ -17,7 +17,7 @@
 #include <map>
 #include <mutex>
 
-using MapType = std::map<uint32_t, InMemoryObject *>;
+using MapType = std::map<uint32_t, std::unique_ptr<InMemoryObject>>;
 
 static std::mutex mapLock;
 static MapType map;
@@ -48,7 +48,8 @@ uint32_t jvm::allocate(const jvm::Class &clss) {
 
   std::scoped_lock X(mapLock);
   uint32_t key = getLowestKey(map);
-  map[key] = reinterpret_cast<InMemoryObject *>(mem);
+  map[key] =
+      std::unique_ptr<InMemoryObject>(reinterpret_cast<InMemoryObject *>(mem));
   return key;
 }
 
@@ -56,19 +57,22 @@ InMemoryObject *jvm::getObject(uint32_t key) {
   std::scoped_lock X(mapLock);
   auto found = map.find(key);
   assert(found != map.end());
-  return found->second;
+  return found->second.get();
 }
 
-static void deallocate(InMemoryObject *ptr) { std::free(ptr); }
 void jvm::deallocate(uint32_t key) {
   std::scoped_lock X(mapLock);
   auto found = map.find(key);
   assert(found != map.end());
-  deallocate(found->second);
   map.erase(found);
 }
 
 size_t jvm::getNumAllocated() {
   std::scoped_lock X(mapLock);
   return map.size();
+}
+
+void jvm::deallocateAll() {
+  std::scoped_lock X(mapLock);
+  map.clear();
 }
