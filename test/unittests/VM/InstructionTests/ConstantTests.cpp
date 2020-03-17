@@ -9,6 +9,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "InstructionTests.h"
 #include "JVM/Core/float_cast.h"
 #include "JVM/VM/Instructions.h"
 #include "JVM/VM/Stack.h"
@@ -16,21 +17,9 @@
 #include "gtest/gtest.h"
 #include <memory>
 
-struct Ins : public testing::Test {
-  std::unique_ptr<ThreadContext> threadContext;
-  void *stackStart;
+struct Constant : public InstructionTests {};
 
-  Ins() {
-    ErrorOr<Stack> stack = Stack::createStack(0x1000);
-    assert(stack);
-    threadContext = std::make_unique<ThreadContext>(std::move(*stack));
-    stackStart = (char *)threadContext->stack.stack + threadContext->stack.size;
-  }
-
-  void SetUp() override { threadContext->stack.sp = stackStart; }
-};
-
-TEST_F(Ins, Nop) {
+TEST_F(Constant, Nop) {
   uint8_t instructions[] = {Instructions::nop, 0};
   threadContext->pc = instructions;
   threadContext->callNext();
@@ -38,7 +27,7 @@ TEST_F(Ins, Nop) {
   EXPECT_EQ(threadContext->stack.sp, stackStart);
 }
 
-TEST_F(Ins, Aconst_null) {
+TEST_F(Constant, Aconst_null) {
   uint8_t instructions[] = {Instructions::aconst_null, 0};
   threadContext->pc = instructions;
   threadContext->callNext();
@@ -49,7 +38,7 @@ TEST_F(Ins, Aconst_null) {
   EXPECT_EQ(threadContext->stack.sp, stackStart);
 }
 
-TEST_F(Ins, Iconst) {
+TEST_F(Constant, Iconst) {
   uint8_t instructions[] = {Instructions::iconst_m1, 0};
   threadContext->pc = instructions;
   threadContext->callNext();
@@ -114,7 +103,7 @@ TEST_F(Ins, Iconst) {
   EXPECT_EQ(threadContext->stack.sp, stackStart);
 }
 
-TEST_F(Ins, Lconst) {
+TEST_F(Constant, Lconst) {
   uint8_t instructions[] = {Instructions::lconst_0, 0};
   threadContext->pc = instructions;
   threadContext->callNext();
@@ -134,7 +123,7 @@ TEST_F(Ins, Lconst) {
   EXPECT_EQ(threadContext->stack.sp, stackStart);
 }
 
-TEST_F(Ins, Fconst) {
+TEST_F(Constant, Fconst) {
   uint8_t instructions[] = {Instructions::fconst_0, 0};
   threadContext->pc = instructions;
   threadContext->callNext();
@@ -163,7 +152,7 @@ TEST_F(Ins, Fconst) {
   EXPECT_EQ(threadContext->stack.sp, stackStart);
 }
 
-TEST_F(Ins, Dconst) {
+TEST_F(Constant, Dconst) {
   uint8_t instructions[] = {Instructions::dconst_0, 0};
   threadContext->pc = instructions;
   threadContext->callNext();
@@ -183,7 +172,7 @@ TEST_F(Ins, Dconst) {
   EXPECT_EQ(threadContext->stack.sp, stackStart);
 }
 
-TEST_F(Ins, Bipush) {
+TEST_F(Constant, Bipush) {
   uint8_t instructions[] = {Instructions::bipush, 0};
   threadContext->pc = instructions;
   threadContext->callNext();
@@ -200,7 +189,7 @@ TEST_F(Ins, Bipush) {
   EXPECT_EQ(pop, 17);
 }
 
-TEST_F(Ins, Sipush) {
+TEST_F(Constant, Sipush) {
   uint8_t instructions[] = {Instructions::sipush, 0, 0};
   threadContext->pc = instructions;
   threadContext->callNext();

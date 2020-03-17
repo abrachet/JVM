@@ -13,7 +13,7 @@
 #include "gtest/gtest.h"
 
 TEST(ClassLoader, ObjectRepresentation) {
-  if (ClassLoader::classPath.size() < 2) {
+  if (ClassLoader::classPath.size() < 3) {
     std::string rtJar;
     ASSERT_FALSE(findRTJar(rtJar).size());
     ASSERT_TRUE(rtJar.size());
@@ -28,7 +28,7 @@ TEST(ClassLoader, ObjectRepresentation) {
 }
 
 TEST(ClassLoader, Name) {
-  if (ClassLoader::classPath.size() < 2) {
+  if (ClassLoader::classPath.size() < 3) {
     std::string rtJar;
     ASSERT_FALSE(findRTJar(rtJar).size());
     ASSERT_TRUE(rtJar.size());

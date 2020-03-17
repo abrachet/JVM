@@ -68,3 +68,17 @@ public:
       tc.callNext();
   }
 };
+
+struct InstructionTest : public testing::Test {
+  std::unique_ptr<ThreadContext> threadContext;
+  void *stackStart;
+
+  Ins() {
+    ErrorOr<Stack> stack = Stack::createStack(0x1000);
+    assert(stack);
+    threadContext = std::make_unique<ThreadContext>(std::move(*stack));
+    stackStart = (char *)threadContext->stack.stack + threadContext->stack.size;
+  }
+
+  void SetUp() override { threadContext->stack.sp = stackStart; }
+};
