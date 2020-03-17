@@ -17,7 +17,7 @@
 #include "gtest/gtest.h"
 #include <memory>
 
-struct Constant : public InstructionTests {};
+struct Constant : public InstructionTest {};
 
 TEST_F(Constant, Nop) {
   uint8_t instructions[] = {Instructions::nop, 0};

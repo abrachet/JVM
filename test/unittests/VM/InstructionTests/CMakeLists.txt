@@ -5,6 +5,7 @@ target_sources(vm_test PUBLIC
   InvokeStaticJVMTest.cpp
   InvokeStaticNativeTest.cpp
   LoadsTest.cpp
+  MathTest.cpp
   NewTest.cpp
   StackTest.cpp
 )

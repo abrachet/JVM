@@ -16,6 +16,7 @@
 #include "Constants.h"
 #include "Control.h"
 #include "Loads.h"
+#include "Math.h"
 #include "References.h"
 #include "Stack.h"
 
@@ -60,7 +61,9 @@ std::array<InsT, 256> instructions = []() constexpr {
 
   // Stack
   array[Instructions::dup] = Ins::dup;
+
   // Math
+  array[Instructions::iadd] = iadd;
 
   // Conversions
 

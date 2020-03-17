@@ -73,7 +73,7 @@ struct InstructionTest : public testing::Test {
   std::unique_ptr<ThreadContext> threadContext;
   void *stackStart;
 
-  Ins() {
+  InstructionTest() {
     ErrorOr<Stack> stack = Stack::createStack(0x1000);
     assert(stack);
     threadContext = std::make_unique<ThreadContext>(std::move(*stack));
