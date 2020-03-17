@@ -67,6 +67,8 @@ std::array<InsT, 256> instructions = []() constexpr {
   array[Instructions::ladd] = ladd;
   array[Instructions::isub] = isub;
   array[Instructions::lsub] = lsub;
+  array[Instructions::imul] = imul;
+  array[Instructions::lmul] = lmul;
 
   // Conversions
 

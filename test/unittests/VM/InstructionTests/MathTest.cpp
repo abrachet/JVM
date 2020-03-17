@@ -35,7 +35,40 @@ TEST_F(Math, IAdd) {
 TEST_F(Math, LAdd) {
   instruction = Instructions::ladd;
   test(5L, 1L, 6L);
-  test<uint64_t>(std::numeric_limits<int32_t>::max(), 1,
-                 (uint64_t)std::numeric_limits<int32_t>::max() + 1);
+  test<int64_t>(std::numeric_limits<int32_t>::max(), 1,
+                (uint64_t)std::numeric_limits<int32_t>::max() + 1);
   test<int64_t>(-1, 1, 0);
+}
+
+TEST_F(Math, ISub) {
+  instruction = Instructions::isub;
+  test(5, 1, 4);
+  test(0, 1, -1);
+  test(1, 1, 0);
+}
+
+TEST_F(Math, LSub) {
+  instruction = Instructions::lsub;
+  test(5L, 1L, 4L);
+  test(10000000000L, 1L, 9999999999L);
+  test(1L, 1L, 0L);
+  test(0L, 1L, -1L);
+}
+
+TEST_F(Math, IMul) {
+  instruction = Instructions::imul;
+  test(5, 1, 5);
+  test(5, 2, 10);
+  test(0, 10, 0);
+  test(10, -1, -10);
+  test(-1, -5, 5);
+  test(std::numeric_limits<int32_t>::max(), 2, -2);
+}
+
+TEST_F(Math, LMul) {
+  instruction = Instructions::lmul;
+  test(5L, 1L, 5L);
+  test(0L, 10L, 0L);
+  test(10L, -1L, -10L);
+  test<int64_t>(std::numeric_limits<int32_t>::max(), 2, 4294967294);
 }
