@@ -5,7 +5,7 @@ class ObjectRepresentationIJ {
     long J; // Expected offset 8
 }
 
-// Expected size 12
+// Expected size 16, need J to always be 8 algined
 class ObjectRepresentationJI {
     long J; // Expected offset 0
     int I;  // Expected offset 8

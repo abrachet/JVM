@@ -78,7 +78,7 @@ class ObjectRepresentationJI : public ObjectRepresentationTest {
 };
 
 TEST_F(ObjectRepresentationJI, JI) {
-  EXPECT_EQ(getOR().getObjectSize(), 12);
+  EXPECT_EQ(getOR().getObjectSize(), 16);
   EXPECT_EQ(getOR().getFieldOffset(0), 0);
   EXPECT_EQ(getOR().getFieldOffset(1), 8);
 }

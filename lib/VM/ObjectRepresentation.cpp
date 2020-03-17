@@ -26,10 +26,12 @@ ObjectRepresentation::createFromClassFile(const ClassFile &classFile) {
 
   ObjectRepresentation OR;
   size_t currentOffset = 0;
+  bool needs8Align = false;
   for (const auto &field : classFile.getFields()) {
     if (field.accessFlags & Class::Field::Static)
       continue;
     Type t = getType(field.descriptorIndex);
+    needs8Align |= (t.getStackEntryCount() == 2);
     size_t fieldSize = t.getStackEntryCount() * oneEntrySize;
     if (currentOffset % fieldSize) {
       currentOffset += oneEntrySize;
@@ -38,6 +40,9 @@ ObjectRepresentation::createFromClassFile(const ClassFile &classFile) {
     OR.memberFields.emplace_back(t, currentOffset);
     currentOffset += fieldSize;
   }
+  if (needs8Align && (currentOffset % twoEntrySize))
+    currentOffset += oneEntrySize;
   OR.size = currentOffset;
+  OR.alignment = needs8Align ? Eight : Four;
   return OR;
 }

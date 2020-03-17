@@ -28,10 +28,13 @@ class ObjectRepresentation {
   std::vector<std::pair<Type, uint64_t>> memberFields;
   uint64_t size;
 
+  enum Alignment : uint64_t { Four = 4, Eight = 8 } alignment = Four;
+
 public:
   ObjectRepresentation() = default;
   static ErrorOr<ObjectRepresentation> createFromClassFile(const ClassFile &);
 
+  uint64_t getObjectAlignment() const { return alignment; }
   uint64_t getObjectSize() const { return size; }
   uint64_t getFieldOffset(jvm::jfieldID id) const {
     return memberFields[id].second;
