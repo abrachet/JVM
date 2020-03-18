@@ -34,7 +34,7 @@ static uint32_t getLowestKey(const MapType &map) {
 }
 
 static size_t alignUp(size_t align, size_t toAlign) {
-  return toAlign + ((align - 1) & -algin);
+  return (toAlign + (align - 1)) & -align;
 }
 
 uint32_t jvm::allocate(const jvm::Class &clss) {
