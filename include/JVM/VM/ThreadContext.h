@@ -88,7 +88,6 @@ struct ThreadContext {
     return frame;
   }
 
-private:
   template <size_t Width> void *getAddressOfLocal(int index) {
     static_assert(Stack::validEntrySize(Width), "Invalid stack entry size");
     uint32_t *stack = reinterpret_cast<uint32_t *>(currentFrame().frameStart);
@@ -97,7 +96,6 @@ private:
     return reinterpret_cast<void *>(stack);
   }
 
-public:
   template <size_t Width> uint64_t loadFromLocal(int index) {
     static_assert(Stack::validEntrySize(Width), "Invalid stack entry size");
     const uint32_t *stack =

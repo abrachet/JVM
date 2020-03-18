@@ -46,4 +46,10 @@ static void lmul(ThreadContext &tc) {
   return mathOperation<2, std::multiplies<>>(tc);
 }
 
+static void iinc(ThreadContext &tc) {
+  uint8_t local = readFromPointer<uint8_t>(tc.pc);
+  uint32_t *var = reinterpret_cast<uint32_t *>(tc.getAddressOfLocal<1>(local));
+  *var += readFromPointer<uint8_t>(tc.pc);
+}
+
 #endif // INS_LOADS_H

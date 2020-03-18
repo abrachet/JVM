@@ -72,3 +72,16 @@ TEST_F(Math, LMul) {
   test(10L, -1L, -10L);
   test<int64_t>(std::numeric_limits<int32_t>::max(), 2, 4294967294);
 }
+
+TEST_F(Math, IInc) {
+  uint8_t ins[] = {
+      Instructions::iconst_0, Instructions::istore_0, Instructions::iinc, 0, 1,
+      Instructions::iload_0,
+  };
+  threadContext->pushFrame("<test>");
+  threadContext->pc = ins;
+  threadContext->stack.push<1>(10001);
+  for (int i = 0; i < 4; i++)
+    threadContext->callNext();
+  EXPECT_EQ(threadContext->stack.pop<1>(), 1);
+}
