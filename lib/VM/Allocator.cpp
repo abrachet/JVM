@@ -33,11 +33,14 @@ static uint32_t getLowestKey(const MapType &map) {
   return lowest;
 }
 
+static size_t alignUp(size_t align, size_t toAlign) {
+  return toAlign + ((align - 1) & -algin);
+}
+
 uint32_t jvm::allocate(const jvm::Class &clss) {
   size_t objectSize = clss.objectRepresentation.getObjectSize();
-  size_t aligned = ((sizeof(InMemoryObject) + objectSize) +
-                    (jvm::requiredTypeAlignment - 1)) &
-                   (-jvm::requiredTypeAlignment);
+  size_t aligned =
+      alignUp(jvm::requiredTypeAlignment, sizeof(InMemoryObject) + objectSize);
   void *const mem = aligned_alloc(jvm::requiredTypeAlignment, aligned);
   assert(mem);
   new (mem) InMemoryObject{clss};
