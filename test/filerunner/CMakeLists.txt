@@ -2,6 +2,7 @@
 set(FILERUNNER ${CMAKE_BINARY_DIR}/bin/filerunner)
 add_custom_command(
   OUTPUT ${FILERUNNER}
+  DEPENDS ${JVM_SRC_DIR}/utils/filerunner.go
   COMMAND go build ${JVM_SRC_DIR}/utils/filerunner.go && mv filerunner ${FILERUNNER}
 )
 

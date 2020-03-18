@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 type ProcessStatus struct {
@@ -202,14 +203,18 @@ func filerunner() int {
 		}
 		filename = filename[index+1:]
 	}
+	start := time.Now()
 	commandRunner := NewCommandRunner(filename, defines)
 	defer commandRunner.Cleanup()
 	err := commandRunner.ParseAll()
+	elapsed := time.Now().Sub(start)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "\033[1;31m[   FAIL   ]\033[0m", filename)
+		fmt.Fprint(os.Stderr, "\033[1;31m[   FAIL   ]\033[0m ", filename)
+		fmt.Fprintf(os.Stderr, " (%dms)\n", elapsed.Milliseconds())
 		return 1
 	}
-	fmt.Fprintln(os.Stderr, "\033[1;32m[   PASS   ]\033[0m", filename)
+	fmt.Fprint(os.Stderr, "\033[1;32m[   PASS   ]\033[0m ", filename)
+	fmt.Fprintf(os.Stderr, " (%dms)\n", elapsed.Milliseconds())
 	return 0
 }
 
