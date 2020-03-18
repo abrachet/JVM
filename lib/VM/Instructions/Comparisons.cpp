@@ -9,14 +9,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef INS_CONTROL_H
-#define INS_CONTROL_H
+#include "Comparisons.h"
+#include "JVM/Core/BigEndianByteReader.h"
+#include <cassert>
 
-#include "Instruction.h"
-#include "JVM/VM/Instructions.h"
-
-void goto_(ThreadContext &);
-void ireturn(ThreadContext &);
-void return_(ThreadContext &);
-
-#endif // INS_CONTROL_H
+void if_icmpeq(ThreadContext &tc) {
+  int16_t branch = readFromPointer<int16_t>(tc.pc);
+  // Currently 3 bytes from goto instruction [goto, branch 1st, branch 2nd]
+  branch -= 3;
+  uint32_t right = tc.stack.pop<1>();
+  uint32_t left = tc.stack.pop<1>();
+  if (right == left)
+    tc.jump(branch);
+}

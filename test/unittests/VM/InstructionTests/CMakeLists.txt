@@ -1,5 +1,6 @@
 
 target_sources(vm_test PUBLIC
+  ComparisonsTest.cpp
   ConstantTests.cpp
   FieldTest.cpp
   General.cpp

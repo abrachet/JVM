@@ -211,7 +211,7 @@ constexpr Instruction i2b("i2b", 145);
 constexpr Instruction i2c("i2c", 146);
 constexpr Instruction i2s("i2s", 147);
 
-// Comparasions
+// Comparisons
 constexpr Instruction lcmp("lcmp", 148);
 constexpr Instruction fcmpl("fcmpl", 149);
 constexpr Instruction fcmpg("fcmpg", 150);

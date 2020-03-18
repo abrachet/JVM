@@ -110,6 +110,12 @@ struct ThreadContext {
     *addr = toStore;
   }
 
+  void jump(int64_t offset) {
+    const char *cpc = reinterpret_cast<const char *>(pc);
+    cpc += offset;
+    pc = cpc;
+  }
+
   std::string_view getCurrentClassName() { return frames.back().className; }
 
   void callNext();

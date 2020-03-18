@@ -10,6 +10,14 @@
 // limitations under the License.
 
 #include "Control.h"
+#include "JVM/Core/BigEndianByteReader.h"
+
+void goto_(ThreadContext &tc) {
+  int16_t branch = readFromPointer<int16_t>(tc.pc);
+  // Currently 3 bytes from goto instruction [goto, branch 1st, branch 2nd]
+  branch -= 3;
+  tc.jump(branch);
+}
 
 template <size_t TypeWidth> void treturn(ThreadContext &tc) {
   if (tc.currentFrame().syncronizedMethod)

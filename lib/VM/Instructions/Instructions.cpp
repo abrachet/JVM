@@ -16,6 +16,7 @@
 // TOOD: remove this when invokespecial is added properly.
 #include "JVM/Core/BigEndianByteReader.h"
 
+#include "Comparisons.h"
 #include "Constants.h"
 #include "Control.h"
 #include "Loads.h"
@@ -83,9 +84,11 @@ std::array<InsT, 256> instructions = []() constexpr {
 
   // Conversions
 
-  // Comparasions
+  // Comparison
+  array[Instructions::if_icmpeq] = if_icmpeq;
 
   // Control
+  array[Instructions::goto_] = goto_;
   array[Instructions::ireturn] = ireturn;
   array[Instructions::return_] = return_;
 

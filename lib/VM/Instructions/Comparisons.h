@@ -9,14 +9,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef INS_CONTROL_H
-#define INS_CONTROL_H
+#ifndef INS_COMPARASIONS_H
+#define INS_COMPARASIONS_H
 
-#include "Instruction.h"
-#include "JVM/VM/Instructions.h"
+#include "JVM/VM/ThreadContext.h"
 
-void goto_(ThreadContext &);
-void ireturn(ThreadContext &);
-void return_(ThreadContext &);
+void if_icmpeq(ThreadContext &);
 
-#endif // INS_CONTROL_H
+#endif // INS_COMPARASIONS_H

@@ -12,6 +12,7 @@ set(filerunner_srcs
   DoNothing.java
   FilerunnerFailure.java
   FilerunnerTest.java
+  Loop.java
   NoInputFiles.txt
 )
 

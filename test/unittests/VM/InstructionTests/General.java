@@ -40,4 +40,15 @@ class General {
         g.i = 5;
         return g.i;
     }
+
+    public static int loop() {
+        int a = 0;
+        for (int i = 0; i != 5; i++)
+            a += i;
+        return a;
+    }
+
+    public static void callLoop() {
+        int a = loop();
+    }
 }
