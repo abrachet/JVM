@@ -82,6 +82,7 @@ public:
 constexpr char Function('(');
 constexpr char Void('V');
 constexpr char Byte('B');
+constexpr char Boolean('Z');
 constexpr char Short('S');
 constexpr char Int('I');
 constexpr char Long('J');

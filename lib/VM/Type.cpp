@@ -32,6 +32,8 @@ static std::optional<Type::BasicType> parseOne(std::string_view &str) {
   case Byte:
     t.c = Byte;
     break;
+  case Boolean:
+    t.c = Boolean;
   case Short:
     t.c = Short;
     break;
@@ -100,6 +102,7 @@ size_t Type::BasicType::getStackEntryCount() const {
   case Void:
     return 0;
   case Byte:
+  case Boolean:
   case Short:
   case Int:
   case Char:
