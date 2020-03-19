@@ -22,9 +22,7 @@ extern "C" void Java___JVM_internal_Start_exit(void *, int exitCode) {
 }
 
 #ifdef TESTING
-extern "C" void Java_Natives_exit(void *, int exitCode) {
-  std::exit(exitCode);
-}
+extern "C" void Java_Natives_exit(void *, int exitCode) { std::exit(exitCode); }
 #endif
 
 template <typename T> static void dieIfError(const ErrorOr<T> &error) {
@@ -70,7 +68,8 @@ static ErrorOr<const void *> loadStart() {
   return reinterpret_cast<const void *>(startCodeOrErr->code);
 }
 
-[[noreturn]] static void startJVM(std::string_view mainClass) {
+[[noreturn]] static void startJVM(std::string_view mainClass,
+                                  const void *mainAddr, uint32_t arg) {
   ErrorOr<Stack> mainStack = Stack::createStack();
   dieIfError(mainStack);
   ThreadContext mainThread(std::move(*mainStack));
@@ -79,12 +78,26 @@ static ErrorOr<const void *> loadStart() {
   dieIfError(startAddr);
   mainThread.pushFrame(Frame(startClassName, nullptr, mainThread.stack.sp));
 
-  ErrorOr<const void *> mainAddr = loadMain(mainClass);
-  dieIfError(mainAddr);
   mainThread.pushFrame(Frame(mainClass, *startAddr, mainThread.stack.sp));
-  mainThread.pc = *mainAddr;
+  mainThread.storeInLocal<1>(0, arg);
+  mainThread.pc = mainAddr;
   for (;;)
     mainThread.callNext();
+}
+
+[[noreturn]] static void startMainInt(std::string_view mainClassName,
+                                      uint32_t arg) {
+  ErrorOr<Class::CodeAttribute> codeOrErr =
+      loadMethod(mainClassName, "main", "(I)V");
+  dieIfError(codeOrErr);
+  startJVM(mainClassName, reinterpret_cast<const void *>(codeOrErr->code), arg);
+}
+
+[[noreturn]] static void startMainString(std::string_view mainClassName) {
+  ErrorOr<const void *> codeOrErr = loadMain(mainClassName);
+  dieIfError(codeOrErr);
+  // 0 is nullptr object key, TODO get args from command line
+  startJVM(mainClassName, *codeOrErr, 0);
 }
 
 int main(int argc, char **argv) {
@@ -95,6 +108,17 @@ int main(int argc, char **argv) {
   std::string rtJar;
   findRTJar(rtJar);
   ClassLoader::classPath.push_back(rtJar);
-  startJVM(argv[1]);
+
+  // TODO: better command line args handling
+  if (std::string_view(argv[1]) == "-Xintmain") {
+    if (argc < 4) {
+      std::fputs("no class file or arg specified for -Xintmain", stderr);
+      return 1;
+    }
+    startMainInt(argv[2], std::atoi(argv[3]));
+  } else {
+    // TODO pass command line args
+    startMainString(argv[1]);
+  }
   __builtin_unreachable();
 }
