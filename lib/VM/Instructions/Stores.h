@@ -9,23 +9,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef INS_LOADS_H
-#define INS_LOADS_H
+#ifndef INS_STORES_H
+#define INS_STORES_H
 
 #include "Instruction.h"
 #include "JVM/VM/Instructions.h"
 
-template <size_t LoadWidth, size_t Index> void load(ThreadContext &tc) {
-  tc.stack.push<LoadWidth>(tc.loadFromLocal<LoadWidth>(Index));
-}
+void iastore(ThreadContext &tc);
 
-template <size_t Index> void iload(ThreadContext &tc) { load<1, Index>(tc); }
-
-static inline void iload_0(ThreadContext &tc) { iload<0>(tc); }
-static inline void iload_1(ThreadContext &tc) { iload<1>(tc); }
-static inline void iload_2(ThreadContext &tc) { iload<2>(tc); }
-static inline void iload_3(ThreadContext &tc) { iload<3>(tc); }
-
-void iaload(ThreadContext &);
-
-#endif // INS_LOADS_H
+#endif // INS_STORES_H

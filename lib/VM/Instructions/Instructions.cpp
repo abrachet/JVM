@@ -23,6 +23,7 @@
 #include "Math.h"
 #include "References.h"
 #include "Stack.h"
+#include "Stores.h"
 
 #define unimplemented(str)                                                     \
   +[](ThreadContext &) -> void {                                               \
@@ -59,6 +60,8 @@ std::array<InsT, 256> instructions = []() constexpr {
   array[Instructions::aload_0] = array[Instructions::iload_0];
   array[Instructions::aload_1] = array[Instructions::iload_1];
 
+  array[Instructions::iaload] = iaload;
+
   // Stores
   // This is just temporary to get the loads test to work.
   array[Instructions::istore_0] =
@@ -70,6 +73,8 @@ std::array<InsT, 256> instructions = []() constexpr {
 
   array[Instructions::astore_0] = array[Instructions::istore_0];
   array[Instructions::astore_1] = array[Instructions::istore_1];
+  array[Instructions::iastore] = iastore;
+
   // Stack
   array[Instructions::dup] = Ins::dup;
 

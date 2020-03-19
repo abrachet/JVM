@@ -60,4 +60,14 @@ class General {
     public static void callGetArrayLength() {
         int a = getArrayLength();
     }
+
+    public static int getAndSetArray() {
+        int[] arr = new int[5];
+        arr[3] = 5;
+        return arr[3];
+    }
+
+    public static void callGetAndSetArray() {
+        int a = getAndSetArray();
+    }
 }

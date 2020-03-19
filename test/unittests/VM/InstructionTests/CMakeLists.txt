@@ -10,6 +10,7 @@ target_sources(vm_test PUBLIC
   MathTest.cpp
   NewTest.cpp
   StackTest.cpp
+  StoresTest.cpp
 )
 
 target_link_options(vm_test PUBLIC -rdynamic)
