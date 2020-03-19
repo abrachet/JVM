@@ -79,6 +79,7 @@ public:
   }
 };
 
+constexpr char Invalid(0);
 constexpr char Function('(');
 constexpr char Void('V');
 constexpr char Byte('B');

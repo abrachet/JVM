@@ -19,5 +19,7 @@ void getfield(ThreadContext &);
 void putfield(ThreadContext &);
 void invokestatic(ThreadContext &);
 void new_(ThreadContext &);
+void newarray(ThreadContext &);
+void arraylength(ThreadContext &);
 
 #endif // INS_REFERENCES_H

@@ -22,21 +22,45 @@ namespace jvm {
 constexpr size_t requiredTypeAlignment = Stack::stackEntryBytes * 2;
 }
 
-struct alignas(jvm::requiredTypeAlignment) InMemoryObject {
-  const jvm::Class &clss;
+struct alignas(jvm::requiredTypeAlignment) InMemoryItem {
   std::recursive_mutex monitor;
+
+  virtual size_t getThisSize() const = 0;
+
+  virtual ~InMemoryItem() {}
 
   void *getThisptr() const {
     const char *addr = reinterpret_cast<const char *>(this);
-    addr += sizeof(InMemoryObject);
+    addr += getThisSize();
     return const_cast<void *>(reinterpret_cast<const void *>(addr));
   }
+
+protected:
+  InMemoryItem() {}
+};
+
+struct alignas(jvm::requiredTypeAlignment) InMemoryObject
+    : public InMemoryItem {
+  const jvm::Class &clss;
+
+  InMemoryObject(const jvm::Class &clss) : clss(clss) {}
+
+  size_t getThisSize() const override { return sizeof(InMemoryObject); }
 
   std::string_view getName() const { return clss.name; }
 
   ObjectRepresentation getObjectRepresentation() {
     return clss.objectRepresentation;
   }
+};
+
+struct alignas(jvm::requiredTypeAlignment) InMemoryArray : public InMemoryItem {
+  Type type;
+  size_t length;
+
+  size_t getThisSize() const override { return sizeof(InMemoryArray); }
+
+  InMemoryArray(Type type, size_t length) : type(type), length(length) {}
 };
 
 #endif // JVM_VM_INMEMORYOBJECT_H

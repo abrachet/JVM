@@ -51,4 +51,13 @@ class General {
     public static void callLoop() {
         int a = loop();
     }
+
+    public static int getArrayLength() {
+        int[] arr = new int[10];
+        return arr.length;
+    }
+
+    public static void callGetArrayLength() {
+        int a = getArrayLength();
+    }
 }

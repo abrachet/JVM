@@ -26,13 +26,28 @@ struct New : public MethodCaller<> {
     EXPECT_EQ(getCode()[0], Instructions::new_);
     EXPECT_EQ(getCode()[3], Instructions::dup);
   }
+
+  void setUpCallGetArrayLength() {
+    setUpMethod(13);
+    EXPECT_EQ(getCode()[0], Instructions::invokestatic);
+    EXPECT_EQ(getCode()[3], Instructions::istore_0);
+    EXPECT_EQ(getCode()[4], Instructions::return_);
+  }
 };
 
 TEST_F(New, Basic) {
   setUpTestNew();
   tc.callNext();
   uint32_t objRef = tc.stack.pop<1>();
-  InMemoryObject *ptr = jvm::getObject(objRef);
-  EXPECT_EQ(ptr->getName(), "General");
+  InMemoryItem *ptr = jvm::getAllocatedItem(objRef);
+  EXPECT_EQ(reinterpret_cast<InMemoryObject *>(ptr)->getName(), "General");
   jvm::deallocate(objRef);
+}
+
+TEST_F(New, NewArray) {
+  setUpCallGetArrayLength();
+  while (*getCode() != Instructions::return_)
+    tc.callNext();
+  EXPECT_EQ(tc.stack.pop<1>(), 10);
+  jvm::deallocateAll();
 }

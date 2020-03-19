@@ -17,7 +17,7 @@
 #include <map>
 #include <mutex>
 
-using MapType = std::map<uint32_t, std::unique_ptr<InMemoryObject>>;
+using MapType = std::map<uint32_t, std::unique_ptr<InMemoryItem>>;
 
 static std::mutex mapLock;
 static MapType map;
@@ -37,6 +37,13 @@ static size_t alignUp(size_t align, size_t toAlign) {
   return (toAlign + (align - 1)) & -align;
 }
 
+static uint32_t assignToKey(InMemoryItem *item) {
+  std::scoped_lock X(mapLock);
+  uint32_t key = getLowestKey(map);
+  map[key] = std::unique_ptr<InMemoryItem>(item);
+  return key;
+}
+
 uint32_t jvm::allocate(const jvm::Class &clss) {
   size_t objectSize = clss.objectRepresentation.getObjectSize();
   size_t aligned =
@@ -49,14 +56,24 @@ uint32_t jvm::allocate(const jvm::Class &clss) {
   assert(!((reinterpret_cast<uintptr_t>(mem) + sizeof(InMemoryObject)) %
            jvm::requiredTypeAlignment));
 
-  std::scoped_lock X(mapLock);
-  uint32_t key = getLowestKey(map);
-  map[key] =
-      std::unique_ptr<InMemoryObject>(reinterpret_cast<InMemoryObject *>(mem));
-  return key;
+  return assignToKey(reinterpret_cast<InMemoryObject *>(mem));
 }
 
-InMemoryObject *jvm::getObject(uint32_t key) {
+uint32_t jvm::allocateArray(Type type, size_t length) {
+  size_t arraySize =
+      type.getStackEntryCount() * Stack::stackEntryBytes * length;
+  size_t aligned =
+      alignUp(jvm::requiredTypeAlignment, sizeof(InMemoryArray) + arraySize);
+  void *const mem = aligned_alloc(jvm::requiredTypeAlignment, aligned);
+  assert(mem);
+  new (mem) InMemoryArray(type, length);
+  std::memset(reinterpret_cast<char *>(mem) + sizeof(InMemoryArray), 0,
+              arraySize);
+
+  return assignToKey(reinterpret_cast<InMemoryArray *>(mem));
+}
+
+InMemoryItem *jvm::getAllocatedItem(uint32_t key) {
   std::scoped_lock X(mapLock);
   auto found = map.find(key);
   assert(found != map.end());

@@ -15,12 +15,14 @@
 #include "JVM/VM/Class.h"
 #include "JVM/VM/ClassLoader.h"
 #include "JVM/VM/InMemoryObject.h"
+#include "JVM/VM/Type.h"
 
 namespace jvm {
 
 [[nodiscard]] uint32_t allocate(const jvm::Class &);
+[[nodiscard]] uint32_t allocateArray(Type type, size_t length);
 
-InMemoryObject *getObject(uint32_t);
+InMemoryItem *getAllocatedItem(uint32_t);
 
 void deallocate(uint32_t);
 

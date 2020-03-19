@@ -22,6 +22,7 @@
 #include "JVM/VM/Type.h"
 #include "JVM/string_view"
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <string>
 #include <vector>
@@ -262,9 +263,10 @@ static std::pair<void *, size_t> getField(const ClassFile &cf, uint32_t cpIndex,
 
   Type fieldType = getFieldType(cf, fieldRef);
   uint32_t fieldID = getFieldID(cf, fieldRef);
-  InMemoryObject *object = jvm::getObject(objectKey);
+  InMemoryItem *object = jvm::getAllocatedItem(objectKey);
   assert(object);
-  const auto &objectRep = object->getObjectRepresentation();
+  const auto &objectRep =
+      reinterpret_cast<InMemoryObject *>(object)->getObjectRepresentation();
   return {reinterpret_cast<char *>(object->getThisptr()) +
               objectRep.getFieldOffset(fieldID),
           fieldType.getStackEntryCount()};
@@ -314,4 +316,26 @@ void putfield(ThreadContext &tc) {
     return writeToAddr<1>(pair.first, objectOnStack);
   assert(pair.second == 2 && "invalid stack size");
   return writeToAddr<2>(pair.first, objectOnStack);
+}
+
+static std::array<Type, 12> integralTypes{
+    Type(Invalid), Type(Invalid), Type(Invalid), Type(Invalid),
+    Type(Boolean), Type(Char),    Type(Float),   Type(Double),
+    Type(Byte),    Type(Short),   Type(Int),     Type(Long)};
+
+void newarray(ThreadContext &tc) {
+  uint8_t type = readFromPointer<uint8_t>(tc.pc);
+  assert(type < integralTypes.size());
+  Type &t = integralTypes[type];
+  assert(t != Invalid);
+  uint32_t count = tc.stack.pop<1>();
+  assert(count >= 0 && "NegativeArraySizeException");
+  uint32_t key = jvm::allocateArray(t, count);
+  tc.stack.push<1>(key);
+}
+
+void arraylength(ThreadContext &tc) {
+  uint32_t key = tc.stack.pop<1>();
+  InMemoryItem *item = jvm::getAllocatedItem(key);
+  tc.stack.push<1>(reinterpret_cast<InMemoryArray *>(item)->length);
 }
