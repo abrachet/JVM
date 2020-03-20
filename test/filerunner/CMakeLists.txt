@@ -14,6 +14,7 @@ set(filerunner_srcs
   DoNothing.java
   FilerunnerFailure.java
   FilerunnerTest.java
+  InstanceOf.java
   IntMain.java
   Loop.java
   Method.java

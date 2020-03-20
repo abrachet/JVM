@@ -14,6 +14,9 @@
 
 #include "JVM/VM/ThreadContext.h"
 
+void ifeq(ThreadContext &);
+void ifne(ThreadContext &);
 void if_icmpeq(ThreadContext &);
+void if_icmpne(ThreadContext &);
 
 #endif // INS_COMPARASIONS_H

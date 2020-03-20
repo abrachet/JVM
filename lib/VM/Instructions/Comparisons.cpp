@@ -11,14 +11,33 @@
 
 #include "Comparisons.h"
 #include "JVM/Core/BigEndianByteReader.h"
+#include <algorithm>
 #include <cassert>
 
-void if_icmpeq(ThreadContext &tc) {
+template <typename Compare> static void ifcmp(ThreadContext &tc) {
+  int16_t branch = readFromPointer<int16_t>(tc.pc);
+  branch -= 3;
+  uint32_t cmp = tc.stack.pop<1>();
+  Compare comp;
+  if (comp(cmp, 0))
+    tc.jump(branch);
+}
+
+void ifeq(ThreadContext &tc) { return ifcmp<std::equal_to<>>(tc); }
+
+void ifne(ThreadContext &tc) { return ifcmp<std::not_equal_to<>>(tc); }
+
+template <typename Compare> static void if_cmp(ThreadContext &tc) {
   int16_t branch = readFromPointer<int16_t>(tc.pc);
   // Currently 3 bytes from goto instruction [goto, branch 1st, branch 2nd]
   branch -= 3;
   uint32_t right = tc.stack.pop<1>();
   uint32_t left = tc.stack.pop<1>();
-  if (right == left)
+  Compare cmp;
+  if (cmp(left, right))
     tc.jump(branch);
 }
+
+void if_icmpeq(ThreadContext &tc) { return if_cmp<std::equal_to<>>(tc); }
+
+void if_icmpne(ThreadContext &tc) { return if_cmp<std::not_equal_to<>>(tc); }

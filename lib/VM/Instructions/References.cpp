@@ -218,7 +218,6 @@ Class::CodeAttribute FunctionCaller::getJVMVirtualMethod() {
   assert(ptr && "NullPointerException");
   ClassHierarchyWalker walker(ptr->clss);
   auto [clss, method] = walker.findVirtualMethod(functionName, typeName);
-  jvm::Class::State state = clss.state;
   ErrorOr<Class::CodeAttribute> codeOrErr =
       method.findCodeAttr(clss.loadedClass->getConstPool());
   tc.currentFrame().nameIndex = method.nameIndex;
@@ -382,4 +381,22 @@ void arraylength(ThreadContext &tc) {
   uint32_t key = tc.stack.pop<1>();
   InMemoryItem *item = jvm::getAllocatedItem(key);
   tc.stack.push<1>(reinterpret_cast<InMemoryArray *>(item)->length);
+}
+
+void instanceof (ThreadContext & tc) {
+  using ClassInfo = Class::ConstPool::ClassInfo;
+  uint32_t key = tc.stack.pop<1>();
+  uint16_t cpIndex = readFromPointer<uint16_t>(tc.pc);
+  const auto &cp = tc.getClassFile().getConstPool();
+  const auto &classInfo = cp.get<ClassInfo>(cpIndex);
+  std::string_view className = cp.get<Utf8Info>(classInfo.nameIndex);
+  InMemoryItem *item = jvm::getAllocatedItem(key);
+  assert(item && "NullPointerException");
+  if (item->isArray() && className == "java/lang/Object") {
+    tc.stack.push<1>(1);
+    return;
+  }
+  auto &obj = reinterpret_cast<InMemoryObject &>(*item);
+  ClassHierarchyWalker walker(obj.clss);
+  tc.stack.push<1>(walker.extends(className));
 }

@@ -90,7 +90,10 @@ std::array<InsT, 256> instructions = []() constexpr {
   // Conversions
 
   // Comparison
+  array[Instructions::ifeq] = ifeq;
+  array[Instructions::ifne] = ifne;
   array[Instructions::if_icmpeq] = if_icmpeq;
+  array[Instructions::if_icmpne] = if_icmpne;
 
   // Control
   array[Instructions::goto_] = goto_;
@@ -110,6 +113,7 @@ std::array<InsT, 256> instructions = []() constexpr {
   array[Instructions::new_] = new_;
   array[Instructions::newarray] = newarray;
   array[Instructions::arraylength] = arraylength;
+  array[Instructions:: instanceof ] = instanceof ;
 
   // Extended
 

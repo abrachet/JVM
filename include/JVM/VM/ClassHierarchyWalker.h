@@ -21,6 +21,8 @@
 class ClassHierarchyWalker {
   const jvm::Class &current;
 
+  bool extends(const jvm::Class &, std::string_view) const;
+
 public:
   ClassHierarchyWalker(const jvm::Class &clss) : current(clss) {}
 

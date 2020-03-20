@@ -22,5 +22,6 @@ void invokevirtual(ThreadContext &);
 void new_(ThreadContext &);
 void newarray(ThreadContext &);
 void arraylength(ThreadContext &);
+void instanceof (ThreadContext &);
 
 #endif // INS_REFERENCES_H

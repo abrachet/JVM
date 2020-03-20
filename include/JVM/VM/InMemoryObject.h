@@ -26,6 +26,8 @@ struct alignas(jvm::requiredTypeAlignment) InMemoryItem {
   std::recursive_mutex monitor;
 
   virtual size_t getThisSize() const = 0;
+  // We don't compile with rtti.
+  virtual bool isArray() const { return false; }
 
   virtual ~InMemoryItem() {}
 
@@ -59,6 +61,7 @@ struct alignas(jvm::requiredTypeAlignment) InMemoryArray : public InMemoryItem {
   size_t length;
 
   size_t getThisSize() const override { return sizeof(InMemoryArray); }
+  bool isArray() const override { return true; }
 
   InMemoryArray(Type type, size_t length) : type(type), length(length) {}
 };

@@ -25,3 +25,18 @@ ClassHierarchyWalker::findVirtualMethod(std::string_view methodName,
   }
   assert(0 && "IncompatibleClassChangeError");
 }
+
+bool ClassHierarchyWalker::extends(const jvm::Class &curr,
+                                   std::string_view name) const {
+  if (curr.name == name)
+    return true;
+  for (const jvm::Class &c : curr.superClasses) {
+    if (extends(c, name))
+      return true;
+  }
+  return false;
+}
+
+bool ClassHierarchyWalker::extends(std::string_view className) const {
+  return extends(current, className);
+}
