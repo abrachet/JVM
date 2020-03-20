@@ -23,7 +23,7 @@ static std::mutex mapLock;
 static MapType map;
 
 static uint32_t getLowestKey(const MapType &map) {
-  uint32_t lowest = 0;
+  uint32_t lowest = 1;
   for (const auto &[key, _] : map) {
     if (lowest < key)
       break;
@@ -74,6 +74,8 @@ uint32_t jvm::allocateArray(Type type, size_t length) {
 }
 
 InMemoryItem *jvm::getAllocatedItem(uint32_t key) {
+  if (key == 0)
+    return nullptr;
   std::scoped_lock X(mapLock);
   auto found = map.find(key);
   assert(found != map.end());

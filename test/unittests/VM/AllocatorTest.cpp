@@ -13,13 +13,18 @@
 #include "JVM/VM/ClassLoader.h"
 #include "gtest/gtest.h"
 
-TEST(Allocator, Basic) {
-  if (ClassLoader::classPath.size() < 3) {
-    std::string rtJar;
-    ASSERT_FALSE(findRTJar(rtJar).size());
-    ASSERT_TRUE(rtJar.size());
-    ClassLoader::classPath.push_back(rtJar);
+struct Allocator : public ::testing::Test {
+  void SetUp() override {
+    if (ClassLoader::classPath.size() < 3) {
+      std::string rtJar;
+      ASSERT_FALSE(findRTJar(rtJar).size());
+      ASSERT_TRUE(rtJar.size());
+      ClassLoader::classPath.push_back(rtJar);
+    }
   }
+};
+
+TEST_F(Allocator, Basic) {
   auto classOrError = ClassLoader::loadClass("ObjectRepresentationIJ");
   ASSERT_TRUE(classOrError) << classOrError.getError();
   uint32_t objKey = jvm::allocate(*classOrError->second);
@@ -37,13 +42,7 @@ TEST(Allocator, Basic) {
   jvm::deallocate(objKey);
 }
 
-TEST(Allocator, DeallocateAll) {
-  if (ClassLoader::classPath.size() < 3) {
-    std::string rtJar;
-    ASSERT_FALSE(findRTJar(rtJar).size());
-    ASSERT_TRUE(rtJar.size());
-    ClassLoader::classPath.push_back(rtJar);
-  }
+TEST_F(Allocator, DeallocateAll) {
   auto classOrError = ClassLoader::loadClass("ObjectRepresentationIJ");
   ASSERT_TRUE(classOrError) << classOrError.getError();
   ASSERT_EQ(jvm::getNumAllocated(), 0);
@@ -51,4 +50,18 @@ TEST(Allocator, DeallocateAll) {
   EXPECT_EQ(jvm::getNumAllocated(), 1);
   jvm::deallocateAll();
   EXPECT_EQ(jvm::getNumAllocated(), 0);
+}
+
+TEST_F(Allocator, Nullptr) {
+  auto classOrError = ClassLoader::loadClass("ObjectRepresentationIJ");
+  ASSERT_TRUE(classOrError) << classOrError.getError();
+  ASSERT_EQ(jvm::getNumAllocated(), 0);
+  jvm::deallocateAll();
+  uint32_t key = jvm::allocate(*classOrError->second);
+  EXPECT_EQ(key, 1);
+  EXPECT_NE(jvm::getAllocatedItem(key), nullptr);
+  uint32_t nullref = jvm::nullref();
+  EXPECT_EQ(nullref, 0);
+  EXPECT_EQ(jvm::getAllocatedItem(nullref), nullptr);
+  jvm::deallocateAll();
 }

@@ -21,6 +21,7 @@ namespace jvm {
 
 [[nodiscard]] uint32_t allocate(const jvm::Class &);
 [[nodiscard]] uint32_t allocateArray(Type type, size_t length);
+[[nodiscard]] static constexpr uint32_t nullref() { return 0; }
 
 InMemoryItem *getAllocatedItem(uint32_t);
 
