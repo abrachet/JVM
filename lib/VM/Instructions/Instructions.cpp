@@ -106,6 +106,7 @@ std::array<InsT, 256> instructions = []() constexpr {
   array[Instructions::invokespecial] =
       +[](ThreadContext &tc) { readFromPointer<uint16_t>(tc.pc); };
   array[Instructions::invokestatic] = invokestatic;
+  array[Instructions::invokevirtual] = invokevirtual;
   array[Instructions::new_] = new_;
   array[Instructions::newarray] = newarray;
   array[Instructions::arraylength] = arraylength;

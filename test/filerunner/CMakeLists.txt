@@ -16,7 +16,9 @@ set(filerunner_srcs
   FilerunnerTest.java
   IntMain.java
   Loop.java
+  Method.java
   NoInputFiles.txt
+  Virtual.java
 )
 
 add_custom_target(filerunner_test

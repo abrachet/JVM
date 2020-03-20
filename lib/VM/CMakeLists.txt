@@ -1,6 +1,7 @@
 
 add_library(VM
   Allocator.cpp
+  ClassHierarchyWalker.cpp
   ClassLoader.cpp
   JNI.cpp
   ObjectRepresentation.cpp
