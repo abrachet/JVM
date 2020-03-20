@@ -96,7 +96,7 @@ ErrorOr<Type> Type::parseType(std::string_view str) {
 
 size_t Type::BasicType::getStackEntryCount() const {
   if (array)
-    return 2;
+    return 1;
 
   switch (c) {
   case Void:

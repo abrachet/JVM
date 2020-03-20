@@ -8,11 +8,13 @@ add_custom_command(
 
 set(filerunner_srcs
   Add.java
+  Arrays.java
   CallNative.java
   ClassFields.java
   DoNothing.java
   FilerunnerFailure.java
   FilerunnerTest.java
+  IntMain.java
   Loop.java
   NoInputFiles.txt
 )

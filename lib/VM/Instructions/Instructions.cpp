@@ -95,6 +95,7 @@ std::array<InsT, 256> instructions = []() constexpr {
   // Control
   array[Instructions::goto_] = goto_;
   array[Instructions::ireturn] = ireturn;
+  array[Instructions::areturn] = array[Instructions::ireturn];
   array[Instructions::return_] = return_;
 
   // References
