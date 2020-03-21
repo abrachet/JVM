@@ -104,12 +104,9 @@ std::array<InsT, 256> instructions = []() constexpr {
   // References
   array[Instructions::getfield] = getfield;
   array[Instructions::putfield] = putfield;
-  // This is temporary because current tests don't do need invokespecial to do
-  // anything.
-  array[Instructions::invokespecial] =
-      +[](ThreadContext &tc) { readFromPointer<uint16_t>(tc.pc); };
-  array[Instructions::invokestatic] = invokestatic;
   array[Instructions::invokevirtual] = invokevirtual;
+  array[Instructions::invokespecial] = invokespecial;
+  array[Instructions::invokestatic] = invokestatic;
   array[Instructions::new_] = new_;
   array[Instructions::newarray] = newarray;
   array[Instructions::arraylength] = arraylength;

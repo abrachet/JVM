@@ -40,6 +40,7 @@ class FunctionCaller {
   std::string_view functionName;
   std::string_view typeName;
   Type functionType;
+  bool invokeExplicit = false;
 
   mutable const ClassFile *methodClassFile = nullptr;
   mutable const Class::Method *method = nullptr;
@@ -74,6 +75,7 @@ class FunctionCaller {
   // TODO: Create JavaEnv structure.
   uint64_t getJavaEnv() const { return 0; }
 
+  ClassHierarchyWalker::ClassAndMethod getForSpecial();
   Class::CodeAttribute getJVMStaticMethod();
   Class::CodeAttribute getJVMVirtualMethod();
   Class::CodeAttribute getJVMMethod();
@@ -139,6 +141,8 @@ public:
   bool isNativeMethod() const {
     return getMethod().accessFlags & Class::Method::AccessFlags::Native;
   }
+
+  void makeInvokeExplicit() { invokeExplicit = true; }
 
   void call() {
     if (isStaticMethod() && isSynchronizedMethod())
@@ -211,13 +215,25 @@ Class::CodeAttribute FunctionCaller::getJVMStaticMethod() {
   return *codeOrErr;
 }
 
+ClassHierarchyWalker::ClassAndMethod FunctionCaller::getForSpecial() {
+  ErrorOr<LoadedClass &> clssOrErr = ClassLoader::loadClass(methodClassName);
+  assert(clssOrErr);
+  ErrorOr<const Class::Method &> methodOrErr =
+      clssOrErr->second->loadedClass->findMethodByNameType(functionName,
+                                                           typeName);
+  assert(methodOrErr);
+  return {*clssOrErr->second, *methodOrErr};
+}
+
 Class::CodeAttribute FunctionCaller::getJVMVirtualMethod() {
   uint32_t *stackStart = reinterpret_cast<uint32_t *>(findFrameStart());
   auto *ptr =
       reinterpret_cast<InMemoryObject *>(jvm::getAllocatedItem(*stackStart));
   assert(ptr && "NullPointerException");
   ClassHierarchyWalker walker(ptr->clss);
-  auto [clss, method] = walker.findVirtualMethod(functionName, typeName);
+  auto [clss, method] = invokeExplicit
+                            ? getForSpecial()
+                            : walker.findVirtualMethod(functionName, typeName);
   ErrorOr<Class::CodeAttribute> codeOrErr =
       method.findCodeAttr(clss.loadedClass->getConstPool());
   tc.currentFrame().nameIndex = method.nameIndex;
@@ -229,15 +245,10 @@ Class::CodeAttribute FunctionCaller::getJVMMethod() {
   return isStaticMethod() ? getJVMStaticMethod() : getJVMVirtualMethod();
 }
 
-// TODO: refactor this as the getMethodClassFile semantics don't make sense
-// for virtual functions
 void FunctionCaller::invokeJVM() {
   assert(!isNativeMethod());
-
   auto attr = getJVMMethod();
-
   tc.currentFrame().frameStart = findFrameStart();
-
   assert(tc.currentFrame().className == methodClassName);
   int extraLocals = attr.maxLocals - getArgSize();
   for (int i = 0; i < extraLocals; i++)
@@ -245,19 +256,28 @@ void FunctionCaller::invokeJVM() {
   tc.pc = attr.code;
 }
 
-void invokestatic(ThreadContext &tc) {
-  uint16_t cpIndex = readFromPointer<uint16_t>(tc.pc);
-  ErrorOr<FunctionCaller> caller = FunctionCaller::create(tc, cpIndex);
-  assert(caller && "throw here");
-  assert(caller->isStaticMethod());
-  caller->call();
-}
-
 void invokevirtual(ThreadContext &tc) {
   uint16_t cpIndex = readFromPointer<uint16_t>(tc.pc);
   ErrorOr<FunctionCaller> caller = FunctionCaller::create(tc, cpIndex);
   assert(caller && "throw here");
   assert(!caller->isStaticMethod());
+  caller->call();
+}
+
+void invokespecial(ThreadContext &tc) {
+  uint16_t cpIndex = readFromPointer<uint16_t>(tc.pc);
+  ErrorOr<FunctionCaller> caller = FunctionCaller::create(tc, cpIndex);
+  assert(caller && "throw here");
+  assert(!caller->isStaticMethod());
+  caller->makeInvokeExplicit();
+  caller->call();
+}
+
+void invokestatic(ThreadContext &tc) {
+  uint16_t cpIndex = readFromPointer<uint16_t>(tc.pc);
+  ErrorOr<FunctionCaller> caller = FunctionCaller::create(tc, cpIndex);
+  assert(caller && "throw here");
+  assert(caller->isStaticMethod());
   caller->call();
 }
 

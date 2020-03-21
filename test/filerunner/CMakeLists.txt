@@ -11,11 +11,13 @@ set(filerunner_srcs
   Arrays.java
   CallNative.java
   ClassFields.java
+  Ctor.java
   DoNothing.java
   FilerunnerFailure.java
   FilerunnerTest.java
   InstanceOf.java
   IntMain.java
+  InvokeSpecial.java
   Loop.java
   Method.java
   NoInputFiles.txt

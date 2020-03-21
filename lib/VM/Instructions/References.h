@@ -17,8 +17,9 @@
 
 void getfield(ThreadContext &);
 void putfield(ThreadContext &);
-void invokestatic(ThreadContext &);
 void invokevirtual(ThreadContext &);
+void invokespecial(ThreadContext &);
+void invokestatic(ThreadContext &);
 void new_(ThreadContext &);
 void newarray(ThreadContext &);
 void arraylength(ThreadContext &);
