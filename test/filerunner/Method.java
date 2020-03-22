@@ -1,7 +1,7 @@
 
 // ASSERT: javac %{file}
 // RUN: %{JVM} Method
-// ASSERT: test %{status} -eq 13 # %{stderr}
+// ASSERT: test %{status} -eq 13
 
 class Method {
     int a;
