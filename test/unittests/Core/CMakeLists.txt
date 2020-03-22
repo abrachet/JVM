@@ -2,6 +2,7 @@
 add_executable(core_test
     DeferTest.cpp
     FileBufferTest.cpp
+    FileCacheTest.cpp
     FileReaderTest.cpp
 )
 

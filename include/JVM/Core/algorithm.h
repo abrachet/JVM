@@ -66,6 +66,11 @@ T accumulate(Iterable &&range, T init, BinaryFunction op) {
   return std::accumulate(std::begin(range), std::end(range), init, op);
 }
 
+template <typename Iterable, typename Compare>
+auto max_element(Iterable &&range, Compare comp) {
+  return std::max_element(std::begin(range), std::end(range), comp);
+}
+
 } // namespace jvm
 
 #endif // JVM_CORE_ALGORITHM_H

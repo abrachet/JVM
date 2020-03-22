@@ -22,9 +22,13 @@ public:
 
   static std::unique_ptr<FileBuffer> create(const std::string &filename);
 
+  using FDType = int;
+
   virtual operator const char *() const = 0;
   virtual operator char *() = 0;
   virtual size_t size() const = 0;
+  virtual std::string getNameIfAvailable() const { return ""; }
+  virtual bool writeToFile(FDType) const { return false; }
 };
 
 class MMappedFileBuffer : public FileBuffer {
@@ -33,9 +37,10 @@ class MMappedFileBuffer : public FileBuffer {
   int fd = -1;
   size_t len;
   char *buf = nullptr;
+  std::string filename = {};
 
-  MMappedFileBuffer(int fd, size_t len, char *buf)
-      : fd(fd), len(len), buf(buf) {}
+  MMappedFileBuffer(int fd, size_t len, char *buf, std::string filename = {})
+      : fd(fd), len(len), buf(buf), filename(filename) {}
 
 public:
   ~MMappedFileBuffer() override;
@@ -45,6 +50,9 @@ public:
   operator char *() override { return buf; }
 
   size_t size() const override { return len; }
+
+  std::string getNameIfAvailable() const override { return filename; }
+  bool writeToFile(FileBuffer::FDType) const override;
 };
 
 #endif // JVM_CORE_FILEBUFFER_H

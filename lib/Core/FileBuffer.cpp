@@ -13,25 +13,33 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 MMappedFileBuffer::~MMappedFileBuffer() {
   if (fd != -1 && buf != MAP_FAILED)
     munmap(buf, len + 1);
 }
 
-std::unique_ptr<FileBuffer> FileBuffer::create(const std::string& filename) {
+std::unique_ptr<FileBuffer> FileBuffer::create(const std::string &filename) {
   int fd = open(filename.data(), O_RDWR);
   if (fd == -1)
     return nullptr;
   struct stat sb;
   if (fstat(fd, &sb))
     return nullptr;
-  void* mapping =
+  void *mapping =
       mmap(nullptr, sb.st_size + 1, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   if (mapping == MAP_FAILED)
     return nullptr;
   madvise(mapping, sb.st_size + 1, MADV_SEQUENTIAL);
   // Can't use make_unique with private ctor.
-  return std::unique_ptr<FileBuffer>(
-      new MMappedFileBuffer(fd, sb.st_size, static_cast<char*>(mapping)));
+  return std::unique_ptr<FileBuffer>(new MMappedFileBuffer(
+      fd, sb.st_size, static_cast<char *>(mapping), filename));
+}
+
+bool MMappedFileBuffer::writeToFile(FileBuffer::FDType outFd) const {
+  if (fd == -1 || buf == MAP_FAILED)
+    return false;
+  ssize_t wrote = ::write(outFd, buf, len);
+  return wrote == len;
 }
