@@ -125,6 +125,15 @@ ClassLocation findClassLocation(std::string className,
   return {};
 }
 
+ClassLocation findClassLocation(std::string className,
+                                const std::vector<std::string> &classPath,
+                                const FileCache &cache) {
+  std::string fromCache = cache.getFileIfInCache(className);
+  if (fromCache.size())
+    return {std::move(className), std::move(fromCache)};
+  return findClassLocation(std::move(className), classPath);
+}
+
 std::unique_ptr<FileBuffer> ZipFileBuffer::create(std::string_view zipFile,
                                                   std::string_view entry) {
   assert(!entry.data()[entry.size()] && "must be c-string");
@@ -139,6 +148,7 @@ std::unique_ptr<FileBuffer> ZipFileBuffer::create(std::string_view zipFile,
 
   std::unique_ptr<ZipFileBuffer> ptr(new ZipFileBuffer);
   ptr->fileSize = sb.size;
+  ptr->entry = entry;
   void *mapping = mmap(nullptr, sb.size + 1, PROT_READ | PROT_WRITE,
                        MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   if (mapping == MAP_FAILED)
@@ -153,6 +163,12 @@ std::unique_ptr<FileBuffer> ZipFileBuffer::create(std::string_view zipFile,
     return nullptr;
 
   return ptr;
+}
+
+bool ZipFileBuffer::writeToFile(FileBuffer::FDType outFd) const {
+  if (mappedFile == nullptr || fileSize == -1)
+    return false;
+  return ::write(outFd, mappedFile, fileSize) == fileSize;
 }
 
 ZipFileBuffer::~ZipFileBuffer() {

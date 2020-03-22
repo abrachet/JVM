@@ -33,10 +33,24 @@ static ClassFileReader::ClassFileOrError readClass(const ClassLocation &loc) {
   }
 
   assert(loc.type == ClassLocation::InJar);
+  if (ClassLoader::fileCache) {
+    std::string file =
+        ClassLoader::fileCache->getFileIfInCache(loc.className + ".class");
+    if (file.size()) {
+      std::unique_ptr<FileBuffer> buf = FileBuffer::create(file);
+      if (buf) {
+        ClassFileReader reader(std::move(buf));
+        return reader.read();
+      }
+    }
+  }
+
   std::unique_ptr<FileBuffer> buf =
       ZipFileBuffer::create(loc.path, loc.className + ".class");
   if (!buf)
     return {nullptr, "Couldn't extract '"s + loc.className + "' from jar."};
+  if (ClassLoader::fileCache)
+    ClassLoader::fileCache->cacheFile(*buf);
   ClassFileReader reader(std::move(buf));
   return reader.read();
 }

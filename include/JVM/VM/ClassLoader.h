@@ -15,6 +15,7 @@
 #include "JVM/Class/ClassFile.h"
 #include "JVM/Class/ClassFinder.h"
 #include "JVM/Core/ErrorOr.h"
+#include "JVM/Core/FileCache.h"
 #include "JVM/VM/Class.h"
 #include "JVM/VM/ObjectRepresentation.h"
 #include "JVM/string_view"
@@ -32,6 +33,7 @@ public:
   using Class = jvm::Class;
 
   static std::vector<std::string> classPath;
+  static inline FileCache *fileCache = nullptr;
 
   static ErrorOr<LoadedClass &> loadClass(const std::string_view fullClassName);
   static ErrorOr<LoadedClass &>
@@ -49,6 +51,10 @@ public:
   static int numLoadedClasses() {
     std::shared_lock l(loadedClassesMutex);
     return loadedClasses.size();
+  }
+
+  static void registerFileCache(FileCache &cache) {
+    fileCache = std::addressof(cache);
   }
 
 private:

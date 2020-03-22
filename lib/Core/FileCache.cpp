@@ -102,12 +102,15 @@ FileCache::FileCache(std::string_view dir, unsigned size)
   walkDirectory();
 }
 
+#include <iostream>
 std::string FileCache::getFileIfInCache(std::string_view filename) const {
+  std::cout << "getting file " << filename << '\n';
   std::string name = getFilename(filename);
   return !::access(name.c_str(), F_OK) ? name : std::string{};
 }
 
 void FileCache::cacheFile(const FileBuffer &file) const {
+  std::cout << "caching file\n";
   if (maxSize == 0)
     return;
 

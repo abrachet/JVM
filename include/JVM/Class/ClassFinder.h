@@ -13,6 +13,7 @@
 #define JVM_CLASS_CLASSFINDER_H
 
 #include "JVM/Core/FileBuffer.h"
+#include "JVM/Core/FileCache.h"
 #include "JVM/string_view"
 #include <cassert>
 #include <functional>
@@ -35,6 +36,7 @@ struct ClassLocation {
 class ZipFileBuffer : public FileBuffer {
   size_t fileSize;
   char *mappedFile;
+  std::string entry;
 
   ZipFileBuffer() {}
 
@@ -46,6 +48,8 @@ public:
   operator const char *() const override { return mappedFile; }
   operator char *() override { return mappedFile; }
   size_t size() const override { return fileSize; }
+  std::string getNameIfAvailable() const override { return entry; }
+  bool writeToFile(FileBuffer::FDType) const override;
 };
 
 std::string findRTJar(std::string &path);
@@ -55,5 +59,9 @@ std::string registerFromJar(const std::string &path,
 
 ClassLocation findClassLocation(std::string className,
                                 const std::vector<std::string> &classPath);
+
+ClassLocation findClassLocation(std::string className,
+                                const std::vector<std::string> &classPath,
+                                const FileCache &cache);
 
 #endif // JVM_CLASS_CLASSFINDER_H

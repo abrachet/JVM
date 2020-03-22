@@ -108,6 +108,9 @@ int main(int argc, char **argv) {
   std::string rtJar;
   findRTJar(rtJar);
   ClassLoader::classPath.push_back(rtJar);
+  // TOOD: use /tmp/JVM_FileCache, but that's broken right now.
+  FileCache fileCache("./JVM_FileCache");
+  ClassLoader::registerFileCache(fileCache);
 
   // TODO: better command line args handling
   if (std::string_view(argv[1]) == "-Xintmain") {
