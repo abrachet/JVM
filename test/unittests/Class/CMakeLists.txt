@@ -4,6 +4,7 @@ add_executable(class_test
   ClassLoaderTest.cpp
   ClassReaderCPBasicTest.cpp
   ClassReaderCPMethodsTest.cpp
+  ClassReaderExceptionTest.cpp
   ClassReaderFieldsTest.cpp
   ClassReaderInterfaceTest.cpp
   ClassReaderMethodsTest.cpp
@@ -39,6 +40,8 @@ add_custom_command(
     mv "${CMAKE_CURRENT_SOURCE_DIR}/C.class" "$<TARGET_FILE_DIR:class_test>/C.class"
     COMMAND javac "${CMAKE_CURRENT_SOURCE_DIR}/Methods.java" &&
     mv "${CMAKE_CURRENT_SOURCE_DIR}/Methods.class" "$<TARGET_FILE_DIR:class_test>/Methods.class"
+    COMMAND javac "${CMAKE_CURRENT_SOURCE_DIR}/ExceptionTable.java" &&
+    mv "${CMAKE_CURRENT_SOURCE_DIR}/ExceptionTable.class" "$<TARGET_FILE_DIR:class_test>/ExceptionTable.class"
 )
 
 execute_process(

@@ -210,13 +210,20 @@ struct Attribute {
       : attributeNameIndex(nameIndex), attributeLength(len), mem(mem) {}
 };
 
+struct ExceptionTableEntry {
+  uint16_t startPc;
+  uint16_t endPc;
+  uint16_t handlerPc;
+  uint16_t catchType;
+};
+
 struct CodeAttribute : public Attribute {
   uint16_t maxStack;
   uint16_t maxLocals;
   uint32_t codeLength;
   const uint8_t *code;
   uint16_t exceptionTableLength;
-  // TODO: Exception table.
+  std::vector<ExceptionTableEntry> exceptionTable;
 
   static CodeAttribute fromAttr(const Attribute &);
 

@@ -27,6 +27,13 @@ CodeAttribute CodeAttribute::fromAttr(const Attribute &attr) {
   ca.code = codePtr;
   codePtr += ca.codeLength;
   readFromPointer(ca.exceptionTableLength, codePtr);
+  ca.exceptionTable.resize(ca.exceptionTableLength);
+  for (auto &entry : ca.exceptionTable) {
+    readFromPointer(entry.startPc, codePtr);
+    readFromPointer(entry.endPc, codePtr);
+    readFromPointer(entry.handlerPc, codePtr);
+    readFromPointer(entry.catchType, codePtr);
+  }
   return ca;
 }
 
