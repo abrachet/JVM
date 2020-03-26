@@ -52,8 +52,8 @@ protected:
     ASSERT_EQ("Code", std::string_view(utf8));
     using Class::CodeAttribute;
     CodeAttribute ca = CodeAttribute::fromAttr(method.attributes[0]);
-    tc.pushFrame(Frame(getClassName(), nullptr, tc.stack.sp, method.nameIndex,
-                       method.descriptorIndex));
+    tc.pushFrame(Frame(getClassName(), nullptr, tc.stack.sp, nullptr,
+                       method.nameIndex, method.descriptorIndex));
     tc.pc = ca.code;
     ASSERT_TRUE(tc.pc);
   }

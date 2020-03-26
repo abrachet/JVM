@@ -9,21 +9,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef INS_REFERENCES_H
-#define INS_REFERENCES_H
+#ifndef JVM_VM_EXCEPTIONS_H
+#define JVM_VM_EXCEPTIONS_H
 
-#include "Instruction.h"
-#include "JVM/VM/Instructions.h"
+#include "JVM/VM/ThreadContext.h"
 
-void getfield(ThreadContext &);
-void putfield(ThreadContext &);
-void invokevirtual(ThreadContext &);
-void invokespecial(ThreadContext &);
-void invokestatic(ThreadContext &);
-void new_(ThreadContext &);
-void newarray(ThreadContext &);
-void arraylength(ThreadContext &);
-void athrow(ThreadContext &);
-void instanceof (ThreadContext &);
+void unwindFromException(ThreadContext &, uint32_t exceptionRef);
 
-#endif // INS_REFERENCES_H
+#endif // JVM_VM_EXCEPTIONS_H

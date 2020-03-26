@@ -3,6 +3,7 @@ add_library(VM
   Allocator.cpp
   ClassHierarchyWalker.cpp
   ClassLoader.cpp
+  Exceptions.cpp
   JNI.cpp
   ObjectRepresentation.cpp
   Stack.cpp

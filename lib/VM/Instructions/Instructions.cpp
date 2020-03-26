@@ -13,9 +13,6 @@
 #include <array>
 #include <cassert>
 
-// TOOD: remove this when invokespecial is added properly.
-#include "JVM/Core/BigEndianByteReader.h"
-
 #include "Comparisons.h"
 #include "Constants.h"
 #include "Control.h"
@@ -110,6 +107,7 @@ std::array<InsT, 256> instructions = []() constexpr {
   array[Instructions::new_] = new_;
   array[Instructions::newarray] = newarray;
   array[Instructions::arraylength] = arraylength;
+  array[Instructions::athrow] = athrow;
   array[Instructions:: instanceof ] = instanceof ;
 
   // Extended

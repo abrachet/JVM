@@ -17,6 +17,7 @@
 #include "JVM/VM/Allocator.h"
 #include "JVM/VM/ClassHierarchyWalker.h"
 #include "JVM/VM/ClassLoader.h"
+#include "JVM/VM/Exceptions.h"
 #include "JVM/VM/JNI.h"
 #include "JVM/VM/ObjectRepresentation.h"
 #include "JVM/VM/ThreadContext.h"
@@ -210,6 +211,7 @@ Class::CodeAttribute FunctionCaller::getJVMStaticMethod() {
   assert(codeOrErr);
   const auto &nameType =
       cp.get<Class::ConstPool::NameAndTypeInfo>(methodRef.nameAndTypeIndex);
+  tc.currentFrame().pcStart = codeOrErr->code;
   tc.currentFrame().nameIndex = nameType.nameIndex;
   tc.currentFrame().typeIndex = nameType.descriptorIndex;
   return *codeOrErr;
@@ -401,6 +403,11 @@ void arraylength(ThreadContext &tc) {
   uint32_t key = tc.stack.pop<1>();
   InMemoryItem *item = jvm::getAllocatedItem(key);
   tc.stack.push<1>(reinterpret_cast<InMemoryArray *>(item)->length);
+}
+
+void athrow(ThreadContext &tc) {
+  uint32_t key = tc.stack.pop<1>();
+  unwindFromException(tc, key);
 }
 
 void instanceof (ThreadContext & tc) {

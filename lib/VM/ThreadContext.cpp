@@ -19,7 +19,15 @@ void ThreadContext::callNext() {
   return instructions[ins](*this);
 }
 
-LoadedClass &ThreadContext::getLoadedClass() {
+const Class::Method &ThreadContext::getCurrentMethod() const {
+  const auto &classFile = getClassFile();
+  ErrorOr<const Class::Method &> methodOrErr =
+      classFile.findMethodByNameType(getMethodName(), getMethodTypeName());
+  assert(methodOrErr && "Method must be a member of current class");
+  return *methodOrErr;
+}
+
+LoadedClass &ThreadContext::getLoadedClass() const {
   ErrorOr<LoadedClass &> loadedClassOrErr =
       ClassLoader::getLoadedClass(getCurrentClassName());
   assert(loadedClassOrErr && "class was not loaded");

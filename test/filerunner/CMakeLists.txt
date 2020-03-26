@@ -13,6 +13,7 @@ set(filerunner_srcs
   ClassFields.java
   Ctor.java
   DoNothing.java
+  Exceptions.java
   FilerunnerFailure.java
   FilerunnerTest.java
   InstanceOf.java

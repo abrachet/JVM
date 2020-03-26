@@ -74,7 +74,7 @@ public:
   }
 
   size_t getStackEntryCount() const {
-    assert(isBasicType());
+    assert(!isFunctionType());
     return type.getStackEntryCount();
   }
 };

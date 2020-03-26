@@ -17,6 +17,11 @@
 #include <cstdio>
 #include <cstdlib>
 
+// TODO: remove these when String support arrives and no need to ignore
+// invokespecial
+#include "JVM/Core/BigEndianByteReader.h"
+#include "JVM/VM/Instructions.h"
+
 extern "C" void Java___JVM_internal_Start_exit(void *, int exitCode) {
   std::exit(exitCode);
 }
@@ -76,9 +81,13 @@ static ErrorOr<const void *> loadStart() {
 
   ErrorOr<const void *> startAddr = loadStart();
   dieIfError(startAddr);
-  mainThread.pushFrame(Frame(startClassName, nullptr, mainThread.stack.sp));
+  mainThread.pushFrame(
+      Frame(startClassName, nullptr, mainThread.stack.sp, *startAddr));
 
-  mainThread.pushFrame(Frame(mainClass, *startAddr, mainThread.stack.sp));
+  // TODO: don't hand code the name and type indexes. But this requires a change
+  // too large for this patch.
+  mainThread.pushFrame(
+      Frame(mainClass, *startAddr, mainThread.stack.sp, mainAddr, 31, 32));
   mainThread.storeInLocal<1>(0, arg);
   mainThread.pc = mainAddr;
   for (;;)
@@ -112,13 +121,22 @@ int main(int argc, char **argv) {
   FileCache fileCache("./JVM_FileCache");
   ClassLoader::registerFileCache(fileCache);
 
+  std::string_view argv1(argv[1]);
   // TODO: better command line args handling
-  if (std::string_view(argv[1]) == "-Xintmain") {
+  if (argv1 == "-Xintmain") {
     if (argc < 4) {
-      std::fputs("no class file or arg specified for -Xintmain", stderr);
+      std::fputs("no class file or arg specified for -Xintmain\n", stderr);
       return 1;
     }
     startMainInt(argv[2], std::atoi(argv[3]));
+  } else if (argv1 == "-Xnoinvokespecial") {
+    if (argc < 3) {
+      std::fputs("no class file specified for -Xnoinvokespecial\n", stderr);
+      return 1;
+    }
+    instructions[Instructions::invokespecial] =
+        +[](ThreadContext &tc) { readFromPointer<uint16_t>(tc.pc); };
+    startMainString(argv[2]);
   } else {
     // TODO pass command line args
     startMainString(argv[1]);

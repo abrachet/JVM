@@ -218,12 +218,14 @@ struct ExceptionTableEntry {
 };
 
 struct CodeAttribute : public Attribute {
+  using ExceptionTable = std::vector<ExceptionTableEntry>;
+
   uint16_t maxStack;
   uint16_t maxLocals;
   uint32_t codeLength;
   const uint8_t *code;
   uint16_t exceptionTableLength;
-  std::vector<ExceptionTableEntry> exceptionTable;
+  ExceptionTable exceptionTable;
 
   static CodeAttribute fromAttr(const Attribute &);
 

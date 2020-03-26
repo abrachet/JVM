@@ -20,15 +20,16 @@
 struct Frame {
   const void *returnAddress = nullptr;
   void *frameStart = nullptr;
+  const void *pcStart = nullptr;
   std::string_view className;
   uint16_t nameIndex = 0;
   uint16_t typeIndex = 0;
   bool syncronizedMethod = false;
 
   Frame(std::string_view className, const void *returnAddress = nullptr,
-        void *frameStart = nullptr, uint16_t nameIndex = 0,
-        uint16_t typeIndex = 0)
-      : returnAddress(returnAddress), frameStart(frameStart),
+        void *frameStart = nullptr, const void *pcStart = nullptr,
+        uint16_t nameIndex = 0, uint16_t typeIndex = 0)
+      : returnAddress(returnAddress), frameStart(frameStart), pcStart(pcStart),
         className(className), nameIndex(nameIndex), typeIndex(typeIndex) {}
 
   std::string_view getMethodName() const {
@@ -58,10 +59,12 @@ struct ThreadContext {
   // TODO: Need to refactor this out into a static create most likely.
   ThreadContext(Stack &&stack) : stack(std::move(stack)) {}
 
-  LoadedClass &getLoadedClass();
-  const ClassFile &getClassFile() {
+  LoadedClass &getLoadedClass() const;
+  const ClassFile &getClassFile() const {
     return *getLoadedClass().second->loadedClass;
   }
+
+  const Class::Method &getCurrentMethod() const;
 
   std::string_view getMethodName() const {
     return currentFrame().getMethodName();
@@ -110,13 +113,29 @@ struct ThreadContext {
     *addr = toStore;
   }
 
+  uint32_t getRelativePc() const {
+    assert(pc >= currentFrame().pcStart && "invalid function start");
+    uintptr_t ptr = reinterpret_cast<uintptr_t>(pc) -
+                    reinterpret_cast<uintptr_t>(currentFrame().pcStart);
+    assert(ptr <= std::numeric_limits<uint32_t>::max());
+    return ptr;
+  }
+
   void jump(int64_t offset) {
     const char *cpc = reinterpret_cast<const char *>(pc);
     cpc += offset;
     pc = cpc;
   }
 
-  std::string_view getCurrentClassName() { return frames.back().className; }
+  void jumpFromStart(uint64_t offset) {
+    const char *cpc = reinterpret_cast<const char *>(currentFrame().pcStart);
+    cpc += offset;
+    pc = cpc;
+  }
+
+  std::string_view getCurrentClassName() const {
+    return frames.back().className;
+  }
 
   void callNext();
 };
