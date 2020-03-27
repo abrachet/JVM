@@ -10,7 +10,10 @@
 // limitations under the License.
 
 #include "JVM/Core/ErrorOr.h"
+#include "JVM/Core/algorithm.h"
+#include "JVM/VM/Allocator.h"
 #include "JVM/VM/ClassLoader.h"
+#include "JVM/VM/InMemoryObject.h"
 #include "JVM/VM/Stack.h"
 #include "JVM/VM/ThreadContext.h"
 #include "JVM/string_view"
@@ -26,15 +29,30 @@ extern "C" void Java___JVM_internal_Start_exit(void *, int exitCode) {
   std::exit(exitCode);
 }
 
+extern "C" void
+Java___JVM_internal_Start_reportUncaughtException(void *, uint32_t throwable) {
+  std::fputs("Exception in thread \"main\" ", stderr);
+  InMemoryItem *item = jvm::getAllocatedItem(throwable);
+  assert(item && "NullPointerException");
+  assert(!item->isArray() && "throwable was not an throwable type");
+  InMemoryObject &obj = reinterpret_cast<InMemoryObject &>(*item);
+  std::string name(obj.clss.name.data(), obj.clss.name.size());
+  jvm::replace(name, '/', '.');
+  std::fprintf(stderr, "%s\n", name.c_str());
+}
+
 #ifdef TESTING
 extern "C" void Java_Natives_exit(void *, int exitCode) { std::exit(exitCode); }
 #endif
 
+static void die(const char *str) {
+  std::fprintf(stderr, "JVM Fatal error: %s", str);
+  std::exit(1);
+}
+
 template <typename T> static void dieIfError(const ErrorOr<T> &error) {
-  if (!error) {
-    std::fprintf(stderr, "JVM Fatal error: %s", error.getError().c_str());
-    std::exit(1);
-  }
+  if (!error)
+    die(error.getError().c_str());
 }
 
 class MethodLoader {
@@ -93,13 +111,17 @@ startJVM(std::string_view mainClass, uint32_t arg,
       startLoader->createFrameFromMethod(nullptr, mainThread.stack.sp);
   dieIfError(startFrame);
   mainThread.pushFrame(std::move(*startFrame));
+  mainThread.pc = *startLoader->findCode();
+  mainThread.callNext();
+  if (mainThread.numFrames() != 2)
+    die("first instruction did not create new frame");
 
   ErrorOr<MethodLoader> mainLoader =
       MethodLoader::create(mainClass, "main", mainType);
   dieIfError(mainLoader);
-  const void *startReturn = mainThread.currentFrame().pcStart;
+  const void *callMain = mainThread.currentFrame().pcStart;
   ErrorOr<Frame> mainFrame =
-      mainLoader->createFrameFromMethod(startReturn, mainThread.stack.sp);
+      mainLoader->createFrameFromMethod(callMain, mainThread.stack.sp);
   dieIfError(mainFrame);
   mainThread.pushFrame(std::move(*mainFrame));
 

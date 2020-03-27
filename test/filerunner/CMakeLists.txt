@@ -22,6 +22,7 @@ set(filerunner_srcs
   Loop.java
   Method.java
   NoInputFiles.txt
+  UncaughtException.java
   Virtual.java
 )
 

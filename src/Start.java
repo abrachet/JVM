@@ -13,10 +13,22 @@
 // before calling main.
 class __JVM_internal_Start {
     private static native void exit(int exitCode);
+    private static native void reportUncaughtException(Throwable t);
 
-    // TODO: this will have exception handling in the future.
-    private static void start() {
+    // This method gets called so that the exception table will actually be
+    // built. It does nothing, the JVM calls one instruction whcih goes into
+    // this method. From there it calls main itself.
+    private static void callMain() {
         // JVM puts the return address here then it finds and calls main itself.
+    }
+
+    private static void start() {
+        try {
+            callMain();
+        } catch (Throwable t) {
+            reportUncaughtException(t);
+            exit(1);
+        }
         exit(0);
     }
 }

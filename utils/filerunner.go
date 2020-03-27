@@ -87,8 +87,8 @@ func (cr *CommandRunner) replaceVariables(line string, prevStatus *ProcessStatus
 	}
 	if prevStatus != nil {
 		line = strings.ReplaceAll(line, "%{status}", fmt.Sprintf("%d", prevStatus.Status.ExitCode()))
-		line = strings.ReplaceAll(line, "%{stderr}", fmt.Sprintf("\"%s\"", prevStatus.Stderr))
-		line = strings.ReplaceAll(line, "%{stdout}", fmt.Sprintf("\"%s\"", prevStatus.Stdout))
+		line = strings.ReplaceAll(line, "%{stderr}", fmt.Sprintf("'%s'", prevStatus.Stderr))
+		line = strings.ReplaceAll(line, "%{stdout}", fmt.Sprintf("'%s'", prevStatus.Stdout))
 	}
 	return line
 }
