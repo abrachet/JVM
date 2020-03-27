@@ -37,76 +37,76 @@ template <typename T> static void dieIfError(const ErrorOr<T> &error) {
   }
 }
 
-static ErrorOr<Class::CodeAttribute> loadMethod(std::string_view className,
-                                                std::string_view name,
-                                                std::string_view type) {
-  ErrorOr<LoadedClass &> loadedClass = ClassLoader::loadClass(className);
-  if (!loadedClass)
-    return loadedClass.getError();
+class MethodLoader {
+  const LoadedClass &loadedClass;
+  const Class::Method &method;
 
-  const auto &classFile = *loadedClass->second->loadedClass;
-  const auto mainMethodOrErr = classFile.findMethodByNameType(name, type);
-  if (!mainMethodOrErr)
-    return mainMethodOrErr.getError();
-  ErrorOr<Class::CodeAttribute> codeOrErr =
-      mainMethodOrErr->findCodeAttr(classFile.getConstPool());
-  if (!codeOrErr)
-    return codeOrErr.getError();
-  return *codeOrErr;
-}
+  MethodLoader(const LoadedClass &loadedClass, const Class::Method &method)
+      : loadedClass(loadedClass), method(method) {}
 
-static ErrorOr<const void *> loadMain(std::string_view className) {
-  ErrorOr<Class::CodeAttribute> mainCodeOrErr =
-      loadMethod(className, "main", "([Ljava/lang/String;)V");
-  if (!mainCodeOrErr)
-    return mainCodeOrErr.getError();
-  return reinterpret_cast<const void *>(mainCodeOrErr->code);
-}
+public:
+  static ErrorOr<MethodLoader> create(std::string_view className,
+                                      std::string_view name,
+                                      std::string_view type) {
+    ErrorOr<LoadedClass &> loadedClass = ClassLoader::loadClass(className);
+    if (!loadedClass)
+      return loadedClass.getError();
+
+    const auto &classFile = *loadedClass->second->loadedClass;
+    const auto methodOrErr = classFile.findMethodByNameType(name, type);
+    if (!methodOrErr)
+      return methodOrErr.getError();
+    return MethodLoader(*loadedClass, *methodOrErr);
+  }
+
+  ErrorOr<const void *> findCode() const {
+    const auto &cp = loadedClass.second->loadedClass->getConstPool();
+    ErrorOr<Class::CodeAttribute> codeOrErr = method.findCodeAttr(cp);
+    if (!codeOrErr)
+      return codeOrErr.getError();
+    return codeOrErr->code;
+  }
+
+  ErrorOr<Frame> createFrameFromMethod(const void *returnAddr,
+                                       void *frameStart) const {
+    ErrorOr<const void *> codeOrErr = findCode();
+    if (!codeOrErr)
+      return codeOrErr.getError();
+    return Frame(loadedClass.second->name, returnAddr, frameStart, *codeOrErr,
+                 method.nameIndex, method.descriptorIndex);
+  }
+};
 
 constexpr std::string_view startClassName = "__JVM_internal_Start";
 
-static ErrorOr<const void *> loadStart() {
-  ErrorOr<Class::CodeAttribute> startCodeOrErr =
-      loadMethod(startClassName, "start", "()V");
-  if (!startCodeOrErr)
-    return startCodeOrErr.getError();
-  return reinterpret_cast<const void *>(startCodeOrErr->code);
-}
-
-[[noreturn]] static void startJVM(std::string_view mainClass,
-                                  const void *mainAddr, uint32_t arg) {
+[[noreturn]] static void
+startJVM(std::string_view mainClass, uint32_t arg,
+         std::string_view mainType = "([Ljava/lang/String;)V") {
   ErrorOr<Stack> mainStack = Stack::createStack();
   dieIfError(mainStack);
   ThreadContext mainThread(std::move(*mainStack));
 
-  ErrorOr<const void *> startAddr = loadStart();
-  dieIfError(startAddr);
-  mainThread.pushFrame(
-      Frame(startClassName, nullptr, mainThread.stack.sp, *startAddr));
+  ErrorOr<MethodLoader> startLoader =
+      MethodLoader::create(startClassName, "start", "()V");
+  dieIfError(startLoader);
+  ErrorOr<Frame> startFrame =
+      startLoader->createFrameFromMethod(nullptr, mainThread.stack.sp);
+  dieIfError(startFrame);
+  mainThread.pushFrame(std::move(*startFrame));
 
-  // TODO: don't hand code the name and type indexes. But this requires a change
-  // too large for this patch.
-  mainThread.pushFrame(
-      Frame(mainClass, *startAddr, mainThread.stack.sp, mainAddr, 31, 32));
+  ErrorOr<MethodLoader> mainLoader =
+      MethodLoader::create(mainClass, "main", mainType);
+  dieIfError(mainLoader);
+  const void *startReturn = mainThread.currentFrame().pcStart;
+  ErrorOr<Frame> mainFrame =
+      mainLoader->createFrameFromMethod(startReturn, mainThread.stack.sp);
+  dieIfError(mainFrame);
+  mainThread.pushFrame(std::move(*mainFrame));
+
   mainThread.storeInLocal<1>(0, arg);
-  mainThread.pc = mainAddr;
+  mainThread.pc = *mainLoader->findCode();
   for (;;)
     mainThread.callNext();
-}
-
-[[noreturn]] static void startMainInt(std::string_view mainClassName,
-                                      uint32_t arg) {
-  ErrorOr<Class::CodeAttribute> codeOrErr =
-      loadMethod(mainClassName, "main", "(I)V");
-  dieIfError(codeOrErr);
-  startJVM(mainClassName, reinterpret_cast<const void *>(codeOrErr->code), arg);
-}
-
-[[noreturn]] static void startMainString(std::string_view mainClassName) {
-  ErrorOr<const void *> codeOrErr = loadMain(mainClassName);
-  dieIfError(codeOrErr);
-  // 0 is nullptr object key, TODO get args from command line
-  startJVM(mainClassName, *codeOrErr, 0);
 }
 
 int main(int argc, char **argv) {
@@ -128,7 +128,7 @@ int main(int argc, char **argv) {
       std::fputs("no class file or arg specified for -Xintmain\n", stderr);
       return 1;
     }
-    startMainInt(argv[2], std::atoi(argv[3]));
+    startJVM(argv[2], std::atoi(argv[3]), "(I)V");
   } else if (argv1 == "-Xnoinvokespecial") {
     if (argc < 3) {
       std::fputs("no class file specified for -Xnoinvokespecial\n", stderr);
@@ -136,10 +136,10 @@ int main(int argc, char **argv) {
     }
     instructions[Instructions::invokespecial] =
         +[](ThreadContext &tc) { readFromPointer<uint16_t>(tc.pc); };
-    startMainString(argv[2]);
+    startJVM(argv[2], 0);
   } else {
     // TODO pass command line args
-    startMainString(argv[1]);
+    startJVM(argv[1], 0);
   }
   __builtin_unreachable();
 }
