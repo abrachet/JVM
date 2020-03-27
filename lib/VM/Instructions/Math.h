@@ -13,6 +13,7 @@
 #define INS_MATH_H
 
 #include "Instruction.h"
+#include "JVM/Core/BigEndianByteReader.h"
 #include "JVM/VM/Instructions.h"
 #include <functional>
 
