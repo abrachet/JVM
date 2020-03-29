@@ -25,5 +25,4 @@ class StaticField {
 
 class HasStatic {
     static int a;
-
 }
