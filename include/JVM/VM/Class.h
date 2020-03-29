@@ -18,6 +18,8 @@
 #include "JVM/VM/ObjectRepresentation.h"
 #include "JVM/string_view"
 #include <mutex>
+#include <string>
+#include <unordered_map>
 
 namespace jvm {
 struct Class;
@@ -41,6 +43,16 @@ struct Class {
   State state = Erroneous;
   ClassLocation location;
   std::string_view name;
+
+  std::unordered_map<std::string, uint64_t> staticVars;
+
+  // No initialization is required for statics because they will be zero when
+  // they are first aquired. std::unordered_map::operator[] can be a little
+  // sketchy, but in this case, it works well. There is of course no check if
+  // str is actually a member of this class. This should be ensured elsewhere.
+  uint64_t &getStatic(std::string_view str) {
+    return staticVars[{str.data(), str.size()}];
+  }
 
   std::unique_ptr<ClassFile> loadedClass;
   // super in [0], interfaces in [1:]

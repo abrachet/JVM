@@ -299,6 +299,7 @@ void new_(ThreadContext &tc) {
 using FieldrefInfo = Class::ConstPool::FieldrefInfo;
 using NameAndTypeInfo = Class::ConstPool::NameAndTypeInfo;
 using Utf8Info = Class::ConstPool::Utf8Info;
+using ClassInfo = Class::ConstPool::ClassInfo;
 
 static Type getFieldType(const ClassFile &cf, const FieldrefInfo &fieldRef) {
   uint16_t nameTypeIndex = fieldRef.nameAndTypeIndex;
@@ -341,6 +342,51 @@ template <size_t StackSize>
 static void pushFromAddr(ThreadContext &tc, const void *ptr) {
   const auto *p = reinterpret_cast<const Stack::EntryType<StackSize> *>(ptr);
   tc.stack.push<StackSize>(*p);
+}
+
+struct FieldInfo {
+  jvm::Class &clss;
+  std::string_view fieldName;
+  Type type;
+};
+
+static FieldInfo getInfo(const Class::ConstPool &cp, uint16_t fieldRefIndex) {
+  const auto &refInfo = cp.get<FieldrefInfo>(fieldRefIndex);
+  const auto &classInfo = cp.get<ClassInfo>(refInfo.classIndex);
+  std::string_view className = cp.get<Utf8Info>(classInfo.nameIndex);
+  ErrorOr<LoadedClass &> loadedClass = ClassLoader::loadClass(className);
+  assert(loadedClass && "ClassNotFoundException");
+  const auto &nameType = cp.get<NameAndTypeInfo>(refInfo.nameAndTypeIndex);
+  ErrorOr<Type> type =
+      Type::parseType(cp.get<Utf8Info>(nameType.descriptorIndex));
+  assert(type && "couldn't parse type");
+  return {*loadedClass->second, cp.get<Utf8Info>(nameType.nameIndex), *type};
+}
+
+void getstatic(ThreadContext &tc) {
+  uint16_t fieldRef = readFromPointer<uint16_t>(tc.pc);
+  FieldInfo info = getInfo(tc.getClassFile().getConstPool(), fieldRef);
+  uint64_t field = info.clss.getStatic(info.fieldName);
+  size_t count = info.type.getStackEntryCount();
+  assert(count == 1 || count == 2 && "unexpected stack size");
+  if (count == 1)
+    tc.stack.push<1>(field);
+  else
+    tc.stack.push<2>(field);
+}
+
+void putstatic(ThreadContext &tc) {
+  uint16_t fieldRef = readFromPointer<uint16_t>(tc.pc);
+  FieldInfo info = getInfo(tc.getClassFile().getConstPool(), fieldRef);
+  uint64_t &field = info.clss.getStatic(info.fieldName);
+  size_t count = info.type.getStackEntryCount();
+  assert(count == 1 || count == 2 && "unexpected stack size");
+  uint64_t toPut;
+  if (count == 1)
+    toPut = tc.stack.pop<1>();
+  else
+    toPut = tc.stack.pop<2>();
+  field = toPut;
 }
 
 void getfield(ThreadContext &tc) {

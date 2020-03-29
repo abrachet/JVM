@@ -99,6 +99,8 @@ std::array<InsT, 256> instructions = []() constexpr {
   array[Instructions::return_] = return_;
 
   // References
+  array[Instructions::getstatic] = getstatic;
+  array[Instructions::putstatic] = putstatic;
   array[Instructions::getfield] = getfield;
   array[Instructions::putfield] = putfield;
   array[Instructions::invokevirtual] = invokevirtual;
